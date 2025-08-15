@@ -29,24 +29,11 @@ const DetalleReporte: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-/* const reporte: Reporte | undefined = location.state as Reporte;
+  const reporte: Reporte | undefined = location.state as Reporte;
 
   if (!reporte) {
     return <p className="p-4">No hay datos para mostrar.</p>;
-  }*/
-
-    const reporte: Reporte = {
-  id_reporte: 501,
-  nombre_usuario: "Ana Morales",
-  cargo_usuario: "Supervisora",
-  cedula: 1098765432,
-  fecha: "2025-08-14T10:45:00",
-  lugar: "Planta Industrial Bogotá",
-  descripcion: "Se detectó una falla en la máquina de embalaje que requiere mantenimiento urgente.",
-  img: "https://www.suseso.cl/606/articles-18649_imagen_portada.thumb_iSlider.jpg",
-  archivos: "https://www.suseso.cl/606/articles-18649_imagen_portada.thumb_iSlider.jpg",
-  estado: "Pendiente",
-};
+  }
 
   const formatearFecha = (fechaIso: string) =>
     new Date(fechaIso).toLocaleString("es-CO", {

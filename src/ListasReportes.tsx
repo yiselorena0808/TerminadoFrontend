@@ -17,7 +17,45 @@ interface Reporte {
 
 const ListasReportes: React.FC = () => {
   const navigate = useNavigate();
-  const [listas, setListas] = useState<Reporte[]>([]);
+  const [listas, setListas] = useState<Reporte[]>([
+  {
+    id_reporte: 1,
+    nombre_usuario: "Juan Pérez",
+    cargo_usuario: "Supervisor",
+    cedula: 123456789,
+    fecha: "2025-08-10T14:30:00Z",
+    lugar: "Bodega Central",
+    descripcion: "Caída de estantería en la zona de carga",
+    img: "https://via.placeholder.com/150",
+    archivos: "informe.pdf",
+    estado: "Pendiente",
+  },
+  {
+    id_reporte: 2,
+    nombre_usuario: "María López",
+    cargo_usuario: "Operaria",
+    cedula: 987654321,
+    fecha: "2025-08-11T09:15:00Z",
+    lugar: "Planta 2",
+    descripcion: "Fuga de aceite en maquinaria",
+    img: "https://via.placeholder.com/150",
+    archivos: "reporte_fuga.docx",
+    estado: "Revisado",
+  },
+  {
+    id_reporte: 3,
+    nombre_usuario: "Carlos Ramírez",
+    cargo_usuario: "Técnico",
+    cedula: 112233445,
+    fecha: "2025-08-12T16:45:00Z",
+    lugar: "Área de mantenimiento",
+    descripcion: "Cortocircuito en tablero eléctrico",
+    img: "https://via.placeholder.com/150",
+    archivos: "foto_incidente.jpg",
+    estado: "Finalizado",
+  },
+]);
+
   const [busqueda, setBusqueda] = useState("");
 
   const estados = ["Pendiente", "Revisado", "Finalizado"];
@@ -32,12 +70,12 @@ const ListasReportes: React.FC = () => {
     }
   };
 
-  useEffect(() => {
+/*  useEffect(() => {
     obtenerListas();
-  }, []);
+  }, []);*/
 
   const abrirDetalle = (item: Reporte) => {
-    navigate("/nav/detalleReporte", { state: item });
+    navigate("/nav/detalleReportes", { state: item });
   };
 
   const formatearFecha = (fechaIso: string): string => {
@@ -53,11 +91,11 @@ const ListasReportes: React.FC = () => {
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
     try {
-      await fetch(`http://localhost:3333/actualizarReporte/${id}`, {
+      /*await fetch(`http://localhost:3333/actualizarReporte/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
-      });
+      });*/
       setListas((prev) =>
         prev.map((item) =>
           item.id_reporte === id ? { ...item, estado: nuevoEstado } : item

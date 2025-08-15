@@ -6,7 +6,7 @@ import RegistroArea from './RegistroArea';
 import RegistroEmpresa from './RegistroEmpresa';
 import Navba from './Navbar';
 import Bienvenida from './Bienvenida';
-import ListarGestiones from './LisstasGestionEPP';
+import ListarGestiones from './ListasGestionEPP';
 import ListasChequeoRecibidas from './ListasChequeo';
 import ListasReportes from './ListasReportes';
 import ListasActividadesLudicas from './ListasActLudicas';
