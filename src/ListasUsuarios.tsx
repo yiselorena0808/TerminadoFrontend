@@ -5,50 +5,50 @@ interface Usuario {
   id: number;
   nombre: string;
   apellido: string;
-  cedula?: number;
-  nombre_usuario: string;
-  correo_electronico: string;
+  nombreUsuario: string;
+  correoElectronico: string;
   cargo: string;
   contrasena?: string;
-  fecha_registro?: string;
+  created_at?: string;
+  updated_at?: string;
+  id_tenant: number;
+  id_area: number;
 }
 
 const AdmUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [filtro, setFiltro] = useState<string>("");
   const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
+  const [idTenantLogueado, setIdTenantLogueado] = useState<number | null>(null);
 
-  // Función para obtener usuarios desde el backend
   const obtenerUsuarios = async () => {
     try {
-      const res = await fetch("http://localhost:3333/listarUsuarios");
+      const res = await fetch("https://backsst.onrender.com/listarUsuarios"); 
       const data = await res.json();
-      setUsuarios(data.datos); // Suponiendo que tu backend devuelve { datos: [...] }
+      setUsuarios(data.datos);
     } catch (error) {
       console.error("Error al cargar usuarios:", error);
     }
   };
 
-  // Función para eliminar un usuario
   const eliminarUsuario = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
 
     try {
-      const res = await fetch(`http://localhost:3333/eliminarUsuario/${id}`, {
+      const res = await fetch(`https://backsst.onrender.com/eliminarUsuario/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
       alert(data.mensaje);
-      obtenerUsuarios(); // Refresca la lista
+      obtenerUsuarios();
     } catch (error) {
       alert("No se pudo eliminar el usuario.");
     }
   };
 
-  // Función para actualizar un usuario
   const actualizarUsuario = async (usuario: Usuario) => {
     try {
-      const res = await fetch(`http://localhost:3333/actualizarUsuario/${usuario.id}`, {
+      const res = await fetch(`https://backsst.onrender.com/actualizarUsuario/${usuario.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(usuario),
@@ -62,23 +62,35 @@ const AdmUsuarios: React.FC = () => {
     }
   };
 
-  // Cargar usuarios al montar el componente
   useEffect(() => {
+    // ✅ Leemos el usuario logueado desde localStorage
+    const usuarioLogueado = localStorage.getItem("usuario");
+    if (usuarioLogueado) {
+      const datos = JSON.parse(usuarioLogueado);
+      setIdTenantLogueado(datos.id_tenant); // guardamos el tenant del usuario logueado
+    }
     obtenerUsuarios();
   }, []);
 
-  // Filtrado de usuarios por nombre, usuario o id
-  const usuariosFiltrados = usuarios.filter(
+  // ✅ Primero filtramos por tenant
+  const usuariosDeMismaEmpresa = usuarios.filter(
+    (u) => idTenantLogueado !== null && u.id_tenant === idTenantLogueado
+  );
+
+  // ✅ Luego aplicamos el filtro de búsqueda
+  const usuariosFiltrados = usuariosDeMismaEmpresa.filter(
     (u) =>
       u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.nombre_usuario.toLowerCase().includes(filtro.toLowerCase()) ||
+      u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
       u.id.toString().includes(filtro)
   );
 
   return (
     <div className="p-6 bg-gradient-to-r from-blue-50 via-blue-100 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-6 text-blue-900 drop-shadow-md">Administración de Usuarios</h1>
+        <h1 className="text-4xl font-extrabold mb-6 text-blue-900 drop-shadow-md">
+          Administración de Usuarios
+        </h1>
 
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <button
@@ -107,18 +119,31 @@ const AdmUsuarios: React.FC = () => {
                 <th className="px-4 py-3 text-left text-sm font-semibold">Usuario</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Correo</th>
                 <th className="px-4 py-3 text-left text-sm font-semibold">Cargo</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold" colSpan={2}>Acciones</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Tenant</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Área</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold" colSpan={2}>
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-blue-200">
               {usuariosFiltrados.map((u, idx) => (
-                <tr key={u.id} className={idx % 2 === 0 ? "bg-blue-50 hover:bg-blue-100" : "bg-blue-100 hover:bg-blue-200"}>
+                <tr
+                  key={u.id}
+                  className={
+                    idx % 2 === 0
+                      ? "bg-blue-50 hover:bg-blue-100"
+                      : "bg-blue-100 hover:bg-blue-200"
+                  }
+                >
                   <td className="px-4 py-2 text-sm text-blue-900 font-medium">{u.id}</td>
                   <td className="px-4 py-2 text-sm text-blue-800">{u.nombre}</td>
                   <td className="px-4 py-2 text-sm text-blue-800">{u.apellido}</td>
-                  <td className="px-4 py-2 text-sm text-blue-700">{u.nombre_usuario}</td>
-                  <td className="px-4 py-2 text-sm text-blue-700">{u.correo_electronico}</td>
+                  <td className="px-4 py-2 text-sm text-blue-700">{u.nombreUsuario}</td>
+                  <td className="px-4 py-2 text-sm text-blue-700">{u.correoElectronico}</td>
                   <td className="px-4 py-2 text-sm text-blue-800">{u.cargo}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.id_tenant}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.id_area}</td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}
@@ -139,7 +164,10 @@ const AdmUsuarios: React.FC = () => {
               ))}
               {usuariosFiltrados.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-6 text-center text-blue-500 font-medium">
+                  <td
+                    colSpan={10}
+                    className="px-4 py-6 text-center text-blue-500 font-medium"
+                  >
                     No se encontraron usuarios.
                   </td>
                 </tr>

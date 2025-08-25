@@ -5,20 +5,20 @@ const RegistroArea: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const [idTenant, setIdTenant] = useState<number | "">("");
   const [nombreArea, setNombreArea] = useState("");
-  const [responsableArea, setResponsableArea] = useState("");
   const [codigoArea, setCodigoArea] = useState("");
   const [descripcion, setDescripcion] = useState("");
 
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("http://localhost:3333/registro-area", {
+    const res = await fetch("https://backsst.onrender.com/crearArea", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        id_tenant: idTenant,
         nombre_area: nombreArea,
-        responsable_area: responsableArea,
         codigo_area: codigoArea,
         descripcion,
       }),
@@ -34,19 +34,21 @@ const RegistroArea: React.FC = () => {
   };
 
   const links = [
-    { path: "/registro", label: "Crear cuenta" },
-    { path: "/registroEmpresa", label: "Crear empresa" },
+    { path: "/registro", label: "Crear Usuario" },
+    { path: "/registroEmpresa", label: "Crear Empresa" },
     { path: "/registroArea", label: "Crear área" },
   ];
 
   return (
-  <div
-    className="min-h-screen flex flex-col"
-    style={{
-      backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-       }}>      {/* Barra de navegación superior */}
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Barra de navegación superior */}
       <nav className="bg-[#142943] shadow-md">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-center space-x-8 h-14 items-center">
@@ -73,11 +75,9 @@ const RegistroArea: React.FC = () => {
           {/* Lado izquierdo */}
           <div className="md:w-1/2 bg-gradient-to-br from-[#1E3A5F] via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
             <div className="text-center space-y-4 z-10">
-              <h2 className="text-3xl font-bold text-white">
-                ¡Registra un área!
-              </h2>
+              <h2 className="text-3xl font-bold text-white">¡Registra un área!</h2>
               <p className="text-gray-200 text-sm">
-                Organiza y gestiona las áreas de tu empresa.
+                Organiza y gestiona las áreas vinculadas a un tenant.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
@@ -98,20 +98,24 @@ const RegistroArea: React.FC = () => {
 
               <form className="space-y-4" onSubmit={registrar}>
                 <input
-                  type="text"
-                  placeholder="Nombre del área"
-                  value={nombreArea}
-                  onChange={(e) => setNombreArea(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  type="number"
+                  placeholder="ID Tenant"
+                  value={idTenant}
+                  onChange={(e) => setIdTenant(Number(e.target.value))}
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
+                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                             text-gray-900 placeholder-gray-500"
                   required
                 />
 
                 <input
                   type="text"
-                  placeholder="Responsable del área"
-                  value={responsableArea}
-                  onChange={(e) => setResponsableArea(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  placeholder="Nombre del área"
+                  value={nombreArea}
+                  onChange={(e) => setNombreArea(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
+                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                             text-gray-900 placeholder-gray-500"
                   required
                 />
 
@@ -120,7 +124,10 @@ const RegistroArea: React.FC = () => {
                   placeholder="Código del área"
                   value={codigoArea}
                   onChange={(e) => setCodigoArea(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
+                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                             text-gray-900 placeholder-gray-500"
+                  required
                 />
 
                 <textarea
@@ -128,23 +135,10 @@ const RegistroArea: React.FC = () => {
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
+                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                             text-gray-900 placeholder-gray-500"
                 />
-
-                <div className="flex items-center space-x-2 text-sm">
-                  <input
-                    type="checkbox"
-                    id="terms"
-                    className="w-4 h-4 border-[#1E3A5F] text-[#1E3A5F] focus:ring-[#1E3A5F]"
-                    required
-                  />
-                  <label htmlFor="terms" className="text-gray-200">
-                    Acepto los{" "}
-                    <a href="#" className="text-blue-200 underline">
-                      Términos y condiciones
-                    </a>
-                  </label>
-                </div>
 
                 <button
                   type="submit"

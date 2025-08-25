@@ -11,7 +11,7 @@ interface Gestion {
   productos: string;
   cantidad: number;
   importancia: string;
-  fecha_creacion: string;
+  fechaCreacion: string;
   estado: string;
 }
 
@@ -24,7 +24,7 @@ const ListarGestiones: React.FC = () => {
 
   const obtenerListas = async () => {
     try {
-      const res = await fetch("http://localhost:3333/listarGestiones");
+      const res = await fetch("https://backsst.onrender.com/listarGestiones");
       const data = await res.json();
       setListas(data.datos);
     } catch (error) {
@@ -37,10 +37,11 @@ const ListarGestiones: React.FC = () => {
   }, []);
 
   const abrirDetalle = (item: Gestion) => {
-    navigate("/nav/detalleGestion", { state: item });
+    navigate("/nav/detalleGestionEpp", { state: item });
   };
 
   const formatearFecha = (fechaIso: string): string => {
+    if (!fechaIso) return "Sin fecha";
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
@@ -51,18 +52,20 @@ const ListarGestiones: React.FC = () => {
     });
   };
 
-  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+  const cambiarEstado = async (id_reporte: number, nuevoEstado: string) => {
     try {
-      await fetch(`http://localhost:3333/actualizarGestion/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-      setListas((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, estado: nuevoEstado } : item
-        )
+      const res = await fetch(
+        `https://backsst.onrender.com/actualizarEstadoGestion/${id_reporte}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: nuevoEstado }),
+        }
       );
+
+      if (res.ok) {
+        obtenerListas();
+      }
     } catch (error) {
       console.error("Error actualizando estado:", error);
     }
@@ -71,7 +74,7 @@ const ListarGestiones: React.FC = () => {
   const eliminarGestion = async (id: number) => {
     if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
     try {
-      await fetch(`http://localhost:3333/eliminarGestion/${id}`, {
+      await fetch(`https://backsst.onrender.com/eliminarGestion/${id}`, {
         method: "DELETE",
       });
       setListas((prev) => prev.filter((item) => item.id !== id));
@@ -101,6 +104,12 @@ const ListarGestiones: React.FC = () => {
         <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
           📋 Listas de Gestión
         </h3>
+        <button
+          onClick={() => navigate("/nav/crearGestionEpp")}
+          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
+        >
+          Crear Gestión
+        </button>
 
         {/* Barra de búsqueda */}
         <div className="flex justify-end mb-6">
@@ -140,7 +149,7 @@ const ListarGestiones: React.FC = () => {
                     <div>
                       <div className="font-bold text-gray-800">
                         {item.nombre} {item.apellido} –{" "}
-                        {formatearFecha(item.fecha_creacion)}
+                        {formatearFecha(item.fechaCreacion)}
                       </div>
                       <div className="text-gray-600 text-sm">
                         Cargo: {item.cargo} | Estado:{" "}

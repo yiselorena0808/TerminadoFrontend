@@ -13,12 +13,13 @@ import ListasActividadesLudicas from './ListasActLudicas';
 import AdmUsuarios from './ListasUsuarios';
 import Gestion from './CrearGestionEpp';
 import ActividadForm from './CrearActLudica';
-import Reportes from './CrearReporte';
-import ListaChequeo from './CrearListaChequeo';
+import ReportesC from './CrearReporte';
 import DetalleReporte from './DetalleReporte';
 import DetalleListaChequeo from './DetalleListaChqueo';
 import DetalleActividad from './DetalleActLudica';
 import DetalleGestionEPP from './DetalleGestionEpp';
+import CrearListaChequeo from './CrearListaChequeo';
+import Perfil from './perfil';
 
 function App() {
   return (
@@ -40,14 +41,12 @@ function App() {
 
           <Route path="ListasChequeo" element={<ListasChequeoRecibidas  />} />
           <Route path="detalleListasChequeo" element={<DetalleListaChequeo />} />
-          <Route path="crearListasChequeo" element={<ListaChequeo onSubmit={function (datos: { id: number; id_usuario: number; usuario_nombre: string; fecha: string; hora: string; modelo: string; marca: string; soat: string; tecnico: string; kilometraje: string; }): void {
-            throw new Error('Function not implemented.');
-          } } />} />
+          <Route path="crearListasChequeo" element={<CrearListaChequeo></CrearListaChequeo>} ></Route>
 
 
-          <Route path="Reportes" element={<ListasReportes />} />
+          <Route path="reportesC" element={<ListasReportes></ListasReportes>} />
           <Route path="detalleReportes" element={<DetalleReporte />} />
-          <Route path="crearReportes" element={<Reportes onSubmit={function (datos: { id_reporte: number; id_usuario: number; nombre_usuario: string; cargo: string; cedula: string; fecha: string; lugar: string; descripcion: string; imagen: string; archivos: string; estado: string | null; }): void {
+          <Route path="crearReportes" element={<ReportesC onSubmit={function (datos: {id_usuario: number; nombre_usuario: string; cargo: string; cedula: string; fecha:Date; lugar: string; descripcion: string; imagen: string; archivos: string; estado: string }): void {
             throw new Error('Function not implemented.');
           } } />} />
 
@@ -56,6 +55,7 @@ function App() {
           <Route path="crearActLudica" element={<ActividadForm onSubmit={function (datos: { id_usuario: number; nombre_usuario: string; nombre_actividad: string; fecha_actividad: string; descripcion: string; imagen_video: string; archivo_adjunto: string; }): void {
             throw new Error('Function not implemented.');
           } } />} />
+          <Route path='perfil' element={<Perfil></Perfil>}></Route>
           
           <Route path="usuarios" element={<AdmUsuarios />} />
         </Route>

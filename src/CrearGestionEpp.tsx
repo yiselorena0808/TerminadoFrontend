@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface Gestion1 {
   onSubmit: (datos: {
@@ -15,6 +15,19 @@ interface Gestion1 {
   }) => void;
 }
 
+interface RegistroEPP {
+  id_usuario: number;
+  nombre: string;
+  apellido: string;
+  cedula: number;
+  cargo: string;
+  productos: string;
+  cantidad: number;
+  importancia: string;
+  estado: string | null;
+  fecha_creacion: string;
+}
+
 const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
   const [id_usuario, setIdUsuario] = useState("");
   const [nombre, setNombre] = useState("");
@@ -27,6 +40,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
   const [estado, setEstado] = useState<string | null>(null);
   const [fecha_creacion, setFechaCreacion] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [registros, setRegistros] = useState<RegistroEPP[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +55,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:3333/crearGestion", {
+      const response = await fetch("https://backsst.onrender.com/crearGestion", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,6 +74,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
 
       const msj = await response.json();
       setMensaje(msj.mensaje || "Gestión creada exitosamente.");
+      obtenerRegistros(); 
     } catch (error) {
       console.error("Error al enviar datos:", error);
       setMensaje("Error al conectar con el servidor.");
@@ -79,11 +94,25 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
     });
   };
 
+  const obtenerRegistros = async () => {
+    try {
+      const res = await fetch("https://backsst.onrender.com/listarGestiones");
+      const data = await res.json();
+      setRegistros(data.datos);
+    } catch (error) {
+      console.error("Error al obtener registros:", error);
+    }
+  };
+
+  useEffect(() => {
+    obtenerRegistros();
+  }, []);
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col md:flex-row">
       {/* Columna izquierda con imagen */}
       <div
-        className="w-1/2 bg-cover bg-center"
+        className="w-full md:w-1/2 bg-cover bg-center"
         style={{
           backgroundImage:
             "url('https://ccmty.com/wp-content/uploads/2018/02/1c257c52b98d4c8b895eac8364583bc9.jpg')",
@@ -95,7 +124,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
       </div>
 
       {/* Columna derecha con formulario */}
-      <div className="w-1/2 flex items-center justify-center p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
         <div className="w-full max-w-lg bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-white">
           <h2 className="text-3xl font-bold text-center mb-6">
             Formulario de Gestión
@@ -195,8 +224,8 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
                 required
               >
                 <option value="">Seleccione un estado</option>
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
+                <option value="Activo">Finalizado</option>
+                <option value="Inactivo">Revisado</option>
                 <option value="Pendiente">Pendiente</option>
               </select>
             </div>

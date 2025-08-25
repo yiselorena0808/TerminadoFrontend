@@ -5,33 +5,26 @@ const RegistroEmpresa: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [nombreEmpresa, setNombreEmpresa] = useState("");
-  const [nit, setNit] = useState("");
+  const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [correoElectronico, setCorreoElectronico] = useState("");
-  const [contrasena, setContrasena] = useState("");
-  const [confirmacion, setConfirmacion] = useState("");
+  const [NIT, setNIT] = useState("");
+  const [esquema, setEsquema] = useState("");
+  const [alias, setAlias] = useState("");
+  const [estado, setEstado] = useState(true);
 
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (contrasena !== confirmacion) {
-      alert("Las contraseñas no coinciden");
-      return;
-    }
-
-    const res = await fetch("http://localhost:3333/registerEmpresa", {
+    const res = await fetch("https://backsst.onrender.com/crearTenant", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        nombre_empresa: nombreEmpresa,
-        nit,
+        nombre,
         direccion,
-        telefono,
-        correo_electronico: correoElectronico,
-        contrasena,
-        confirmacion,
+        NIT,
+        esquema,
+        alias,
+        estado,
       }),
     });
 
@@ -46,20 +39,21 @@ const RegistroEmpresa: React.FC = () => {
   };
 
   const links = [
-    { path: "/registro", label: "Crear cuenta" },
-    { path: "/registroEmpresa", label: "Crear empresa" },
+    { path: "/registro", label: "Crear Usuario" },
+    { path: "/registroEmpresa", label: "Crear Empresa" },
     { path: "/registroArea", label: "Crear área" },
   ];
 
   return (
     <div
-    className="min-h-screen flex flex-col"
-    style={{
-      backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
-      backgroundSize: "cover",
-      backgroundPosition: "center",
-       }}>
-      {/* Barra de navegación superior */}
+      className="min-h-screen flex flex-col"
+      style={{
+        backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Barra de navegación */}
       <nav className="bg-[#142943] shadow-md">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-center space-x-8 h-14 items-center">
@@ -86,17 +80,15 @@ const RegistroEmpresa: React.FC = () => {
           {/* Lado izquierdo */}
           <div className="md:w-1/2 bg-gradient-to-br from-[#1E3A5F] via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
             <div className="text-center space-y-4 z-10">
-              <h2 className="text-3xl font-bold text-white">
-                ¡Haz crecer tu empresa con nosotros!
-              </h2>
+              <h2 className="text-3xl font-bold text-white">¡Registra tu empresa!</h2>
               <p className="text-gray-200 text-sm">
-                Registra tu empresa y accede a todas nuestras herramientas.
+                Define nombre, NIT, dirección, esquema y alias para tu tenant.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
               <img
                 src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png"
-                alt="Empresa"
+                alt="Tenant"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -106,23 +98,15 @@ const RegistroEmpresa: React.FC = () => {
           <div className="md:w-1/2 p-8 flex items-center">
             <div className="w-full">
               <h3 className="text-2xl font-bold mb-6 text-white text-center">
-                Registrar empresa
+                Registrar Empresa
               </h3>
 
               <form className="space-y-4" onSubmit={registrar}>
                 <input
                   type="text"
-                  placeholder="Nombre de la empresa"
-                  value={nombreEmpresa}
-                  onChange={(e) => setNombreEmpresa(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
-                />
-
-                <input
-                  type="text"
-                  placeholder="NIT"
-                  value={nit}
-                  onChange={(e) => setNit(e.target.value)}
+                  placeholder="Nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
@@ -136,47 +120,38 @@ const RegistroEmpresa: React.FC = () => {
 
                 <input
                   type="text"
-                  placeholder="Teléfono"
-                  value={telefono}
-                  onChange={(e) => setTelefono(e.target.value)}
+                  placeholder="NIT"
+                  value={NIT}
+                  onChange={(e) => setNIT(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <input
-                  type="email"
-                  placeholder="Correo electrónico"
-                  value={correoElectronico}
-                  onChange={(e) => setCorreoElectronico(e.target.value)}
+                  type="text"
+                  placeholder="Esquema"
+                  value={esquema}
+                  onChange={(e) => setEsquema(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <input
-                    type="password"
-                    placeholder="Contraseña"
-                    value={contrasena}
-                    onChange={(e) => setContrasena(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
-                  />
-                  <input
-                    type="password"
-                    placeholder="Confirmar contraseña"
-                    value={confirmacion}
-                    onChange={(e) => setConfirmacion(e.target.value)}
-                    className="px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
-                  />
-                </div>
-                 <div className="flex items-center space-x-2 text-sm">
+                <input
+                  type="text"
+                  placeholder="Alias"
+                  value={alias}
+                  onChange={(e) => setAlias(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                />
+
+                <div className="flex items-center space-x-2 text-sm">
                   <input
                     type="checkbox"
-                    id="terms"
+                    id="estado"
+                    checked={estado}
+                    onChange={(e) => setEstado(e.target.checked)}
                     className="w-4 h-4 border-[#1E3A5F] text-[#1E3A5F] focus:ring-[#1E3A5F]"
                   />
-                  <label htmlFor="terms" className="text-gray-200">
-                    Acepto los{" "}
-                    <a href="#" className="text-blue-200 underline">
-                      Términos y condiciones
-                    </a>
+                  <label htmlFor="estado" className="text-gray-200">
+                    Estado activo
                   </label>
                 </div>
 

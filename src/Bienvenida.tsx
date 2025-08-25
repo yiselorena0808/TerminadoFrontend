@@ -6,7 +6,7 @@ const Bienvenida: React.FC = () => {
     <div
       className="min-h-screen py-12 px-4 sm:px-8 text-black bg-cover bg-center"
       style={{
-        backgroundImage: "url('/ruta/tu-imagen.jpg')", // Cambia por tu imagen real
+        backgroundImage: "url('/ruta/tu-imagen.jpg')",
       }}
     >
       {/* Título y descripción */}

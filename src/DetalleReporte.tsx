@@ -1,26 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  FileText,
-  Image as ImageIcon,
-  ArrowLeft,
-  User,
-  Briefcase,
-  IdCard,
-  Calendar,
-  MapPin,
-  FileCheck,
-} from "lucide-react";
+import { FileCheck, ArrowLeft, Trash2 } from "lucide-react";
 
 interface Reporte {
-  id_reporte: number;
-  nombre_usuario: string;
-  cargo_usuario: string;
-  cedula: number;
+  idReporte: number;
+  idUsuario: number;
+  nombreUsuario: string;
+  cargo: string;
+  cedula: string;
   fecha: string;
   lugar: string;
   descripcion: string;
-  img: string;
+  imagen: string;
   archivos: string;
   estado: string;
 }
@@ -31,22 +22,51 @@ const DetalleReporte: React.FC = () => {
 
   const reporte: Reporte | undefined = location.state as Reporte;
 
+  
+  const formatFechaForInput = (fecha: string) => {
+    if (!fecha) return "";
+    const d = new Date(fecha);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    const hours = String(d.getHours()).padStart(2, "0");
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  };
+
+ 
+  const [form, setForm] = useState<Reporte>({
+    ...reporte!,
+    fecha: formatFechaForInput(reporte!.fecha),
+  });
+
   if (!reporte) {
     return <p className="p-4">No hay datos para mostrar.</p>;
   }
 
-  const formatearFecha = (fechaIso: string) =>
-    new Date(fechaIso).toLocaleString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  const API_URL = "https://backsst.onrender.com";
 
-  const verImagen = () => {
-    const imgUrl = `http://localhost:3333/img/${reporte.img}`;
-    window.open(imgUrl, "_blank");
+  const eliminarReporte = async () => {
+    if (!window.confirm("¿Seguro que deseas eliminar este reporte?")) return;
+
+    try {
+      const res = await fetch(`${API_URL}/eliminarReporte/${form.idReporte}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      console.log("📥 Respuesta backend:", data);
+
+      if (res.ok) {
+        alert(data.msj || "Reporte eliminado correctamente.");
+        navigate(-1);
+      } else {
+        alert(data.error || "No se pudo eliminar el reporte.");
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      alert("Error de conexión con el servidor.");
+    }
   };
 
   return (
@@ -57,10 +77,8 @@ const DetalleReporte: React.FC = () => {
           "url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80')",
       }}
     >
-      {/* Overlay oscuro */}
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
-      {/* Contenido */}
       <div className="relative z-10 max-w-6xl mx-auto">
         {/* Botón Volver */}
         <button
@@ -75,7 +93,7 @@ const DetalleReporte: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">📋 Detalle del Reporte</h2>
-            <p className="text-blue-100 text-lg">ID #{reporte.id_reporte}</p>
+            <p className="text-blue-100 text-lg">ID #{form.idReporte}</p>
           </div>
 
           {/* Body */}
@@ -85,21 +103,26 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Información del Usuario
               </h3>
-              <p className="flex items-center gap-2 text-gray-700">
-                <User className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Usuario:</span>{" "}
-                {reporte.nombre_usuario}
-              </p>
-              <p className="flex items-center gap-2 text-gray-700">
-                <Briefcase className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Cargo:</span>{" "}
-                {reporte.cargo_usuario}
-              </p>
-              <p className="flex items-center gap-2 text-gray-700">
-                <IdCard className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Cédula:</span>{" "}
-                {reporte.cedula}
-              </p>
+              <input
+                type="text"
+                value={form.nombreUsuario}
+                onChange={(e) =>
+                  setForm({ ...form, nombreUsuario: e.target.value })
+                }
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <input
+                type="text"
+                value={form.cargo}
+                onChange={(e) => setForm({ ...form, cargo: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <input
+                type="text"
+                value={form.cedula}
+                onChange={(e) => setForm({ ...form, cedula: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
             </div>
 
             {/* Información del reporte */}
@@ -107,31 +130,28 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Detalles del Reporte
               </h3>
-              <p className="flex items-center gap-2 text-gray-700">
-                <Calendar className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Fecha:</span>{" "}
-                {formatearFecha(reporte.fecha)}
-              </p>
-              <p className="flex items-center gap-2 text-gray-700">
-                <MapPin className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Lugar:</span>{" "}
-                {reporte.lugar}
-              </p>
-              <p className="flex items-center gap-2 text-gray-700">
-                <FileCheck className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Estado:</span>{" "}
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    reporte.estado === "Pendiente"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : reporte.estado === "Aprobado"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
-                >
-                  {reporte.estado}
-                </span>
-              </p>
+              <input
+                type="datetime-local"
+                value={form.fecha}
+                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <input
+                type="text"
+                value={form.lugar}
+                onChange={(e) => setForm({ ...form, lugar: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              />
+              <select
+                value={form.estado || ""}
+                onChange={(e) => setForm({ ...form, estado: e.target.value })}
+                className="w-full border rounded-lg px-3 py-2"
+              >
+                <option value="">Seleccionar estado</option>
+                <option value="Pendiente">Pendiente</option>
+                <option value="Revisado">Revisado</option>
+                <option value="Finalizado">Finalizado</option>
+              </select>
             </div>
 
             {/* Descripción */}
@@ -139,45 +159,23 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-2">
                 Descripción
               </h3>
-              <p className="text-gray-700 leading-relaxed text-justify">
-                {reporte.descripcion}
-              </p>
+              <textarea
+                value={form.descripcion}
+                onChange={(e) =>
+                  setForm({ ...form, descripcion: e.target.value })
+                }
+                className="w-full border rounded-lg px-3 py-2 min-h-[120px]"
+              />
             </div>
-
-            {/* Imagen */}
-            {reporte.img && (
-              <div className="md:col-span-2">
-                <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-4">
-                  Evidencia
-                </h3>
-                <div
-                  className="relative group cursor-pointer rounded-xl overflow-hidden border shadow hover:shadow-lg transition"
-                  onClick={verImagen}
-                >
-                  <img
-                    src={`http://localhost:3333/img/${reporte.img}`}
-                    alt="Evidencia"
-                    className="w-full max-h-[500px] object-cover group-hover:scale-105 transition-transform"
-                  />
-                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white font-medium transition">
-                    Click para ampliar
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Footer con acciones */}
           <div className="bg-gray-50 px-10 py-6 flex flex-wrap gap-4 justify-end border-t">
             <button
-              onClick={verImagen}
-              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 transition text-lg"
+              onClick={eliminarReporte}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 transition text-lg"
             >
-              <ImageIcon className="w-5 h-5" /> Ver Imagen
-            </button>
-
-            <button className="flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-xl shadow hover:bg-gray-900 transition text-lg">
-              <FileText className="w-5 h-5" /> Descargar Solicitud
+              <Trash2 className="w-5 h-5" /> Eliminar
             </button>
           </div>
         </div>

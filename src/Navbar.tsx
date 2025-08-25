@@ -10,23 +10,48 @@ import {
 } from "react-icons/ai";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 
+interface Empresa {
+  id_empresa: number;
+  nombre: string;
+  direccion: string;
+}
+
+interface Area {
+  id_area: number;
+  nombre_area: string;
+  descripcion: string;
+}
+
+interface Usuario {
+  id: number;
+  nombre: string;
+  apellido: string;
+  nombreUsuario: string;
+  correoElectronico: string;
+  cargo: string;
+  fotoPerfil?: string;
+  empresa?: Empresa;
+  area?: Area;
+}
+
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [nombre, setNombre] = useState("");
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
 
   const ocultarSidebar =
     location.pathname === "/" || location.pathname === "/Registro";
-  if (ocultarSidebar) {
-    return null;
-  }
+  if (ocultarSidebar) return null;
 
   useEffect(() => {
-    // Para pruebas
-    setNombre("Usuario de Prueba");
-  }, [navigate]);
+    const usuarioGuardado = localStorage.getItem("usuario");
+    if (usuarioGuardado) {
+      const user: Usuario = JSON.parse(usuarioGuardado);
+      setUsuario(user);
+    }
+  }, []);
 
   const logout = () => {
     localStorage.clear();
@@ -35,7 +60,7 @@ const Sidebar: React.FC = () => {
 
   const menuItems = [
     { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicio" },
-    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportes" },
+    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportesC" },
     { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
     { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
@@ -72,18 +97,24 @@ const Sidebar: React.FC = () => {
         </div>
 
         {/* Perfil */}
-        {!isCollapsed && (
+        {!isCollapsed && usuario && (
           <div className="flex flex-col items-center py-6 border-b border-gray-700">
             <div className="relative">
               <img
-                src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                src={
+                  usuario.fotoPerfil ||
+                  "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                }
                 alt="Perfil"
                 className="w-24 h-24 rounded-full border-4 border-blue-500 shadow-lg hover:scale-105 transition-transform"
+                onClick={() => navigate("/nav/perfil")}
               />
               <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900"></span>
             </div>
-            <h2 className="mt-3 font-semibold text-lg">{nombre || "Usuario"}</h2>
-            <p className="text-gray-400 text-sm">Administrador</p>
+            <h2 className="mt-3 font-semibold text-lg">
+              {usuario.nombre} {usuario.apellido}
+            </h2>
+            <p className="text-gray-400 text-sm">{usuario.cargo}</p>
           </div>
         )}
 
@@ -100,7 +131,7 @@ const Sidebar: React.FC = () => {
                   onClick={() => navigate(item.path)}
                   className={`flex items-center w-full ${
                     isCollapsed ? "justify-center" : "gap-2 px-3"
-                  } py-3 text-sm transition-all duration-200 border-l-4 border-transparent hover:border-blue-400 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 rounded-lg`}
+                  } py-3 text-sm text-black transition-all duration-200 border-l-4 border-transparent hover:border-blue-400 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 rounded-lg`}
                 >
                   <span className="text-blue-300 group-hover:text-blue-400 transition-colors">
                     {item.icon}
@@ -125,7 +156,7 @@ const Sidebar: React.FC = () => {
             >
               🔒 Cerrar sesión
             </button>
-            <p className="mt-2">© 2025 Tu Empresa</p>
+            <p className="mt-2">© 2025 SST</p>
           </div>
         )}
       </div>

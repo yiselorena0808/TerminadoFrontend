@@ -1,8 +1,17 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { User, FileText, Calendar, Briefcase, Clipboard } from "lucide-react";
+import {
+  User,
+  FileText,
+  Calendar,
+  Briefcase,
+  Clipboard,
+  Trash2,
+  Save,
+} from "lucide-react";
 
 interface GestionDetalle {
+  id: number;
   id_usuario: number;
   nombre: string;
   apellido: string;
@@ -12,32 +21,24 @@ interface GestionDetalle {
   cantidad: number;
   importancia: string;
   estado: string | null;
-  fecha_creacion: string;
+  fechaCreacion: string;
 }
 
 const DetalleGestionEPP: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const gestion: GestionDetalle | undefined = location.state as GestionDetalle;
 
-  /*const gestion: GestionDetalle | undefined = location.state as GestionDetalle;
+  const [estado, setEstado] = useState(gestion?.estado || "");
+  const [mensaje, setMensaje] = useState("");
 
   if (!gestion) {
-    return <p className="p-4 text-white text-center">No hay datos para mostrar.</p>;
-  }*/
- 
- const gestion: GestionDetalle = {
-  id_usuario: 123,
-  nombre: "Juan",
-  apellido: "Pérez",
-  cedula: 1020304050,
-  cargo: "Operario",
-  productos: "Casco, Guantes, Chaleco",
-  cantidad: 3,
-  importancia: "Alta",
-  estado: "Activo",
-  fecha_creacion: "2025-08-14",
-};
-
+    return (
+      <p className="p-4 text-white text-center">
+         No hay datos para mostrar.
+      </p>
+    );
+  }
 
   const formatearFecha = (fecha: string) =>
     new Date(fecha).toLocaleDateString("es-CO", {
@@ -45,6 +46,25 @@ const DetalleGestionEPP: React.FC = () => {
       month: "long",
       day: "numeric",
     });
+
+  const eliminarGestion = async () => {
+    if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
+    try {
+      const res = await fetch(
+        `https://backsst.onrender.com/eliminarGestion/${gestion.id}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        alert("Gestión eliminada");
+        navigate(-1);
+      } else {
+        setMensaje("Error al eliminar");
+      }
+    } catch (error) {
+      console.error(error);
+      setMensaje(" Error en el servidor");
+    }
+  };
 
   return (
     <div
@@ -71,7 +91,9 @@ const DetalleGestionEPP: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">🛡️ Detalle de Gestión EPP</h2>
-            <p className="text-blue-100 text-lg">Usuario ID #{gestion.id_usuario}</p>
+            <p className="text-blue-100 text-lg">
+              Usuario ID #{gestion.id_usuario}
+            </p>
           </div>
 
           {/* Body */}
@@ -118,33 +140,46 @@ const DetalleGestionEPP: React.FC = () => {
                 <span className="font-semibold text-gray-900">Importancia:</span>{" "}
                 {gestion.importancia}
               </p>
-              <p className="flex items-center gap-2 text-gray-700">
-                <Clipboard className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Estado:</span>{" "}
-                <span
-                  className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    gestion.estado === "Pendiente"
-                      ? "bg-yellow-100 text-yellow-800"
-                      : gestion.estado === "Activo"
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
+
+              {/* Estado editable */}
+              <div className="flex items-center gap-3">
+                <span className="font-semibold text-gray-900">Estado:</span>
+                <select
+                  value={estado}
+                  onChange={(e) => setEstado(e.target.value)}
+                  className="px-3 py-2 border rounded-lg"
                 >
-                  {gestion.estado || "Sin definir"}
-                </span>
-              </p>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Revisado">Revisado</option>
+                  <option value="Finalizado">Finalizado</option>
+                </select>
+              </div>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <Calendar className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Fecha Creación:</span>{" "}
-                {formatearFecha(gestion.fecha_creacion)}
+                <span className="font-semibold text-gray-900">
+                  Fecha Creación:
+                </span>{" "}
+                {formatearFecha(gestion.fechaCreacion)}
               </p>
             </div>
           </div>
 
-          {/* Footer */}
+          {/* Mensaje */}
+          {mensaje && (
+            <div className="px-10 pb-4 text-center text-green-700 font-semibold">
+              {mensaje}
+            </div>
+          )}
+
+          {/* Footer con acciones */}
           <div className="bg-gray-50 px-10 py-6 flex flex-wrap gap-4 justify-end border-t">
-            <button className="flex items-center gap-2 px-6 py-3 bg-gray-800 text-white rounded-xl shadow hover:bg-gray-900 transition text-lg">
-              <FileText className="w-5 h-5" /> Descargar Registro
+
+            <button
+              onClick={eliminarGestion}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 transition text-lg"
+            >
+              <Trash2 className="w-5 h-5" /> Eliminar
             </button>
           </div>
         </div>

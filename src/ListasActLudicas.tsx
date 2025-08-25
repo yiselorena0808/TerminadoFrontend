@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaDownload, FaTrash } from "react-icons/fa";
+import { FaTrash, FaDownload, FaEye, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
 interface ActividadLudica {
   id: number;
-  nombre: string;
-  responsable: string;
-  fecha: string;
+  idUsuario: number;
+  nombreUsuario: string;
+  nombreActividad: string;
+  fechaActividad: string;
   descripcion: string;
-  archivos?: string;
-  estado: string;
+  imagenVideo: string;
+  archivoAdjunto: string;
 }
 
 const ListasActividadesLudicas: React.FC = () => {
@@ -17,12 +18,9 @@ const ListasActividadesLudicas: React.FC = () => {
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
-  const estados = ["Pendiente", "Revisado", "Finalizado"];
-
-  // Obtener actividades desde backend
   const obtenerActividades = async () => {
     try {
-      const res = await fetch("http://localhost:3333/listarActividadesLudicas");
+      const res = await fetch("https://backsst.onrender.com/listarActividadesLudicas");
       const data = await res.json();
       setActividades(data.datos);
     } catch (error) {
@@ -34,75 +32,46 @@ const ListasActividadesLudicas: React.FC = () => {
     obtenerActividades();
   }, []);
 
-  // Abrir detalle
-  const abrirDetalle = (item: ActividadLudica) => {
-    navigate("/nav/detalleActividadLudica", { state: item });
+  const ir = () => {
+    navigate("/nav/crearActLudica");
   };
 
-  // Formatear fecha
-  const formatearFecha = (fechaIso: string) => {
-    const fecha = new Date(fechaIso);
-    return fecha.toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  // Cambiar estado
-  const cambiarEstado = async (id: number, nuevoEstado: string) => {
-    try {
-      await fetch(`http://localhost:3333/actualizarActividadLudica/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });
-      setActividades((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, estado: nuevoEstado } : item
-        )
-      );
-    } catch (error) {
-      console.error("Error actualizando estado:", error);
-    }
-  };
-
-  // Eliminar actividad
   const eliminarActividad = async (id: number) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta actividad lúdica?"))
-      return;
+    if (!window.confirm("¿Seguro deseas eliminar esta actividad?")) return;
     try {
-      await fetch(`http://localhost:3333/eliminarActividadLudica/${id}`, {
+      await fetch(`https://backsst.onrender.com/eliminarActividadLudica/${id}`, {
         method: "DELETE",
       });
-      setActividades((prev) => prev.filter((item) => item.id !== id));
+      setActividades((prev) => prev.filter((a) => a.id !== id));
     } catch (error) {
-      console.error("Error al eliminar actividad:", error);
+      console.error("Error eliminando actividad:", error);
     }
   };
 
-  // Filtrar por estado y búsqueda
-  const filtrarPorEstado = (estado: string) =>
-    actividades.filter(
-      (item) =>
-        item.estado === estado &&
-        `${item.nombre} ${item.responsable}`
-          .toLowerCase()
-          .includes(busqueda.toLowerCase())
-    );
+  const actividadesFiltradas = actividades.filter((item) =>
+    `${item.nombreUsuario} ${item.nombreActividad}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase())
+  );
 
   return (
     <div
       className="p-6 min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
+          "url('https://img.freepik.com/foto-gratis/manos-sosteniendo-papel-ilustracion-iconos-diversion_53876-138841.jpg')",
       }}
     >
       <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
-          🎨 Actividades Lúdicas
+        <h3 className="font-extrabold text-center mb-6 text-3xl text-indigo-900">
+          🎉 Actividades Lúdicas
         </h3>
+        <button
+          onClick={ir}
+          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
+        >
+          <FaPlus /> Crear Actividad
+        </button>
 
         {/* Barra de búsqueda */}
         <div className="flex justify-end mb-6">
@@ -110,111 +79,81 @@ const ListasActividadesLudicas: React.FC = () => {
             <input
               type="text"
               className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar por nombre o responsable..."
+              placeholder="Buscar actividades..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />
             <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              <FaSearch />
+              🔍
             </span>
           </div>
         </div>
 
-        {/* Listado por estados */}
-        {estados.map((estado) => {
-          const actividadesFiltradas = filtrarPorEstado(estado);
-          return (
-            <div key={estado} className="mb-8">
-              <h4 className="font-semibold text-xl mb-4 text-indigo-700">
-                {estado}
-              </h4>
+        {/* Lista de actividades */}
+        {actividadesFiltradas.length === 0 ? (
+          <p className="text-center text-gray-600 italic">
+            No se encontraron actividades.
+          </p>
+        ) : (
+          actividadesFiltradas.map((item) => (
+            <div
+              key={item.id}
+              className="flex justify-between items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
+            >
+              {/* Info de la actividad */}
+              <div>
+                <div className="font-bold text-gray-800 text-lg">
+                  {item.nombreActividad}
+                </div>
+                <div className="text-sm text-gray-600">
+                  Usuario:{" "}
+                  <span className="font-medium">{item.nombreUsuario}</span>
+                </div>
+                <div className="text-sm text-gray-600">
+                  Fecha:{" "}
+                  {item.fechaActividad
+                    ? new Date(item.fechaActividad).toLocaleDateString("es-CO", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
+                    : "Sin fecha"}
+                </div>
+                <div className="text-gray-500 text-sm mt-1 line-clamp-2">
+                  {item.descripcion}
+                </div>
+              </div>
 
-              {actividadesFiltradas.length === 0 ? (
-                <p className="text-gray-600 italic">
-                  No hay actividades en estado {estado.toLowerCase()}.
-                </p>
-              ) : (
-                actividadesFiltradas.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center p-4 my-3 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
+              {/* Botones */}
+              <div className="flex gap-3 items-center">
+                <button
+                  onClick={() => navigate("/nav/detalleActLudica", { state: item })}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition flex items-center gap-1"
+                >
+                  <FaEye /> Ver
+                </button>
+
+                {item.archivoAdjunto && (
+                  <a
+                    href={item.archivoAdjunto}
+                    download
+                    className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-md transition"
                   >
-                    <div>
-                      <div className="font-bold text-gray-800">
-                        {item.nombre} – {formatearFecha(item.fecha)}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        Responsable: {item.responsable}
-                      </div>
-                      {item.descripcion && (
-                        <div className="text-gray-500 text-sm mt-1">
-                          {item.descripcion}
-                        </div>
-                      )}
-                    </div>
+                    <FaDownload />
+                  </a>
+                )}
 
-                    <div className="flex gap-3 items-center">
-                      {/* Abrir */}
-                      <button
-                        onClick={() => abrirDetalle(item)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
-                      >
-                        Abrir
-                      </button>
-
-                      {/* Dropdown de estado */}
-                      <div className="relative group">
-                        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg shadow-md transition">
-                          Estado ▼
-                        </button>
-                        <div className="absolute hidden group-hover:block bg-white border border-indigo-300 rounded-lg shadow-lg mt-1 right-0 w-44 animate-[fadeIn] z-50">
-                          {estados.map((e) => (
-                            <button
-                              key={e}
-                              onClick={() => cambiarEstado(item.id, e)}
-                              className={`block px-5 py-2 text-sm w-full text-left text-gray-800 transition hover:bg-indigo-100 ${
-                                item.estado === e
-                                  ? "font-bold text-indigo-600"
-                                  : ""
-                              }`}
-                            >
-                              {e}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Descargar */}
-                      {item.archivos && (
-                        <button className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-md transition">
-                          <FaDownload />
-                        </button>
-                      )}
-
-                      {/* Eliminar */}
-                      <button
-                        onClick={() => eliminarActividad(item.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </div>
-                ))
-              )}
+                <button
+                  onClick={() => eliminarActividad(item.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                >
+                  <FaTrash />
+                </button>
+              </div>
             </div>
-          );
-        })}
+          ))
+        )}
       </div>
-
-      <style>
-        {`
-          @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-        `}
-      </style>
     </div>
   );
 };

@@ -9,7 +9,7 @@ const Login: React.FC = () => {
   const Enviar = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const res = await fetch(`http://localhost:3333/login`, {
+    const res = await fetch(`https://backsst.onrender.com/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ correo_electronico, contrasena }),
@@ -17,14 +17,16 @@ const Login: React.FC = () => {
 
     const data = await res.json();
 
-    if (data.mensaje === "bienvenido") {
-      localStorage.setItem("nombre", data.nombre);
-      localStorage.setItem("correo", data.correo);
+    if (data.mensaje === "Login correcto") {
+    
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
-      navigate("/nav/bienvenida", { replace: true });
+
+      navigate("/nav/inicio", { replace: true });
       window.location.reload();
     } else {
-      alert("Correo o contraseña incorrectos");
+      alert(data.mensaje);
     }
   };
 
@@ -33,22 +35,16 @@ const Login: React.FC = () => {
       className="flex items-center justify-center min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
-          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://www.comunidadism.es/wp-content/uploads/2021/04/prl.jpg')",
+          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://cdn2.hubspot.net/hubfs/3530961/Blogs-Pensemos-23_07_18.jpg')",
       }}
     >
       <div className="flex w-11/12 md:w-4/5 lg:w-2/3 bg-transparent text-white rounded-lg overflow-hidden">
         {/* Columna izquierda */}
         <div className="hidden md:flex flex-col justify-center w-1/2 p-10">
-          <h1 className="text-4xl font-bold mb-4">Bienvenido a SST</h1>
-         <p className="text-sm mb-4 opacity-80 leading-relaxed text-justify">
-          Protegiendo a las personas, cuidando el futuro: compromiso con la Seguridad y Salud en el Trabajo.
+          <h1 className="text-4xl font-bold mb-4">Bienvenido de nuevo</h1>
+          <p className="text-sm mb-6 opacity-80 leading-relaxed">
+            Ingresa con tus credenciales para acceder al sistema.
           </p>
-          <p className="text-sm mb-6 opacity-80 leading-relaxed text-justify">
-            Cuidar la vida y la salud de quienes hacen posible nuestro trabajo es nuestra mayor prioridad. 
-            Fomentamos una cultura preventiva, donde la seguridad es un valor 
-            compartido y el bienestar de todos es el motor de nuestro crecimiento.
-            </p>
-
           <div className="flex gap-4 text-xl">
             <i className="fab fa-facebook-f cursor-pointer hover:text-gray-300"></i>
             <i className="fab fa-twitter cursor-pointer hover:text-gray-300"></i>

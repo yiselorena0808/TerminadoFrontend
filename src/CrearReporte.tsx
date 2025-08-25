@@ -1,85 +1,53 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-interface ReportesProps {
-  onSubmit: (datos: {
-    id_reporte: number;
-    id_usuario: number;
-    nombre_usuario: string;
-    cargo: string;
-    cedula: string;
-    fecha: string;
-    lugar: string;
-    descripcion: string;
-    imagen: string;
-    archivos: string;
-    estado: string | null;
-  }) => void;
-}
+const ReportesC: React.FC = () => {
+  const [form, setForm] = useState({
+    id_usuario: "",
+    nombre_usuario: "",
+    cargo: "",
+    cedula: "",
+    fecha: "",
+    lugar: "",
+    descripcion: "",
+    imagen: "",
+    archivos: "",
+    estado: "",
+  });
 
-const Reportes: React.FC<ReportesProps> = ({ onSubmit }) => {
-  const [id_reporte, setIdReporte] = useState("");
-  const [id_usuario, setIdUsuario] = useState("");
-  const [nombre_usuario, setNombreUsuario] = useState("");
-  const [cargo, setCargo] = useState("");
-  const [cedula, setCedula] = useState("");
-  const [fecha, setFecha] = useState("");
-  const [lugar, setLugar] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [imagen, setImagen] = useState("");
-  const [archivos, setArchivos] = useState("");
-  const [estado, setEstado] = useState<string | null>(null);
   const [mensaje, setMensaje] = useState<string>("");
+  const navigate = useNavigate();
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setForm({ ...form, [name]: value });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const idReporteNum = parseInt(id_reporte);
-    const idUsuarioNum = parseInt(id_usuario);
-
-    if (isNaN(idReporteNum) || isNaN(idUsuarioNum)) {
-      alert("ID de reporte y ID de usuario deben ser números válidos.");
+    const idUsuarioNum = parseInt(form.id_usuario);
+    if (isNaN(idUsuarioNum)) {
+      alert("ID de usuario debe ser un número válido.");
       return;
     }
 
     try {
-      const response = await fetch("http://localhost:3333/crearReporte", {
+      const response = await fetch("https://backsst.onrender.com/crearReporte", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_reporte: idReporteNum,
+          ...form,
           id_usuario: idUsuarioNum,
-          nombre_usuario,
-          cargo,
-          cedula,
-          fecha,
-          lugar,
-          descripcion,
-          imagen,
-          archivos,
-          estado,
         }),
       });
 
-      const msj = await response.json();
-      setMensaje(msj.mensaje || "Reporte enviado correctamente.");
+      const data = await response.json();
+      setMensaje(data.mensaje || "Reporte enviado correctamente");
     } catch (error) {
-      console.error("Error al enviar los datos:", error);
-      setMensaje("Error al conectar con el servidor.");
+      console.error("Error al enviar:", error);
+      setMensaje("No se pudo enviar el reporte.");
     }
-
-    onSubmit({
-      id_reporte: idReporteNum,
-      id_usuario: idUsuarioNum,
-      nombre_usuario,
-      cargo,
-      cedula,
-      fecha,
-      lugar,
-      descripcion,
-      imagen,
-      archivos,
-      estado,
-    });
   };
 
   return (
@@ -101,7 +69,7 @@ const Reportes: React.FC<ReportesProps> = ({ onSubmit }) => {
       <div className="w-1/2 flex items-center justify-center p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
         <div className="w-full max-w-lg bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-white">
           <h2 className="text-3xl font-bold text-center mb-6">
-            Registro de Reportes
+            📝 Registro de Reportes
           </h2>
 
           {mensaje && (
@@ -113,96 +81,98 @@ const Reportes: React.FC<ReportesProps> = ({ onSubmit }) => {
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="number"
-              placeholder="ID Reporte"
-              value={id_reporte}
-              onChange={(e) => setIdReporte(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              required
-            />
-            <input
-              type="number"
+              name="id_usuario"
               placeholder="ID Usuario"
-              value={id_usuario}
-              onChange={(e) => setIdUsuario(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.id_usuario}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="nombre_usuario"
               placeholder="Nombre Usuario"
-              value={nombre_usuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.nombre_usuario}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="cargo"
               placeholder="Cargo"
-              value={cargo}
-              onChange={(e) => setCargo(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.cargo}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="cedula"
               placeholder="Cédula"
-              value={cedula}
-              onChange={(e) => setCedula(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.cedula}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="date"
-              value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              name="fecha"
+              value={form.fecha}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="lugar"
               placeholder="Lugar"
-              value={lugar}
-              onChange={(e) => setLugar(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.lugar}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <textarea
+              name="descripcion"
               placeholder="Descripción"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              rows={3}
+              value={form.descripcion}
+              onChange={handleChange}
               required
+              rows={3}
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="imagen"
               placeholder="Imagen (URL)"
-              value={imagen}
-              onChange={(e) => setImagen(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.imagen}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <input
               type="text"
+              name="archivos"
               placeholder="Archivos (URL)"
-              value={archivos}
-              onChange={(e) => setArchivos(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={form.archivos}
+              onChange={handleChange}
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             />
             <select
-              value={estado ?? ""}
-              onChange={(e) => setEstado(e.target.value || null)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              name="estado"
+              value={form.estado}
+              onChange={handleChange}
               required
+              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
             >
               <option value="">Seleccione un estado</option>
-              <option value="Abierto">Abierto</option>
-              <option value="En Proceso">En Proceso</option>
-              <option value="Cerrado">Cerrado</option>
+              <option value="Pendiente">Pendiente</option>
+              <option value="Revisado">Revisado</option>
+              <option value="Finalizado">Finalizado</option>
             </select>
 
             <button
               type="submit"
-              className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transform transition-all duration-300"
+              className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transition"
             >
               Enviar Reporte
             </button>
@@ -213,4 +183,4 @@ const Reportes: React.FC<ReportesProps> = ({ onSubmit }) => {
   );
 };
 
-export default Reportes;
+export default ReportesC;

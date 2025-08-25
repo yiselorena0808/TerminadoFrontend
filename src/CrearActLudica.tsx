@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface ActividadFormProps {
   onSubmit: (datos: {
@@ -12,6 +12,16 @@ interface ActividadFormProps {
   }) => void;
 }
 
+interface Actividad {
+  id_usuario: number;
+  nombre_usuario: string;
+  nombre_actividad: string;
+  fecha_actividad: string;
+  descripcion: string;
+  imagen_video: string;
+  archivo_adjunto: string;
+}
+
 const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
   const [id_usuario, setIdUsuario] = useState("");
   const [nombre_usuario, setNombreUsuario] = useState("");
@@ -21,6 +31,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
   const [imagen_video, setImagenVideo] = useState("");
   const [archivo_adjunto, setArchivoAdjunto] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [actividades, setActividades] = useState<Actividad[]>([]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +43,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
     }
 
     try {
-      const response = await fetch("http://localhost:3333/crearActividad", {
+      const response = await fetch("https://backsst.onrender.com/crearActividadLudica", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -48,6 +59,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
 
       const msj = await response.json();
       setMensaje(msj.mensaje || "Actividad registrada exitosamente.");
+      obtenerActividades();
     } catch (error) {
       console.error("Error al enviar datos:", error);
       setMensaje("Error al conectar con el servidor.");
@@ -64,11 +76,25 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
     });
   };
 
+  const obtenerActividades = async () => {
+    try {
+      const res = await fetch("http://localhost:3333/listarActividadesLudicas");
+      const data = await res.json();
+      setActividades(data.datos); 
+    } catch (error) {
+      console.error("Error al obtener actividades:", error);
+    }
+  };
+
+  useEffect(() => {
+    obtenerActividades();
+  }, []);
+
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex flex-col md:flex-row">
       {/* Columna izquierda con imagen */}
       <div
-        className="w-1/2 bg-cover bg-center"
+        className="w-full md:w-1/2 bg-cover bg-center"
         style={{
           backgroundImage:
             "url('https://onesoluciones.co/wp-content/uploads/2021/04/Pausas-1.jpg')",
@@ -80,7 +106,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
       </div>
 
       {/* Columna derecha con formulario */}
-      <div className="w-1/2 flex items-center justify-center p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
         <div className="w-full max-w-lg bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-white">
           <h2 className="text-3xl font-bold text-center mb-6">
             Formulario de Actividad
@@ -155,9 +181,30 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
             </button>
           </form>
         </div>
+
+        {/* Lista de actividades */}
+        <div className="w-full max-w-lg mt-10 bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-6 text-white">
+          <h3 className="text-2xl font-bold mb-4 text-center">Actividades Registradas</h3>
+          {actividades.length === 0 ? (
+            <p className="text-center">No hay actividades registradas.</p>
+          ) : (
+            <ul className="space-y-2 max-h-96 overflow-y-auto">
+              {actividades.map((act, idx) => (
+                <li key={idx} className="p-3 bg-blue-700/50 rounded-lg">
+                  <p><strong>Usuario:</strong> {act.nombre_usuario}</p>
+                  <p><strong>Actividad:</strong> {act.nombre_actividad}</p>
+                  <p><strong>Fecha:</strong> {act.fecha_actividad}</p>
+                  <p><strong>Descripción:</strong> {act.descripcion}</p>
+                  <p><strong>Imagen/Video:</strong> {act.imagen_video}</p>
+                  <p><strong>Archivo:</strong> {act.archivo_adjunto}</p>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default ActividadForm;
+export default ActividadForm; 

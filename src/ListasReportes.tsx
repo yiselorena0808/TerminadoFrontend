@@ -1,80 +1,43 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaTrash } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 
-interface Reporte {
+interface Gestion {
   id_reporte: number;
+  id_usuario: number;
   nombre_usuario: string;
-  cargo_usuario: string;
+  cargo: string;
   cedula: number;
   fecha: string;
   lugar: string;
   descripcion: string;
-  img: string;
+  imagen: string;
   archivos: string;
   estado: string;
 }
 
-const ListasReportes: React.FC = () => {
+const ListarReportes: React.FC = () => {
   const navigate = useNavigate();
-  const [listas, setListas] = useState<Reporte[]>([
-  {
-    id_reporte: 1,
-    nombre_usuario: "Juan Pérez",
-    cargo_usuario: "Supervisor",
-    cedula: 123456789,
-    fecha: "2025-08-10T14:30:00Z",
-    lugar: "Bodega Central",
-    descripcion: "Caída de estantería en la zona de carga",
-    img: "https://via.placeholder.com/150",
-    archivos: "informe.pdf",
-    estado: "Pendiente",
-  },
-  {
-    id_reporte: 2,
-    nombre_usuario: "María López",
-    cargo_usuario: "Operaria",
-    cedula: 987654321,
-    fecha: "2025-08-11T09:15:00Z",
-    lugar: "Planta 2",
-    descripcion: "Fuga de aceite en maquinaria",
-    img: "https://via.placeholder.com/150",
-    archivos: "reporte_fuga.docx",
-    estado: "Revisado",
-  },
-  {
-    id_reporte: 3,
-    nombre_usuario: "Carlos Ramírez",
-    cargo_usuario: "Técnico",
-    cedula: 112233445,
-    fecha: "2025-08-12T16:45:00Z",
-    lugar: "Área de mantenimiento",
-    descripcion: "Cortocircuito en tablero eléctrico",
-    img: "https://via.placeholder.com/150",
-    archivos: "foto_incidente.jpg",
-    estado: "Finalizado",
-  },
-]);
-
+  const [listas, setListas] = useState<Gestion[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
   const estados = ["Pendiente", "Revisado", "Finalizado"];
 
   const obtenerListas = async () => {
     try {
-      const res = await fetch("http://localhost:3333/listarReportes");
+      const res = await fetch("https://backsst.onrender.com/listarReportes");
       const data = await res.json();
-      setListas(data.mensaje);
+      setListas(data.datos);
     } catch (error) {
       console.error("Error al obtener reportes:", error);
     }
   };
 
-/*  useEffect(() => {
+  useEffect(() => {
     obtenerListas();
-  }, []);*/
+  }, []);
 
-  const abrirDetalle = (item: Reporte) => {
+  const abrirDetalle = (item: Gestion) => {
     navigate("/nav/detalleReportes", { state: item });
   };
 
@@ -89,32 +52,41 @@ const ListasReportes: React.FC = () => {
     });
   };
 
-  const cambiarEstado = async (id: number, nuevoEstado: string) => {
+  const cambiarEstado = async (id_reporte: number, nuevoEstado: string) => {
     try {
-      /*await fetch(`http://localhost:3333/actualizarReporte/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
-      });*/
-      setListas((prev) =>
-        prev.map((item) =>
-          item.id_reporte === id ? { ...item, estado: nuevoEstado } : item
-        )
+      const res = await fetch(
+        `https://backsst.onrender.com/actualizarReporte/${id_reporte}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ estado: nuevoEstado }),
+        }
       );
+
+      if (res.ok) {
+  
+        await obtenerListas();
+      } else {
+        console.error("Error en la respuesta:", await res.json());
+      }
     } catch (error) {
       console.error("Error actualizando estado:", error);
     }
   };
 
-  const eliminarReporte = async (id: number) => {
+  const eliminarGestion = async (id: number) => {
     if (!window.confirm("¿Estás seguro de eliminar este reporte?")) return;
     try {
-      await fetch(`http://localhost:3333/eliminarReporte/${id}`, {
-        method: "DELETE",
-      });
-      setListas((prev) => prev.filter((item) => item.id_reporte !== id));
+      const res = await fetch(
+        `https://backsst.onrender.com/eliminarReporte/${id}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+     
+        setListas((prev) => prev.filter((item) => item.id_reporte !== id));
+      }
     } catch (error) {
-      console.error("Error al eliminar:", error);
+      console.error("Error al eliminar reporte:", error);
     }
   };
 
@@ -122,7 +94,7 @@ const ListasReportes: React.FC = () => {
     listas.filter(
       (item) =>
         item.estado === estado &&
-        `${item.nombre_usuario} ${item.cargo_usuario}`
+        `${item.nombre_usuario} ${item.cargo} ${item.fecha}`
           .toLowerCase()
           .includes(busqueda.toLowerCase())
     );
@@ -137,8 +109,14 @@ const ListasReportes: React.FC = () => {
     >
       <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
         <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
-          📝 Listas de Reportes
+          📋 Listado de Reportes
         </h3>
+        <button
+          onClick={() => navigate("/nav/crearReportes")}
+          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
+        >
+          Crear Reporte
+        </button>
 
         {/* Barra de búsqueda */}
         <div className="flex justify-end mb-6">
@@ -151,26 +129,26 @@ const ListasReportes: React.FC = () => {
               onChange={(e) => setBusqueda(e.target.value)}
             />
             <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              <FaSearch />
+              🔍
             </span>
           </div>
         </div>
 
         {/* Listado por estados */}
         {estados.map((estado) => {
-          const reportesFiltrados = filtrarPorEstado(estado);
+          const gestionesFiltradas = filtrarPorEstado(estado);
           return (
             <div key={estado} className="mb-8">
               <h4 className="font-semibold text-xl mb-4 text-indigo-700">
                 {estado}
               </h4>
 
-              {reportesFiltrados.length === 0 ? (
+              {gestionesFiltradas.length === 0 ? (
                 <p className="text-gray-600 italic">
                   No hay reportes {estado.toLowerCase()}.
                 </p>
               ) : (
-                reportesFiltrados.map((item) => (
+                gestionesFiltradas.map((item) => (
                   <div
                     key={item.id_reporte}
                     className="flex justify-between items-center p-4 my-3 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
@@ -180,7 +158,7 @@ const ListasReportes: React.FC = () => {
                         {item.nombre_usuario} – {formatearFecha(item.fecha)}
                       </div>
                       <div className="text-gray-600 text-sm">
-                        Cargo: {item.cargo_usuario} | Estado:{" "}
+                        Cargo: {item.cargo} | Estado:{" "}
                         <span className="font-semibold text-indigo-600">
                           {item.estado}
                         </span>
@@ -188,7 +166,8 @@ const ListasReportes: React.FC = () => {
                     </div>
 
                     {/* Botones */}
-                    <div className="flex gap-3 items-center">
+                    <div className="flex gap-4 items-center">
+                      {/* Abrir */}
                       <button
                         onClick={() => abrirDetalle(item)}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
@@ -205,9 +184,7 @@ const ListasReportes: React.FC = () => {
                           {estados.map((e) => (
                             <button
                               key={e}
-                              onClick={() =>
-                                cambiarEstado(item.id_reporte, e)
-                              }
+                              onClick={() => cambiarEstado(item.id_reporte, e)}
                               className={`block px-5 py-2 text-sm w-full text-left text-gray-800 transition hover:bg-indigo-100 ${
                                 item.estado === e
                                   ? "font-bold text-indigo-600"
@@ -220,8 +197,9 @@ const ListasReportes: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Eliminar */}
                       <button
-                        onClick={() => eliminarReporte(item.id_reporte)}
+                        onClick={() => eliminarGestion(item.id_reporte)}
                         className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
                       >
                         <FaTrash />
@@ -235,6 +213,7 @@ const ListasReportes: React.FC = () => {
         })}
       </div>
 
+      {/* Estilos personalizados */}
       <style>
         {`
           @keyframes fadeIn {
@@ -247,4 +226,4 @@ const ListasReportes: React.FC = () => {
   );
 };
 
-export default ListasReportes;
+export default ListarReportes;
