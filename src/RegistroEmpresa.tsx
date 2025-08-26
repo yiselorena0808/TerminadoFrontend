@@ -7,7 +7,7 @@ const RegistroEmpresa: React.FC = () => {
 
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
-  const [NIT, setNIT] = useState("");
+  const [nit,setNit] = useState("");
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
   const [estado, setEstado] = useState(true);
@@ -15,13 +15,13 @@ const RegistroEmpresa: React.FC = () => {
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("https://backsst.onrender.com/crearTenant", {
+    const res = await fetch("https://backsst.onrender.com/crearEmpresa", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nombre,
         direccion,
-        NIT,
+        nit,
         esquema,
         alias,
         estado,
@@ -121,8 +121,8 @@ const RegistroEmpresa: React.FC = () => {
                 <input
                   type="text"
                   placeholder="NIT"
-                  value={NIT}
-                  onChange={(e) => setNIT(e.target.value)}
+                  value={nit}
+                  onChange={(e) => setNit(e.target.value)}
                   className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
