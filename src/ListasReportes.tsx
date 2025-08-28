@@ -23,9 +23,13 @@ const ListarReportes: React.FC = () => {
 
   const estados = ["Pendiente", "Revisado", "Finalizado"];
 
+  const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
+  const apiActualizarReporte = import.meta.env.VITE_API_ACTUALIZARREPORTE;
+  const apiEliminarReporte = import.meta.env.VITE_API_ELIMINARREPORTE;
+
   const obtenerListas = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarReportes");
+      const res = await fetch(apiListarReportes);
       const data = await res.json();
       setListas(data.datos);
     } catch (error) {
@@ -52,10 +56,10 @@ const ListarReportes: React.FC = () => {
     });
   };
 
-  const cambiarEstado = async (id_reporte: number, nuevoEstado: string) => {
+  const cambiarEstado = async (id: number, nuevoEstado: string) => {
     try {
       const res = await fetch(
-        `https://backsst.onrender.com/actualizarReporte/${id_reporte}`,
+        apiActualizarReporte+id,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -78,10 +82,12 @@ const ListarReportes: React.FC = () => {
     if (!window.confirm("¿Estás seguro de eliminar este reporte?")) return;
     try {
       const res = await fetch(
-        `https://backsst.onrender.com/eliminarReporte/${id}`,
+        apiEliminarReporte + id,
         { method: "DELETE" }
       );
       if (res.ok) {
+        alert('reporte eliminado')
+        navigate(-1)
      
         setListas((prev) => prev.filter((item) => item.id_reporte !== id));
       }

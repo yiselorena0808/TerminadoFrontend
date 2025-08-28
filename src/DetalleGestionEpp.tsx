@@ -32,6 +32,8 @@ const DetalleGestionEPP: React.FC = () => {
   const [estado, setEstado] = useState(gestion?.estado || "");
   const [mensaje, setMensaje] = useState("");
 
+  const apiEliminar= import.meta.env.VITE_API_ELIMINARGESTION
+
   if (!gestion) {
     return (
       <p className="p-4 text-white text-center">
@@ -47,11 +49,11 @@ const DetalleGestionEPP: React.FC = () => {
       day: "numeric",
     });
 
-  const eliminarGestion = async () => {
+  const eliminarGestion = async (id:number) => {
     if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
     try {
       const res = await fetch(
-        `https://backsst.onrender.com/eliminarGestion/${gestion.id}`,
+       apiEliminar + id ,
         { method: "DELETE" }
       );
       if (res.ok) {

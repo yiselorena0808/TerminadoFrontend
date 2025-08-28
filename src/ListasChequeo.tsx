@@ -20,9 +20,11 @@ const ListasChequeoRecibidas: React.FC = () => {
   const [listas, setListas] = useState<ListaChequeo[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
+  const apiListarCheq= import.meta.env.VITE_API_LISTARCHEQUEO
+
   const obtenerListas = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarListasChequeo");
+      const res = await fetch(apiListarCheq);
       const data = await res.json();
       setListas(data.datos);
     } catch (error) {

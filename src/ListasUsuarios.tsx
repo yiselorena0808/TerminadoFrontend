@@ -63,21 +63,21 @@ const AdmUsuarios: React.FC = () => {
   };
 
   useEffect(() => {
-    // ✅ Leemos el usuario logueado desde localStorage
+  
     const usuarioLogueado = localStorage.getItem("usuario");
     if (usuarioLogueado) {
       const datos = JSON.parse(usuarioLogueado);
-      setIdTenantLogueado(datos.id_tenant); // guardamos el tenant del usuario logueado
+      setIdTenantLogueado(datos.id_tenant); 
     }
     obtenerUsuarios();
   }, []);
 
-  // ✅ Primero filtramos por tenant
+
   const usuariosDeMismaEmpresa = usuarios.filter(
     (u) => idTenantLogueado !== null && u.id_tenant === idTenantLogueado
   );
 
-  // ✅ Luego aplicamos el filtro de búsqueda
+
   const usuariosFiltrados = usuariosDeMismaEmpresa.filter(
     (u) =>
       u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||

@@ -13,6 +13,8 @@ const CrearListaChequeo: React.FC = () => {
     kilometraje: "",
   });
 
+  const apiCrearLista=import.meta.env.VITE_API_CREARCHEQUEO
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
@@ -20,7 +22,7 @@ const CrearListaChequeo: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch("https://backsst.onrender.com/crearListaChequeo", {
+      const res = await fetch(apiCrearLista, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),

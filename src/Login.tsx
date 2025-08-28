@@ -6,27 +6,34 @@ const Login: React.FC = () => {
   const [contrasena, setContrasena] = useState("");
   const navigate = useNavigate();
 
+  const apiLogin = import.meta.env.VITE_API_LOGIN;
+
   const Enviar = async (event: React.FormEvent) => {
     event.preventDefault();
 
-    const res = await fetch(`https://backsst.onrender.com/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ correo_electronico, contrasena }),
-    });
+    try {
+      const res = await fetch(apiLogin, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ correo_electronico, contrasena }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
+      const mensaje = data.mensaje || data.msj || "Error desconocido";
 
-    if (data.mensaje === "Login correcto") {
-    
+      if (!res.ok || mensaje !== "Login correcto") {
+        alert(mensaje);
+        return;
+      }
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
 
       navigate("/nav/inicio", { replace: true });
       window.location.reload();
-    } else {
-      alert(data.mensaje);
+    } catch (error) {
+      alert("Error de conexión con el servidor");
     }
   };
 

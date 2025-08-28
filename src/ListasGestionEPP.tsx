@@ -22,9 +22,13 @@ const ListarGestiones: React.FC = () => {
 
   const estados = ["Pendiente", "Revisado", "Finalizado"];
 
+  const apiListarGestiones= import.meta.env.VITE_API_LISTARGESTIONES;
+  const apiActualizarEstadoGestion= import.meta.env.VITE_API_ACTUALIZARGESTION;
+  const apiEliminarGestion= import.meta.env.VITE_API_ELIMINARGESTION;
+
   const obtenerListas = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarGestiones");
+      const res = await fetch(apiListarGestiones);
       const data = await res.json();
       setListas(data.datos);
     } catch (error) {
@@ -55,7 +59,7 @@ const ListarGestiones: React.FC = () => {
   const cambiarEstado = async (id_reporte: number, nuevoEstado: string) => {
     try {
       const res = await fetch(
-        `https://backsst.onrender.com/actualizarEstadoGestion/${id_reporte}`,
+       apiActualizarEstadoGestion + id_reporte,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -74,7 +78,7 @@ const ListarGestiones: React.FC = () => {
   const eliminarGestion = async (id: number) => {
     if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
     try {
-      await fetch(`https://backsst.onrender.com/eliminarGestion/${id}`, {
+      await fetch(apiEliminarGestion + id, {
         method: "DELETE",
       });
       setListas((prev) => prev.filter((item) => item.id !== id));

@@ -33,6 +33,8 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
   const [mensaje, setMensaje] = useState("");
   const [actividades, setActividades] = useState<Actividad[]>([]);
 
+  const apiCrearAct= import.meta.env.VITE_API_CREARACTIVIDAD
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -43,7 +45,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
     }
 
     try {
-      const response = await fetch("https://backsst.onrender.com/crearActividadLudica", {
+      const response = await fetch(apiCrearAct, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

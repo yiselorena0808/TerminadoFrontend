@@ -18,6 +18,8 @@ const ReportesC: React.FC = () => {
   const [mensaje, setMensaje] = useState<string>("");
   const navigate = useNavigate();
 
+  const apiCrearReporte= import.meta.env.VITE_API_REGISTROREPORTE;
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
@@ -33,7 +35,7 @@ const ReportesC: React.FC = () => {
     }
 
     try {
-      const response = await fetch("https://backsst.onrender.com/crearReporte", {
+      const response = await fetch(apiCrearReporte, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

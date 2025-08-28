@@ -18,9 +18,12 @@ const ListasActividadesLudicas: React.FC = () => {
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
+  const apiEliminarAct= import.meta.env.VITE_API_ELIMINARACTIVIDAD
+  const apiListarAct= import.meta.env.VITE_API_LISTARACTIVIDADES
+
   const obtenerActividades = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarActividadesLudicas");
+      const res = await fetch(apiListarAct);
       const data = await res.json();
       setActividades(data.datos);
     } catch (error) {
@@ -39,7 +42,7 @@ const ListasActividadesLudicas: React.FC = () => {
   const eliminarActividad = async (id: number) => {
     if (!window.confirm("¿Seguro deseas eliminar esta actividad?")) return;
     try {
-      await fetch(`https://backsst.onrender.com/eliminarActividadLudica/${id}`, {
+      await fetch(apiEliminarAct + id, {
         method: "DELETE",
       });
       setActividades((prev) => prev.filter((a) => a.id !== id));

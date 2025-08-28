@@ -8,23 +8,25 @@ const RegistroEmpresa: React.FC = () => {
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
   const [nit,setNit] = useState("");
+  const [estado, setEstado] = useState(true);
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
-  const [estado, setEstado] = useState(true);
+
+  const apiRegisterEmpresa = import.meta.env.VITE_API_REGISTROEMPRESA;
 
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("https://backsst.onrender.com/crearEmpresa", {
+    const res = await fetch(apiRegisterEmpresa, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         nombre,
         direccion,
         nit,
-        esquema,
-        alias,
         estado,
+        esquema,
+        alias
       }),
     });
 
@@ -39,9 +41,9 @@ const RegistroEmpresa: React.FC = () => {
   };
 
   const links = [
-    { path: "/registro", label: "Crear Usuario" },
-    { path: "/registroEmpresa", label: "Crear Empresa" },
-    { path: "/registroArea", label: "Crear área" },
+    { path: "/registro", label: "Registrar un usuario" },
+    { path: "/registroEmpresa", label: "Registrar una empresa" },
+    { path: "/registroArea", label: "Registrar una área" },
   ];
 
   return (
@@ -82,7 +84,7 @@ const RegistroEmpresa: React.FC = () => {
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">¡Registra tu empresa!</h2>
               <p className="text-gray-200 text-sm">
-                Define nombre, NIT, dirección, esquema y alias para tu tenant.
+                Ingresa los datos requeridos para registrar una tu empresa en el sistema.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">

@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+
+interface Empresa {
+  id_empresa: number;
+  nombre: string;
+}
 
 const RegistroArea: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [idEmpresa, setIdEmpresa] = useState<number | "">("");
+  const [empresas, setEmpresas] = useState<Empresa[]>([]);
+  const [id_empresa, setIdEmpresa] = useState<number | "">("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
   const [descripcion, setDescripcion] = useState("");
@@ -13,16 +19,42 @@ const RegistroArea: React.FC = () => {
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
 
+  const apiRegisterArea = import.meta.env.VITE_API_REGISTROAREA;
+  const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
+
+  useEffect(() => {
+  const fetchEmpresas = async () => {
+    try {
+      const res = await fetch(apiEmpresas);
+      const data = await res.json();
+
+      if (data.datos) {
+        const empresasNormalizadas = data.datos.map((e: any) => ({
+          id_empresa: e.id_empresa ?? e.idEmpresa,
+          nombre: e.nombre,
+        }));
+        setEmpresas(empresasNormalizadas);
+      } else {
+        console.error("Formato inesperado en la respuesta:", data);
+      }
+    } catch (err) {
+      console.error("Error cargando empresas:", err);
+    }
+  };
+  fetchEmpresas();
+}, []);
+
+
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch("https://backsst.onrender.com/crearArea", {
+    const res = await fetch(apiRegisterArea, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        id_empresa: idEmpresa,
-        nombre,       // 👈 corregido
-        codigo,       // 👈 corregido
+        id_empresa: id_empresa,
+        nombre,
+        codigo,
         descripcion,
         estado,
         esquema,
@@ -40,9 +72,9 @@ const RegistroArea: React.FC = () => {
   };
 
   const links = [
-    { path: "/registro", label: "Crear Usuario" },
-    { path: "/registroEmpresa", label: "Crear Empresa" },
-    { path: "/registroArea", label: "Crear área" },
+    { path: "/registro", label: "Registrar un usuario" },
+    { path: "/registroEmpresa", label: "Registrar una empresa" },
+    { path: "/registroArea", label: "Registrar una área" },
   ];
 
   return (
@@ -83,7 +115,7 @@ const RegistroArea: React.FC = () => {
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">¡Registra un área!</h2>
               <p className="text-gray-200 text-sm">
-                Organiza y gestiona las áreas vinculadas a un tenant.
+                Organiza y gestiona las áreas vinculadas a tu empresa.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
@@ -103,16 +135,22 @@ const RegistroArea: React.FC = () => {
               </h3>
 
               <form className="space-y-4" onSubmit={registrar}>
-                <input
-                  type="number"
-                  placeholder="ID Empresa"
-                  value={idEmpresa}
+                {/* SELECT de empresa */}
+                <select
+                  value={id_empresa}
                   onChange={(e) => setIdEmpresa(Number(e.target.value))}
                   className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
                              focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                             text-gray-900"
                   required
-                />
+                >
+                  <option value="">-- Selecciona una empresa --</option>
+                  {empresas.map((empresa) => (
+                    <option key={empresa.id_empresa} value={empresa.id_empresa}>
+                      {empresa.nombre}
+                    </option>
+                  ))}
+                </select>
 
                 <input
                   type="text"

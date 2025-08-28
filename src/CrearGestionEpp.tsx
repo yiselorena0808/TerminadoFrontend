@@ -49,13 +49,15 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
     const cantidadNum = parseInt(cantidad);
     const idUsuarioNum = parseInt(id_usuario);
 
+    const apiGestion= import.meta.env.VITE_API_CREARGESTION;
+
     if (isNaN(cedulaNum) || isNaN(cantidadNum) || isNaN(idUsuarioNum)) {
       alert("Cédula, Cantidad e ID Usuario deben ser números válidos.");
       return;
     }
 
     try {
-      const response = await fetch("https://backsst.onrender.com/crearGestion", {
+      const response = await fetch(apiGestion, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -96,7 +98,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
 
   const obtenerRegistros = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarGestiones");
+      const res = await fetch(import.meta.env.VITE_API_LISTARGESTIONES);
       const data = await res.json();
       setRegistros(data.datos);
     } catch (error) {
