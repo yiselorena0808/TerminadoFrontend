@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlus } from "react-icons/fa";
+import { FaSearch, FaPlus, FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface ListaChequeo {
   id: number;
   id_usuario: number;
-  usuario_nombre: string;
+  usuarioNombre: string;
   fecha: string;
   hora: string;
   modelo: string;
@@ -20,7 +22,7 @@ const ListasChequeoRecibidas: React.FC = () => {
   const [listas, setListas] = useState<ListaChequeo[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
-  const apiListarCheq= import.meta.env.VITE_API_LISTARCHEQUEO
+  const apiListarCheq = import.meta.env.VITE_API_LISTARCHEQUEO;
 
   const obtenerListas = async () => {
     try {
@@ -54,11 +56,29 @@ const ListasChequeoRecibidas: React.FC = () => {
   };
 
   const filtrar = (item: ListaChequeo) =>
-    `${item.usuario_nombre} ${item.modelo} ${item.marca}`
+    `${item.usuarioNombre} ${item.modelo} ${item.marca}`
       .toLowerCase()
       .includes(busqueda.toLowerCase());
 
   const listasFiltradas = listas.filter(filtrar);
+
+  
+  const descargarPDF = (lista: ListaChequeo) => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Reporte Lista de Chequeo", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Usuario: ${lista.usuarioNombre}`, 20, 40);
+    doc.text(`Fecha: ${formatearFecha(lista.fecha)} ${lista.hora}`, 20, 50);
+    doc.text(`Marca: ${lista.marca}`, 20, 60);
+    doc.text(`Modelo: ${lista.modelo}`, 20, 70);
+    doc.text(`Kilometraje: ${lista.kilometraje}`, 20, 80);
+    doc.text(`Técnico: ${lista.tecnico}`, 20, 90);
+    doc.text(`SOAT: ${lista.soat}`, 20, 100);
+
+    doc.save(`listaChequeo_${lista.id}.pdf`);
+  };
 
   return (
     <div
@@ -77,7 +97,10 @@ const ListasChequeoRecibidas: React.FC = () => {
         </div>
         <button
           onClick={ir}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center">Crear Lista de chequeo</button>
+          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
+        >
+          <FaPlus /> Crear Lista de chequeo
+        </button>
 
         {/* Barra búsqueda */}
         <div className="flex justify-end mb-6">
@@ -108,7 +131,7 @@ const ListasChequeoRecibidas: React.FC = () => {
             >
               <div>
                 <div className="font-bold text-gray-800">
-                  {item.usuario_nombre} – {formatearFecha(item.fecha)} {item.hora}
+                  {item.usuarioNombre} – {formatearFecha(item.fecha)} {item.hora}
                 </div>
                 <div className="text-gray-600 text-sm">
                   Marca: {item.marca} | Modelo: {item.modelo} | KM:{" "}
@@ -119,12 +142,23 @@ const ListasChequeoRecibidas: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                onClick={() => abrirDetalle(item)}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
-              >
-                Abrir
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => abrirDetalle(item)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
+                >
+                  Abrir
+                </button>
+
+                {/* Botón PDF */}
+                <button
+                  onClick={() => descargarPDF(item)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                  title="Descargar PDF"
+                >
+                  <FaFilePdf />
+                </button>
+              </div>
             </div>
           ))
         )}

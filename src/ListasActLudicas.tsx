@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { FaTrash, FaDownload, FaEye, FaPlus } from "react-icons/fa";
+import { FaTrash, FaDownload, FaEye, FaPlus, FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface ActividadLudica {
   id: number;
@@ -18,8 +20,40 @@ const ListasActividadesLudicas: React.FC = () => {
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
 
-  const apiEliminarAct= import.meta.env.VITE_API_ELIMINARACTIVIDAD
-  const apiListarAct= import.meta.env.VITE_API_LISTARACTIVIDADES
+  const apiEliminarAct = import.meta.env.VITE_API_ELIMINARACTIVIDAD;
+  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
+
+
+  const descargarPDF = (actividad: ActividadLudica) => {
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text("Reporte Actividad Lúdica", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Actividad: ${actividad.nombreActividad}`, 20, 40);
+    doc.text(`Usuario: ${actividad.nombreUsuario}`, 20, 50);
+    doc.text(
+      `Fecha: ${
+        actividad.fechaActividad
+          ? new Date(actividad.fechaActividad).toLocaleDateString("es-CO")
+          : "Sin fecha"
+      }`,
+      20,
+      60
+    );
+
+    doc.text(
+      doc.splitTextToSize(
+        actividad.descripcion || "Sin descripción",
+        170
+      ),
+      20,
+      80
+    );
+
+    doc.save(`actividad_${actividad.id}.pdf`);
+  };
 
   const obtenerActividades = async () => {
     try {
@@ -62,7 +96,7 @@ const ListasActividadesLudicas: React.FC = () => {
       className="p-6 min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
-          "url('https://img.freepik.com/foto-gratis/manos-sosteniendo-papel-ilustracion-iconos-diversion_53876-138841.jpg')",
+          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
     >
       <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
@@ -115,11 +149,14 @@ const ListasActividadesLudicas: React.FC = () => {
                 <div className="text-sm text-gray-600">
                   Fecha:{" "}
                   {item.fechaActividad
-                    ? new Date(item.fechaActividad).toLocaleDateString("es-CO", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
+                    ? new Date(item.fechaActividad).toLocaleDateString(
+                        "es-CO",
+                        {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        }
+                      )
                     : "Sin fecha"}
                 </div>
                 <div className="text-gray-500 text-sm mt-1 line-clamp-2">
@@ -130,25 +167,27 @@ const ListasActividadesLudicas: React.FC = () => {
               {/* Botones */}
               <div className="flex gap-3 items-center">
                 <button
-                  onClick={() => navigate("/nav/detalleActLudica", { state: item })}
+                  onClick={() =>
+                    navigate("/nav/detalleActLudica", { state: item })
+                  }
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition flex items-center gap-1"
                 >
                   <FaEye /> Ver
                 </button>
 
-                {item.archivoAdjunto && (
-                  <a
-                    href={item.archivoAdjunto}
-                    download
-                    className="bg-green-500 hover:bg-green-600 text-white p-2 rounded-full shadow-md transition"
-                  >
-                    <FaDownload />
-                  </a>
-                )}
+                {/* Descargar PDF generado */}
+                <button
+                  onClick={() => descargarPDF(item)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                  title="Descargar PDF"
+                >
+                  <FaFilePdf />
+                </button>
 
+                {/* Eliminar actividad */}
                 <button
                   onClick={() => eliminarActividad(item.id)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                  className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-md transition"
                 >
                   <FaTrash />
                 </button>

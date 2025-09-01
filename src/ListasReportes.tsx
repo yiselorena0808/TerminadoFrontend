@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 interface Gestion {
   id_reporte: number;
   id_usuario: number;
-  nombre_usuario: string;
+  nombreUsuario: string;
   cargo: string;
   cedula: number;
   fecha: string;
@@ -58,17 +58,13 @@ const ListarReportes: React.FC = () => {
 
   const cambiarEstado = async (id: number, nuevoEstado: string) => {
     try {
-      const res = await fetch(
-        apiActualizarReporte+id,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ estado: nuevoEstado }),
-        }
-      );
+      const res = await fetch(`${apiActualizarReporte}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ estado: nuevoEstado }),
+      });
 
       if (res.ok) {
-  
         await obtenerListas();
       } else {
         console.error("Error en la respuesta:", await res.json());
@@ -81,15 +77,18 @@ const ListarReportes: React.FC = () => {
   const eliminarGestion = async (id: number) => {
     if (!window.confirm("¿Estás seguro de eliminar este reporte?")) return;
     try {
-      const res = await fetch(
-        apiEliminarReporte + id,
-        { method: "DELETE" }
-      );
+      const res = await fetch(`${apiEliminarReporte}/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json().catch(() => null);
+      console.log("Respuesta DELETE:", res.status, data);
+
       if (res.ok) {
-        alert('reporte eliminado')
-        navigate(-1)
-     
+        alert("Reporte eliminado");
         setListas((prev) => prev.filter((item) => item.id_reporte !== id));
+      } else {
+        console.error("Error eliminando reporte:", data);
       }
     } catch (error) {
       console.error("Error al eliminar reporte:", error);
@@ -100,7 +99,7 @@ const ListarReportes: React.FC = () => {
     listas.filter(
       (item) =>
         item.estado === estado &&
-        `${item.nombre_usuario} ${item.cargo} ${item.fecha}`
+        `${item.nombreUsuario} ${item.cargo} ${item.fecha}`
           .toLowerCase()
           .includes(busqueda.toLowerCase())
     );
@@ -161,7 +160,7 @@ const ListarReportes: React.FC = () => {
                   >
                     <div>
                       <div className="font-bold text-gray-800">
-                        {item.nombre_usuario} – {formatearFecha(item.fecha)}
+                        {item.nombreUsuario} – {formatearFecha(item.fecha)}
                       </div>
                       <div className="text-gray-600 text-sm">
                         Cargo: {item.cargo} | Estado:{" "}
