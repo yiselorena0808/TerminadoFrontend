@@ -1,18 +1,43 @@
 import { useEffect, useState } from "react";
 import ActualizarUsuarioModal from "./Actualizarusuarios";
 
+interface Empresa {
+  idEmpresa: number;
+  nombre: string;
+  direccion: string;
+  nit: string;
+  estado: boolean;
+  esquema: string;
+  alias: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface Area {
+  idArea: number;
+  descripcion: string;
+  idEmpresa: number;
+  estado: boolean;
+  esquema: string;
+  alias: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Usuario {
   id: number;
+  idEmpresa: number;
+  idArea: number;
   nombre: string;
   apellido: string;
   nombreUsuario: string;
   correoElectronico: string;
   cargo: string;
-  contrasena?: string;
-  created_at?: string;
-  updated_at?: string;
-  id_tenant: number;
-  id_area: number;
+  contrasena: string;
+  createdAt: string;
+  updatedAt: string;
+  empresa: Empresa;
+  area: Area;
 }
 
 const AdmUsuarios: React.FC = () => {
@@ -21,11 +46,15 @@ const AdmUsuarios: React.FC = () => {
   const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
   const [idTenantLogueado, setIdTenantLogueado] = useState<number | null>(null);
 
+  const apiListar= import.meta.env.VITE_API_LISTARUSUARIOS
+  const apiEliminar= import.meta.env.VITE_API_ELIMINARUSUARIO
+  const apiActualizar= import.meta.env.VITE_API_ACTUALIZARUSUARIO
+
   const obtenerUsuarios = async () => {
     try {
-      const res = await fetch("https://backsst.onrender.com/listarUsuarios"); 
-      const data = await res.json();
-      setUsuarios(data.datos);
+      const res = await fetch(apiListar);
+      const data: Usuario[] = await res.json();
+      setUsuarios(data);
     } catch (error) {
       console.error("Error al cargar usuarios:", error);
     }
@@ -35,9 +64,12 @@ const AdmUsuarios: React.FC = () => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
 
     try {
-      const res = await fetch(`https://backsst.onrender.com/eliminarUsuario/${id}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        apiEliminar + id,
+        {
+          method: "DELETE",
+        }
+      );
       const data = await res.json();
       alert(data.mensaje);
       obtenerUsuarios();
@@ -48,11 +80,14 @@ const AdmUsuarios: React.FC = () => {
 
   const actualizarUsuario = async (usuario: Usuario) => {
     try {
-      const res = await fetch(`https://backsst.onrender.com/actualizarUsuario/${usuario.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(usuario),
-      });
+      const res = await fetch(
+       apiActualizar + usuario.id,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(usuario),
+        }
+      );
       const data = await res.json();
       alert(data.mensaje);
       setUsuarioAEditar(null);
@@ -63,20 +98,17 @@ const AdmUsuarios: React.FC = () => {
   };
 
   useEffect(() => {
-  
     const usuarioLogueado = localStorage.getItem("usuario");
     if (usuarioLogueado) {
       const datos = JSON.parse(usuarioLogueado);
-      setIdTenantLogueado(datos.id_tenant); 
+      setIdTenantLogueado(datos.idEmpresa); 
     }
     obtenerUsuarios();
   }, []);
 
-
   const usuariosDeMismaEmpresa = usuarios.filter(
-    (u) => idTenantLogueado !== null && u.id_tenant === idTenantLogueado
+    (u) => idTenantLogueado !== null && u.idEmpresa === idTenantLogueado
   );
-
 
   const usuariosFiltrados = usuariosDeMismaEmpresa.filter(
     (u) =>
@@ -114,14 +146,31 @@ const AdmUsuarios: React.FC = () => {
             <thead className="bg-blue-900 text-white">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Nombre</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Apellido</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Usuario</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Correo</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Cargo</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Tenant</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">Área</th>
-                <th className="px-4 py-3 text-center text-sm font-semibold" colSpan={2}>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Nombre
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Apellido
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Usuario
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Correo
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Cargo
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Empresa
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">
+                  Área
+                </th>
+                <th
+                  className="px-4 py-3 text-center text-sm font-semibold"
+                  colSpan={2}
+                >
                   Acciones
                 </th>
               </tr>
@@ -136,14 +185,30 @@ const AdmUsuarios: React.FC = () => {
                       : "bg-blue-100 hover:bg-blue-200"
                   }
                 >
-                  <td className="px-4 py-2 text-sm text-blue-900 font-medium">{u.id}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.nombre}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.apellido}</td>
-                  <td className="px-4 py-2 text-sm text-blue-700">{u.nombreUsuario}</td>
-                  <td className="px-4 py-2 text-sm text-blue-700">{u.correoElectronico}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.cargo}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.id_tenant}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.id_area}</td>
+                  <td className="px-4 py-2 text-sm text-blue-900 font-medium">
+                    {u.id}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-800">
+                    {u.nombre}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-800">
+                    {u.apellido}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-700">
+                    {u.nombreUsuario}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-700">
+                    {u.correoElectronico}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-800">
+                    {u.cargo}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-800">
+                    {u.empresa?.nombre}
+                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-800">
+                    {u.area?.descripcion}
+                  </td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}
