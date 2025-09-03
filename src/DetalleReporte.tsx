@@ -68,7 +68,7 @@ const DetalleReporte: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
-            <p className="text-blue-100 text-lg">ID #{form.idReporte}</p>
+            <p className="text-blue-100 text-lg">Usuario: {form.nombreUsuario}</p>
           </div>
 
           {/* Body */}

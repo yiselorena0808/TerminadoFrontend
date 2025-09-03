@@ -73,7 +73,7 @@ const DetalleGestionEPP: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">🛡️ Detalle de Gestión EPP</h2>
             <p className="text-blue-100 text-lg">
-              Usuario ID #{gestion.idUsuario}
+              Usuario: {gestion.nombre} {gestion.apellido}
             </p>
           </div>
 

@@ -79,7 +79,7 @@ const DetalleActividadLudica: React.FC = () => {
             <p className="flex items-center gap-2 text-gray-700">
               <User className="w-5 h-5 text-pink-600" />
               <span className="font-semibold">Usuario:</span>{" "}
-              {actividad.nombreUsuario} (ID: {actividad.idUsuario})
+              {actividad.nombreUsuario}
             </p>
 
             {/* Nombre actividad */}
