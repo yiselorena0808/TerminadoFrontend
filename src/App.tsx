@@ -20,6 +20,9 @@ import DetalleActividad from './DetalleActLudica';
 import DetalleGestionEPP from './DetalleGestionEpp';
 import CrearListaChequeo from './CrearListaChequeo';
 import Perfil from './perfil';
+import NavbarUser from './User/NavUser';
+import ListarGestionesUser from './User/GestionEppUser';
+import LectorGestion from './User/LectorGestion';
 
 function App() {
   return (
@@ -30,10 +33,14 @@ function App() {
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
          <Route path="/nav" element={<Navba />}>
+          <Route path="/navUser" element={<NavbarUser></NavbarUser>}></Route>
           <Route path="inicio" element={<Bienvenida  />} />
 
           <Route path="gestionEpp" element={<ListarGestiones  />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
+          
+          <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />
+          <Route path="lectorUser" element={<LectorGestion />} />
 
           <Route path="creargestionEpp" element={<Gestion onSubmit={function (datos: { id_usuario: number; nombre: string; apellido: string; cedula: number; cargo: string; productos: string; cantidad: number; importancia: string; estado: string | null; fecha_creacion: string; }): void {
             throw new Error('Function not implemented.');

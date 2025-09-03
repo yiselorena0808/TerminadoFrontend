@@ -59,11 +59,11 @@ const NavbarUser: React.FC = () => {
   };
 
   const menuItems = [
-    { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicio" },
-    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportesC" },
-    { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
-    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
-    { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" }
+    { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/navUser/inicio" },
+    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/navUser/reportesC" },
+    { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/navUser/actLudica" },
+    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/navUser/ListasChequeo" },
+    { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/navUser/gUser" }
  ];
 
   return (

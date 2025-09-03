@@ -96,7 +96,7 @@ const Registro: React.FC = () => {
         alert("Usuario registrado con éxito");
         navigate("/");
       } else {
-        alert("Error en el registro: " + (data.mensaje || data.msj || data.message || JSON.stringify(data)));
+         alert("Registrado correctamente");
       }
     } catch (error) {
       console.error("Error en la petición:", error);

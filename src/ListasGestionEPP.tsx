@@ -72,6 +72,7 @@ const ListarGestiones: React.FC = () => {
       console.error("Error actualizando estado:", error);
     }
   };
+
   const filtrarPorEstado = (estado: string) =>
     listas.filter(
       (item) =>

@@ -26,9 +26,17 @@ const Login: React.FC = () => {
         return;
       }
 
+      // Guardamos el token y usuario completo
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
+
+      // 👇 Guardamos idEmpresa por separado para el filtrado
+      if (data.user && data.user.idEmpresa !== undefined) {
+        localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
+      } else {
+        console.warn("El usuario no tiene idEmpresa");
+      }
 
       navigate("/nav/inicio", { replace: true });
       window.location.reload();
@@ -52,12 +60,6 @@ const Login: React.FC = () => {
           <p className="text-sm mb-6 opacity-80 leading-relaxed">
             Ingresa con tus credenciales para acceder al sistema.
           </p>
-          <div className="flex gap-4 text-xl">
-            <i className="fab fa-facebook-f cursor-pointer hover:text-gray-300"></i>
-            <i className="fab fa-twitter cursor-pointer hover:text-gray-300"></i>
-            <i className="fab fa-instagram cursor-pointer hover:text-gray-300"></i>
-            <i className="fab fa-youtube cursor-pointer hover:text-gray-300"></i>
-          </div>
         </div>
 
         {/* Columna derecha */}

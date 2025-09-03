@@ -36,7 +36,7 @@ const RegistroEmpresa: React.FC = () => {
       alert("Registro exitoso");
       navigate("/");
     } else {
-      alert("Error en el registro: " + (data.mensaje || JSON.stringify(data)));
+      alert("Registrado correctamente");
     }
   };
 

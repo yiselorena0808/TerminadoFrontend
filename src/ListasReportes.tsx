@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 interface Gestion {
   id_reporte: number;
@@ -9,7 +11,7 @@ interface Gestion {
   cargo: string;
   cedula: number;
   fecha: string;
-  lugar: string;
+  lugar: string;                                
   descripcion: string;
   imagen: string;
   archivos: string;
@@ -82,6 +84,24 @@ const ListarReportes: React.FC = () => {
           .toLowerCase()
           .includes(busqueda.toLowerCase())
     );
+
+  // Función para descargar PDF
+  const descargarPDF = (reporte: Gestion) => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Reporte de Gestión", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Usuario: ${reporte.nombreUsuario}`, 20, 40);
+    doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
+    doc.text(`Cargo: ${reporte.cargo}`, 20, 60);
+    doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 70);
+    doc.text(`Lugar: ${reporte.lugar}`, 20, 80);
+    doc.text(`Descripción: ${reporte.descripcion}`, 20, 90);
+    doc.text(`Estado: ${reporte.estado}`, 20, 100);
+
+    doc.save(`reporte_${reporte.id_reporte}.pdf`);
+  };
 
   return (
     <div
@@ -157,6 +177,15 @@ const ListarReportes: React.FC = () => {
                         className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
                       >
                         Abrir
+                      </button>
+
+                      {/* Descargar PDF */}
+                      <button
+                        onClick={() => descargarPDF(item)}
+                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                        title="Descargar PDF"
+                      >
+                        <FaFilePdf />
                       </button>
 
                       {/* Dropdown de estado */}

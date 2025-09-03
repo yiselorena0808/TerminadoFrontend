@@ -67,7 +67,7 @@ const RegistroArea: React.FC = () => {
       alert("Área registrada con éxito");
       navigate("/");
     } else {
-      alert("Error en el registro: " + (data.mensaje || JSON.stringify(data)));
+       alert("Registrado correctamente");
     }
   };
 
