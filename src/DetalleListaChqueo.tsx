@@ -76,7 +76,7 @@ const DetalleListaChequeo: React.FC = () => {
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white">
-          <h2 className="text-3xl font-bold">📋 Detalle Lista de Chequeo</h2>
+          <h2 className="text-3xl font-bold">Detalle Lista de Chequeo</h2>
           <p className="text-blue-100">Usuario: {form.usuarioNombre}</p>
         </div>
 

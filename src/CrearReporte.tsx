@@ -18,9 +18,13 @@ const ReportesC: React.FC = () => {
   const [mensaje, setMensaje] = useState<string>("");
   const navigate = useNavigate();
 
-  const apiCrearReporte= import.meta.env.VITE_API_REGISTROREPORTE;
+  const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
@@ -48,138 +52,136 @@ const ReportesC: React.FC = () => {
       setMensaje(data.mensaje || "Reporte enviado correctamente");
     } catch (error) {
       console.error("Error al enviar:", error);
-      setMensaje("No se pudo enviar el reporte.");
+      setMensaje("No se pudo enviar el reporte ");
     }
   };
 
   return (
-    <div className="min-h-screen flex">
-      {/* Columna izquierda con imagen */}
-      <div
-        className="w-1/2 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://img.freepik.com/vector-gratis/equipo-construccion-trabajadores_24908-56103.jpg?semt=ais_hybrid&w=740&q=80')",
-        }}
-      >
-        <div className="w-full h-full bg-blue-900/40 flex items-center justify-center text-white text-4xl font-bold">
+    <div className="flex items-center justify-center min-h-screen bg-cover bg-center"
+      style={{
+        backgroundImage:
+          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://img.freepik.com/vector-gratis/equipo-construccion-trabajadores_24908-56103.jpg?semt=ais_hybrid&w=740&q=80')",
+      }}
+    >
+      <div className="w-full max-w-3xl bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 text-white">
+        <h2 className="text-4xl font-bold text-center mb-6 drop-shadow-lg">
           Registro de Reportes
-        </div>
-      </div>
+        </h2>
 
-      {/* Columna derecha con formulario */}
-      <div className="w-1/2 flex items-center justify-center p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
-        <div className="w-full max-w-lg bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-white">
-          <h2 className="text-3xl font-bold text-center mb-6">
-            📝 Registro de Reportes
-          </h2>
+        {mensaje && (
+          <div className="mb-4 p-3 rounded-lg bg-blue-300 text-blue-900 text-center font-medium shadow">
+            {mensaje}
+          </div>
+        )}
 
-          {mensaje && (
-            <div className="mb-4 p-3 rounded-lg bg-blue-300 text-blue-900 text-center font-medium">
-              {mensaje}
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="number"
+            name="id_usuario"
+            placeholder="ID Usuario"
+            value={form.id_usuario}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="nombre_usuario"
+            placeholder="Nombre Usuario"
+            value={form.nombre_usuario}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="cargo"
+            placeholder="Cargo"
+            value={form.cargo}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="cedula"
+            placeholder="Cédula"
+            value={form.cedula}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="date"
+            name="fecha"
+            value={form.fecha}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="lugar"
+            placeholder="Lugar"
+            value={form.lugar}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <textarea
+            name="descripcion"
+            placeholder="Descripción"
+            value={form.descripcion}
+            onChange={handleChange}
+            required
+            rows={3}
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="imagen"
+            placeholder="Imagen (URL)"
+            value={form.imagen}
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <input
+            type="text"
+            name="archivos"
+            placeholder="Archivos (URL)"
+            value={form.archivos}
+            onChange={handleChange}
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+          />
+          <select
+            name="estado"
+            value={form.estado}
+            onChange={handleChange}
+            required
+            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
+          >
+            <option value="">Seleccione un estado</option>
+            <option value="Pendiente">Pendiente</option>
+            <option value="Revisado">Revisado</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="number"
-              name="id_usuario"
-              placeholder="ID Usuario"
-              value={form.id_usuario}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="nombre_usuario"
-              placeholder="Nombre Usuario"
-              value={form.nombre_usuario}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="cargo"
-              placeholder="Cargo"
-              value={form.cargo}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="cedula"
-              placeholder="Cédula"
-              value={form.cedula}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="date"
-              name="fecha"
-              value={form.fecha}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="lugar"
-              placeholder="Lugar"
-              value={form.lugar}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <textarea
-              name="descripcion"
-              placeholder="Descripción"
-              value={form.descripcion}
-              onChange={handleChange}
-              required
-              rows={3}
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="imagen"
-              placeholder="Imagen (URL)"
-              value={form.imagen}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <input
-              type="text"
-              name="archivos"
-              placeholder="Archivos (URL)"
-              value={form.archivos}
-              onChange={handleChange}
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            />
-            <select
-              name="estado"
-              value={form.estado}
-              onChange={handleChange}
-              required
-              className="w-full p-3 rounded-lg bg-blue-700/50 border border-blue-300 text-white"
-            >
-              <option value="">Seleccione un estado</option>
-              <option value="Pendiente">Pendiente</option>
-              <option value="Revisado">Revisado</option>
-              <option value="Finalizado">Finalizado</option>
-            </select>
-
+          <div className="flex gap-4">
             <button
               type="submit"
-              className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transition"
+              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transition"
             >
               Enviar Reporte
             </button>
-          </form>
-        </div>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-gray-500 to-gray-700 rounded-lg shadow-lg hover:scale-105 transition"
+            >
+              Volver
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

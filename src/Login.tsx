@@ -25,13 +25,11 @@ const Login: React.FC = () => {
         alert(mensaje);
         return;
       }
-
-      // Guardamos el token y usuario completo
+      
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
 
-      // 👇 Guardamos idEmpresa por separado para el filtrado
       if (data.user && data.user.idEmpresa !== undefined) {
         localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
       } else {
@@ -47,7 +45,7 @@ const Login: React.FC = () => {
 
   return (
     <div
-      className="flex items-center justify-center min-h-screen bg-cover bg-center"
+    className="flex items-center justify-center w-screen h-screen bg-cover bg-center"
       style={{
         backgroundImage:
           "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://cdn2.hubspot.net/hubfs/3530961/Blogs-Pensemos-23_07_18.jpg')",

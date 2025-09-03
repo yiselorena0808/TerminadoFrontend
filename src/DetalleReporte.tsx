@@ -67,7 +67,7 @@ const DetalleReporte: React.FC = () => {
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-fadeIn">
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
-            <h2 className="text-4xl font-bold">📋 Detalle del Reporte</h2>
+            <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
             <p className="text-blue-100 text-lg">ID #{form.idReporte}</p>
           </div>
 

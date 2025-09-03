@@ -1,6 +1,9 @@
+import { ArrowLeft } from "lucide-react";
 import React, { useState } from "react";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const CrearListaChequeo: React.FC = () => {
+   const navigate = useNavigate();
   const [form, setForm] = useState({
     id_usuario: "",
     usuario_nombre: "",
@@ -51,15 +54,23 @@ const CrearListaChequeo: React.FC = () => {
   };
 
   return (
+    
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-6">
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl"
       >
+        {/* Botón Volver */}
+        <button
+          onClick={() => navigate(-1)}
+          className="mb-8 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-800 bg-white/90 border border-gray-300 rounded-xl shadow hover:bg-white transition"
+        >
+          <ArrowLeft className="w-4 h-4" /> Volver
+        </button>
         <h2 className="text-2xl font-bold text-indigo-700 mb-6">
-          📝 Crear Lista de Chequeo
+          Crear Lista de Chequeo
         </h2>
-
+    
         {/* Usuario */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
           <input

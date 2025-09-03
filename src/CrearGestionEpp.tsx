@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 
 interface Gestion1 {
   onSubmit: (datos: {
@@ -29,6 +31,8 @@ interface RegistroEPP {
 }
 
 const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
+  const navigate = useNavigate();
+
   const [id_usuario, setIdUsuario] = useState("");
   const [nombre, setNombre] = useState("");
   const [apellido, setApellido] = useState("");
@@ -49,7 +53,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
     const cantidadNum = parseInt(cantidad);
     const idUsuarioNum = parseInt(id_usuario);
 
-    const apiGestion= import.meta.env.VITE_API_CREARGESTION;
+    const apiGestion = import.meta.env.VITE_API_CREARGESTION;
 
     if (isNaN(cedulaNum) || isNaN(cantidadNum) || isNaN(idUsuarioNum)) {
       alert("Cédula, Cantidad e ID Usuario deben ser números válidos.");
@@ -76,7 +80,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
 
       const msj = await response.json();
       setMensaje(msj.mensaje || "Gestión creada exitosamente.");
-      obtenerRegistros(); 
+      obtenerRegistros();
     } catch (error) {
       console.error("Error al enviar datos:", error);
       setMensaje("Error al conectar con el servidor.");
@@ -111,40 +115,52 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row">
+    <div className="min-h-screen flex flex-col md:flex-row bg-gray-100">
       {/* Columna izquierda con imagen */}
-      <div
-        className="w-full md:w-1/2 bg-cover bg-center"
-        style={{
-          backgroundImage:
-            "url('https://ccmty.com/wp-content/uploads/2018/02/1c257c52b98d4c8b895eac8364583bc9.jpg')",
-        }}
-      >
-        <div className="w-full h-full bg-blue-900/40 flex items-center justify-center text-white text-4xl font-bold text-center p-4">
-          Gestión de Entrega de EPP
-        </div>
-      </div>
+<div
+  className="w-full md:w-1/2 bg-cover bg-center relative"
+  style={{
+    backgroundImage:
+      "url('https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80')",
+  }}
+>
+  {/* Botón de volver sobre la imagen */}
+  <button
+    onClick={() => navigate(-1)}
+    className="absolute top-5 left-5 flex items-center gap-2 px-4 py-2 rounded-lg bg-white/80 hover:bg-white text-gray-700 font-medium shadow-md backdrop-blur-sm transition"
+  >
+    <ArrowLeft size={18} />
+    Volver
+  </button>
+
+  <div className="w-full h-full bg-black/40 flex items-center justify-center text-white text-4xl font-bold text-center p-6">
+    Gestión de Entrega de EPP
+  </div>
+</div>
 
       {/* Columna derecha con formulario */}
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-10 bg-gradient-to-b from-blue-500 via-blue-700 to-blue-900">
-        <div className="w-full max-w-lg bg-blue-800/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 text-white">
-          <h2 className="text-3xl font-bold text-center mb-6">
+      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-8">
+      
+        <div className="w-full max-w-lg bg-white rounded-2xl shadow-xl p-8 relative">
+          <h2 className="text-3xl font-bold text-center mb-6 text-gray-800">
             Formulario de Gestión
+            
           </h2>
 
           {mensaje && (
-            <div className="mb-4 p-3 rounded-lg bg-blue-300 text-blue-900 text-center font-medium">
+            <div className="mb-4 p-3 rounded-lg bg-green-100 text-green-800 text-center font-medium">
               {mensaje}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Inputs */}
             <input
               type="number"
               placeholder="ID Usuario"
               value={id_usuario}
               onChange={(e) => setIdUsuario(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -152,7 +168,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Nombre"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -160,7 +176,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Apellido"
               value={apellido}
               onChange={(e) => setApellido(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -168,7 +184,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Cédula"
               value={cedula}
               onChange={(e) => setCedula(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -176,7 +192,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Cargo"
               value={cargo}
               onChange={(e) => setCargo(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -184,7 +200,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Lista de productos"
               value={productos}
               onChange={(e) => setProductos(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
             <input
@@ -192,13 +208,15 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               placeholder="Cantidad"
               value={cantidad}
               onChange={(e) => setCantidad(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
 
             {/* Importancia */}
-            <div className="text-white">
-              <label className="block font-semibold mb-1">Importancia</label>
+            <div>
+              <label className="block font-semibold mb-1 text-gray-700">
+                Importancia
+              </label>
               <div className="flex gap-6">
                 {["Alta", "Media", "Baja"].map((nivel) => (
                   <label key={nivel} className="flex items-center gap-2">
@@ -208,7 +226,7 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
                       value={nivel}
                       checked={importancia === nivel}
                       onChange={(e) => setImportancia(e.target.value)}
-                      className="text-blue-500 focus:ring-blue-500"
+                      className="text-green-500 focus:ring-green-500"
                     />
                     {nivel}
                   </label>
@@ -218,16 +236,18 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
 
             {/* Estado */}
             <div>
-              <label className="block font-semibold mb-1">Estado</label>
+              <label className="block font-semibold mb-1 text-gray-700">
+                Estado
+              </label>
               <select
                 value={estado ?? ""}
                 onChange={(e) => setEstado(e.target.value || null)}
-                className="w-full p-3 rounded-lg bg-blue-700/50 text-white border border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                className="w-full p-3 rounded-lg bg-gray-50 text-gray-700 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-green-400"
                 required
               >
                 <option value="">Seleccione un estado</option>
-                <option value="Activo">Finalizado</option>
-                <option value="Inactivo">Revisado</option>
+                <option value="Finalizado">Finalizado</option>
+                <option value="Revisado">Revisado</option>
                 <option value="Pendiente">Pendiente</option>
               </select>
             </div>
@@ -236,13 +256,13 @@ const Gestion: React.FC<Gestion1> = ({ onSubmit }) => {
               type="date"
               value={fecha_creacion}
               onChange={(e) => setFechaCreacion(e.target.value)}
-              className="w-full p-3 border border-blue-300 rounded-lg bg-blue-700/50 text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300"
+              className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-400"
               required
             />
 
             <button
               type="submit"
-              className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transform transition-all duration-300"
+              className="w-full py-3 text-lg font-bold text-white bg-gradient-to-r from-green-400 to-green-600 rounded-lg shadow-lg hover:scale-105 transform transition-all duration-300"
             >
               Guardar Gestión
             </button>

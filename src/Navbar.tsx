@@ -64,8 +64,8 @@ const Sidebar: React.FC = () => {
     { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
     { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/crearBlog" },
     { icon: <AiOutlineUser className="text-4xl" />, label: "Lista de Usuarios", path: "/nav/usuarios" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "User", path: "/nav/navUser" },
   
   ];
 
