@@ -38,6 +38,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
   const [actividades, setActividades] = useState<Actividad[]>([]);
 
   const apiCrearAct = import.meta.env.VITE_API_CREARACTIVIDAD;
+  const aplISAct = import.meta.env.VITE_API_LISTARACTIVIDADES
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,7 +85,7 @@ const ActividadForm: React.FC<ActividadFormProps> = ({ onSubmit }) => {
 
   const obtenerActividades = async () => {
     try {
-      const res = await fetch("http://localhost:3333/listarActividadesLudicas");
+      const res = await fetch(aplISAct);
       const data = await res.json();
       setActividades(data.datos);
     } catch (error) {
