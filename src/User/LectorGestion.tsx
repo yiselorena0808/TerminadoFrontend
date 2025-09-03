@@ -12,7 +12,7 @@ import {
 
 interface GestionDetalle {
   id: number;
-  idUsuario: number;
+  id_usuario: number;
   nombre: string;
   apellido: string;
   cedula: number;
@@ -24,13 +24,15 @@ interface GestionDetalle {
   fechaCreacion: string;
 }
 
-const DetalleGestionEPP: React.FC = () => {
+const LectorGestion: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const gestion: GestionDetalle | undefined = location.state as GestionDetalle;
 
   const [estado, setEstado] = useState(gestion?.estado || "");
   const [mensaje, setMensaje] = useState("");
+
+  const apiEliminar= import.meta.env.VITE_API_ELIMINARGESTION
 
   if (!gestion) {
     return (
@@ -46,6 +48,25 @@ const DetalleGestionEPP: React.FC = () => {
       month: "long",
       day: "numeric",
     });
+
+  const eliminarGestion = async (id:number) => {
+    if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
+    try {
+      const res = await fetch(
+       apiEliminar + id ,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        alert("Gestión eliminada");
+        navigate(-1);
+      } else {
+        setMensaje("Error al eliminar");
+      }
+    } catch (error) {
+      console.error(error);
+      setMensaje(" Error en el servidor");
+    }
+  };
 
   return (
     <div
@@ -73,7 +94,7 @@ const DetalleGestionEPP: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">🛡️ Detalle de Gestión EPP</h2>
             <p className="text-blue-100 text-lg">
-              Usuario ID #{gestion.idUsuario}
+              Usuario ID #{gestion.id_usuario}
             </p>
           </div>
 
@@ -152,10 +173,21 @@ const DetalleGestionEPP: React.FC = () => {
               {mensaje}
             </div>
           )}
+
+          {/* Footer con acciones */}
+          <div className="bg-gray-50 px-10 py-6 flex flex-wrap gap-4 justify-end border-t">
+
+            <button
+              onClick={eliminarGestion}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 transition text-lg"
+            >
+              <Trash2 className="w-5 h-5" /> Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default DetalleGestionEPP;
+export default LectorGestion;

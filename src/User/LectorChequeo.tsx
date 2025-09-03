@@ -15,7 +15,7 @@ interface ListaChequeo {
   kilometraje: string;
 }
 
-const DetalleListaChequeo: React.FC = () => {
+const LectorChequeo: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const lista = location.state as ListaChequeo | undefined;
@@ -58,6 +58,30 @@ const DetalleListaChequeo: React.FC = () => {
       </div>
     );
   }
+
+  const eliminarLista = async () => {
+    if (!window.confirm("¿Seguro que deseas eliminar esta lista?")) return;
+
+    try {
+      const res = await fetch(
+        `https://backsst.onrender.com/eliminarListaChequeo/${form.id}`,
+        { method: "DELETE" }
+      );
+
+      if (res.ok) {
+        alert("Lista eliminada correctamente.");
+        navigate("/nav/listasChequeo", { replace: true });
+      } else {
+        const errorText = await res.text();
+        console.error("Error backend:", errorText);
+        alert("No se pudo eliminar la lista.");
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      alert("Error de conexión con el servidor.");
+    }
+  };
+
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -66,13 +90,6 @@ const DetalleListaChequeo: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-100 p-10">
-       {/* Botón Volver */}
-        <button
-          onClick={() => navigate(-1)}
-          className="mb-8 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-800 bg-white/90 border border-gray-300 rounded-xl shadow hover:bg-white transition"
-        >
-          ← Volver
-        </button>
       <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white">
@@ -166,9 +183,19 @@ const DetalleListaChequeo: React.FC = () => {
             />
           </div>
         </div>
+
+        {/* Footer */}
+        <div className="bg-gray-50 p-6 flex gap-4 justify-end">
+          <button
+            onClick={eliminarLista}
+            className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 transition"
+          >
+            <Trash2 className="w-5 h-5" /> Eliminar
+          </button>
+        </div>
       </div>
     </div>
   );
 };
 
-export default DetalleListaChequeo;
+export default LectorChequeo;

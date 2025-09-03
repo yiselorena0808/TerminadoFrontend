@@ -16,7 +16,7 @@ interface Reporte {
   estado: string;
 }
 
-const DetalleReporte: React.FC = () => {
+const LectorReporte: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -43,6 +43,31 @@ const DetalleReporte: React.FC = () => {
   if (!reporte) {
     return <p className="p-4">No hay datos para mostrar.</p>;
   }
+
+  const API_URL = "https://backsst.onrender.com";
+
+  const eliminarReporte = async () => {
+    if (!window.confirm("¿Seguro que deseas eliminar este reporte?")) return;
+
+    try {
+      const res = await fetch(`${API_URL}/eliminarReporte/${form.idReporte}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      console.log("📥 Respuesta backend:", data);
+
+      if (res.ok) {
+        alert(data.msj || "Reporte eliminado correctamente.");
+        navigate(-1);
+      } else {
+        alert(data.error || "No se pudo eliminar el reporte.");
+      }
+    } catch (error) {
+      console.error("Error al eliminar:", error);
+      alert("Error de conexión con el servidor.");
+    }
+  };
 
   return (
     <div
@@ -143,10 +168,20 @@ const DetalleReporte: React.FC = () => {
               />
             </div>
           </div>
+
+          {/* Footer con acciones */}
+          <div className="bg-gray-50 px-10 py-6 flex flex-wrap gap-4 justify-end border-t">
+            <button
+              onClick={eliminarReporte}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 transition text-lg"
+            >
+              <Trash2 className="w-5 h-5" /> Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default DetalleReporte;
+export default LectorReporte;

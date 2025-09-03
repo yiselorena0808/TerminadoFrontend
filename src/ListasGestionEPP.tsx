@@ -72,17 +72,6 @@ const ListarGestiones: React.FC = () => {
       console.error("Error actualizando estado:", error);
     }
   };
-
-  const eliminarGestion = async (id: number) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
-    try {
-      await fetch(apiEliminarGestion + id, { method: "DELETE" });
-      setListas((prev) => prev.filter((item) => item.id !== id));
-    } catch (error) {
-      console.error("Error al eliminar gestión:", error);
-    }
-  };
-
   const filtrarPorEstado = (estado: string) =>
     listas.filter(
       (item) =>
@@ -202,13 +191,6 @@ const ListarGestiones: React.FC = () => {
                           ))}
                         </div>
                       </div>
-
-                      <button
-                        onClick={() => eliminarGestion(item.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-md transition"
-                      >
-                        <FaTrash />
-                      </button>
                     </div>
                   </div>
                 ))

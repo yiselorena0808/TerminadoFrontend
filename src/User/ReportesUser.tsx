@@ -16,7 +16,7 @@ interface Gestion {
   estado: string;
 }
 
-const ListarReportes: React.FC = () => {
+const ListarReportesUser: React.FC = () => {
   const navigate = useNavigate();
   const [listas, setListas] = useState<Gestion[]>([]);
   const [busqueda, setBusqueda] = useState("");
@@ -71,6 +71,27 @@ const ListarReportes: React.FC = () => {
       }
     } catch (error) {
       console.error("Error actualizando estado:", error);
+    }
+  };
+
+  const eliminarGestion = async (id: number) => {
+    if (!window.confirm("¿Estás seguro de eliminar este reporte?")) return;
+    try {
+      const res = await fetch(`${apiEliminarReporte}/${id}`, {
+        method: "DELETE",
+      });
+
+      const data = await res.json().catch(() => null);
+      console.log("Respuesta DELETE:", res.status, data);
+
+      if (res.ok) {
+        alert("Reporte eliminado");
+        setListas((prev) => prev.filter((item) => item.id_reporte !== id));
+      } else {
+        console.error("Error eliminando reporte:", data);
+      }
+    } catch (error) {
+      console.error("Error al eliminar reporte:", error);
     }
   };
 
@@ -180,6 +201,14 @@ const ListarReportes: React.FC = () => {
                           ))}
                         </div>
                       </div>
+
+                      {/* Eliminar */}
+                      <button
+                        onClick={() => eliminarGestion(item.id_reporte)}
+                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
+                      >
+                        <FaTrash />
+                      </button>
                     </div>
                   </div>
                 ))
@@ -202,4 +231,4 @@ const ListarReportes: React.FC = () => {
   );
 };
 
-export default ListarReportes;
+export default ListarReportesUser;

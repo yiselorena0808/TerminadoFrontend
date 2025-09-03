@@ -19,7 +19,8 @@ const ListasActividadesLudicas: React.FC = () => {
   const navigate = useNavigate();
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
-  
+
+  const apiEliminarAct = import.meta.env.VITE_API_ELIMINARACTIVIDAD;
   const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
 
 
@@ -70,6 +71,18 @@ const ListasActividadesLudicas: React.FC = () => {
 
   const ir = () => {
     navigate("/nav/crearActLudica");
+  };
+
+  const eliminarActividad = async (id: number) => {
+    if (!window.confirm("¿Seguro deseas eliminar esta actividad?")) return;
+    try {
+      await fetch(apiEliminarAct + id, {
+        method: "DELETE",
+      });
+      setActividades((prev) => prev.filter((a) => a.id !== id));
+    } catch (error) {
+      console.error("Error eliminando actividad:", error);
+    }
   };
 
   const actividadesFiltradas = actividades.filter((item) =>
@@ -169,6 +182,14 @@ const ListasActividadesLudicas: React.FC = () => {
                   title="Descargar PDF"
                 >
                   <FaFilePdf />
+                </button>
+
+                {/* Eliminar actividad */}
+                <button
+                  onClick={() => eliminarActividad(item.id)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-md transition"
+                >
+                  <FaTrash />
                 </button>
               </div>
             </div>

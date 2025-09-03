@@ -22,7 +22,7 @@ interface ActividadLudica {
   archivoAdjunto: string;
 }
 
-const DetalleActividadLudica: React.FC = () => {
+const LectorAct: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const actividad = location.state as ActividadLudica | undefined;
@@ -44,6 +44,25 @@ const DetalleActividadLudica: React.FC = () => {
           day: "numeric",
         });
   };
+
+  const eliminarActividad = async () => {
+    if (!window.confirm("¿Eliminar esta actividad lúdica?")) return;
+    try {
+      const res = await fetch(
+        `https://backsst.onrender.com/eliminarActividadLudica/${actividad.id}`,
+        { method: "DELETE" }
+      );
+      if (res.ok) {
+        alert("Actividad eliminada");
+        navigate(-1);
+      } else {
+        setMensaje("Error al eliminar");
+      }
+    } catch (error) {
+      setMensaje(" Error en el servidor");
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative px-6 py-10"
@@ -146,10 +165,20 @@ const DetalleActividadLudica: React.FC = () => {
               {mensaje}
             </div>
           )}
+
+          {/* Footer acciones */}
+          <div className="bg-gray-50 px-8 py-5 flex justify-end gap-4 border-t">
+            <button
+              onClick={eliminarActividad}
+              className="flex items-center gap-2 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            >
+              <Trash2 className="w-5 h-5" /> Eliminar
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default DetalleActividadLudica;
+export default LectorAct;
