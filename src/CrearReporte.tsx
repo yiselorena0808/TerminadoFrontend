@@ -29,6 +29,18 @@ const ReportesC: React.FC = () => {
     setForm({ ...form, [name]: value });
   };
 
+  // Función para convertir archivo a base64
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm({ ...form, archivos: reader.result as string });
+    };
+    reader.readAsDataURL(file); // Convierte a base64
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -52,12 +64,13 @@ const ReportesC: React.FC = () => {
       setMensaje(data.mensaje || "Reporte enviado correctamente");
     } catch (error) {
       console.error("Error al enviar:", error);
-      setMensaje("No se pudo enviar el reporte ");
+      setMensaje("No se pudo enviar el reporte");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-cover bg-center"
+    <div
+      className="flex items-center justify-center min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
           "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://img.freepik.com/vector-gratis/equipo-construccion-trabajadores_24908-56103.jpg?semt=ais_hybrid&w=740&q=80')",
@@ -145,14 +158,23 @@ const ReportesC: React.FC = () => {
             onChange={handleChange}
             className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
           />
-          <input
-            type="text"
-            name="archivos"
-            placeholder="Archivos (URL)"
-            value={form.archivos}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
+
+          {/* Input para seleccionar archivo desde escritorio */}
+          <div>
+            <label className="block mb-1 text-white font-semibold">Archivo:</label>
+            <input
+              type="file"
+              accept="*"
+              onChange={handleFileChange}
+              className="w-full p-2 rounded-lg text-gray-800 bg-white border border-blue-200"
+            />
+            {form.archivos && (
+              <p className="mt-2 text-sm text-green-300 truncate">
+                Archivo cargado (base64)
+              </p>
+            )}
+          </div>
+
           <select
             name="estado"
             value={form.estado}

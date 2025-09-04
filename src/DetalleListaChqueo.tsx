@@ -65,7 +65,13 @@ const DetalleListaChequeo: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-10">
+    <div className="min-h-screen bg-cover bg-center bg-no-repeat relative px-6 py-10"
+      style={{
+        backgroundImage:
+          "url('https://ccmty.com/wp-content/uploads/2018/02/1c257c52b98d4c8b895eac8364583bc9.jpg')",
+      }}
+      >
+    <div className="absolute inset-10 bg-black/30 backdrop-blur-sm">
        {/* Botón Volver */}
         <button
           onClick={() => navigate(-1)}
@@ -167,6 +173,7 @@ const DetalleListaChequeo: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
     </div>
   );
 };

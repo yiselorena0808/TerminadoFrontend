@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FileCheck, ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Save } from "lucide-react";
 
 interface Reporte {
   idReporte: number;
@@ -11,18 +11,17 @@ interface Reporte {
   fecha: string;
   lugar: string;
   descripcion: string;
-  imagen: string;
-  archivos: string;
+  imagen: string;    
+  archivos: string;  
   estado: string;
+  comentario?: string;
 }
 
 const DetalleReporte: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const reporte: Reporte | undefined = location.state as Reporte;
 
-  
   const formatFechaForInput = (fecha: string) => {
     if (!fecha) return "";
     const d = new Date(fecha);
@@ -34,15 +33,35 @@ const DetalleReporte: React.FC = () => {
     return `${year}-${month}-${day}T${hours}:${minutes}`;
   };
 
- 
   const [form, setForm] = useState<Reporte>({
     ...reporte!,
     fecha: formatFechaForInput(reporte!.fecha),
+    comentario: reporte?.comentario || "",
   });
 
-  if (!reporte) {
-    return <p className="p-4">No hay datos para mostrar.</p>;
-  }
+  if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
+
+  const guardarCambios = async () => {
+    try {
+      const apiActualizar = import.meta.env.VITE_API_ACTUALIZARREPORTE;
+      const res = await fetch(`${apiActualizar}/${form.idReporte}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          estado: form.estado,
+          comentario: form.comentario,
+        }),
+      });
+      if (res.ok) {
+        alert("Estado y comentario actualizados correctamente");
+        navigate(-1);
+      } else {
+        alert("Error al actualizar el reporte");
+      }
+    } catch (error) {
+      console.error("Error al actualizar:", error);
+    }
+  };
 
   return (
     <div
@@ -78,26 +97,9 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Información del Usuario
               </h3>
-              <input
-                type="text"
-                value={form.nombreUsuario}
-                onChange={(e) =>
-                  setForm({ ...form, nombreUsuario: e.target.value })
-                }
-                className="w-full border rounded-lg px-3 py-2"
-              />
-              <input
-                type="text"
-                value={form.cargo}
-                onChange={(e) => setForm({ ...form, cargo: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-              <input
-                type="text"
-                value={form.cedula}
-                onChange={(e) => setForm({ ...form, cedula: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
+              <p><strong>Nombre:</strong> {form.nombreUsuario}</p>
+              <p><strong>Cargo:</strong> {form.cargo}</p>
+              <p><strong>Cédula:</strong> {form.cedula}</p>
             </div>
 
             {/* Información del reporte */}
@@ -105,28 +107,47 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Detalles del Reporte
               </h3>
-              <input
-                type="datetime-local"
-                value={form.fecha}
-                onChange={(e) => setForm({ ...form, fecha: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-              <input
-                type="text"
-                value={form.lugar}
-                onChange={(e) => setForm({ ...form, lugar: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              />
-              <select
-                value={form.estado || ""}
-                onChange={(e) => setForm({ ...form, estado: e.target.value })}
-                className="w-full border rounded-lg px-3 py-2"
-              >
-                <option value="">Seleccionar estado</option>
-                <option value="Pendiente">Pendiente</option>
-                <option value="Revisado">Revisado</option>
-                <option value="Finalizado">Finalizado</option>
-              </select>
+              <p><strong>Fecha:</strong> {form.fecha}</p>
+              <p><strong>Lugar:</strong> {form.lugar}</p>
+              <p><strong>Estado actual:</strong> {form.estado}</p>
+
+              {/* Imagen */}
+              {form.imagen && (
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => window.open(form.imagen, "_blank")}
+                    className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+                  >
+                    Ver Imagen
+                  </button>
+                  <a
+                    href={form.imagen}
+                    download={`reporte_${form.idReporte}_imagen`}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
+                  >
+                    Descargar Imagen
+                  </a>
+                </div>
+              )}
+
+              {/* Archivo */}
+              {form.archivos && (
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => window.open(form.archivos, "_blank")}
+                    className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+                  >
+                    Ver Archivo
+                  </button>
+                  <a
+                    href={form.archivos}
+                    download={`reporte_${form.idReporte}_archivo`}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
+                  >
+                    Descargar Archivo
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Descripción */}
@@ -134,15 +155,49 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-2">
                 Descripción
               </h3>
-              <textarea
-                value={form.descripcion}
-                onChange={(e) =>
-                  setForm({ ...form, descripcion: e.target.value })
-                }
-                className="w-full border rounded-lg px-3 py-2 min-h-[120px]"
-              />
+              <p className="text-gray-700 whitespace-pre-line">{form.descripcion}</p>
             </div>
           </div>
+        </div>
+
+        {/* Card de Admin: Cambiar estado y comentario */}
+        <div className="mt-8 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">
+            ⚙️ Gestión Administrador
+          </h3>
+
+          {/* Estado */}
+          <label className="block text-gray-700 font-semibold mb-2">
+            Cambiar Estado
+          </label>
+          <select
+            value={form.estado}
+            onChange={(e) => setForm({ ...form, estado: e.target.value })}
+            className="w-full border rounded-lg px-3 py-2 mb-4"
+          >
+            <option value="Pendiente">Pendiente</option>
+            <option value="Revisado">Revisado</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
+
+          {/* Comentario */}
+          <label className="block text-gray-700 font-semibold mb-2">
+            Agregar Comentario
+          </label>
+          <textarea
+            value={form.comentario}
+            onChange={(e) => setForm({ ...form, comentario: e.target.value })}
+            className="w-full border rounded-lg px-3 py-2 min-h-[100px] mb-4"
+            placeholder="Escribe un comentario sobre el reporte..."
+          />
+
+          {/* Guardar */}
+          <button
+            onClick={guardarCambios}
+            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md transition"
+          >
+            <Save className="w-5 h-5" /> Guardar Cambios
+          </button>
         </div>
       </div>
     </div>
