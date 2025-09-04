@@ -29,6 +29,7 @@ const ReportesC: React.FC = () => {
     setForm({ ...form, [name]: value });
   };
 
+  // Función para convertir archivo a base64
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -37,7 +38,7 @@ const ReportesC: React.FC = () => {
     reader.onload = () => {
       setForm({ ...form, archivos: reader.result as string });
     };
-    reader.readAsDataURL(file); 
+    reader.readAsDataURL(file); // Convierte a base64
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

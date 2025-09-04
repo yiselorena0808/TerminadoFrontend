@@ -11,8 +11,8 @@ interface Reporte {
   fecha: string;
   lugar: string;
   descripcion: string;
-  imagen: string;    
-  archivos: string;  
+  imagen: string | null;
+  archivos: string | null;
   estado: string;
   comentario?: string;
 }
@@ -87,7 +87,9 @@ const DetalleReporte: React.FC = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
             <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
-            <p className="text-blue-100 text-lg">Usuario: {form.nombreUsuario}</p>
+            <p className="text-blue-100 text-lg">
+              Usuario: {form.nombreUsuario}
+            </p>
           </div>
 
           {/* Body */}
@@ -97,9 +99,15 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Información del Usuario
               </h3>
-              <p><strong>Nombre:</strong> {form.nombreUsuario}</p>
-              <p><strong>Cargo:</strong> {form.cargo}</p>
-              <p><strong>Cédula:</strong> {form.cedula}</p>
+              <p>
+                <strong>Nombre:</strong> {form.nombreUsuario}
+              </p>
+              <p>
+                <strong>Cargo:</strong> {form.cargo}
+              </p>
+              <p>
+                <strong>Cédula:</strong> {form.cedula}
+              </p>
             </div>
 
             {/* Información del reporte */}
@@ -107,47 +115,69 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 Detalles del Reporte
               </h3>
-              <p><strong>Fecha:</strong> {form.fecha}</p>
-              <p><strong>Lugar:</strong> {form.lugar}</p>
-              <p><strong>Estado actual:</strong> {form.estado}</p>
+              <p>
+                <strong>Fecha:</strong> {form.fecha}
+              </p>
+              <p>
+                <strong>Lugar:</strong> {form.lugar}
+              </p>
+              <p>
+                <strong>Estado actual:</strong> {form.estado}
+              </p>
 
               {/* Imagen */}
-              {form.imagen && (
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => window.open(form.imagen, "_blank")}
-                    className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
-                  >
-                    Ver Imagen
-                  </button>
-                  <a
-                    href={form.imagen}
-                    download={`reporte_${form.idReporte}_imagen`}
-                    className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
-                  >
-                    Descargar Imagen
-                  </a>
-                </div>
-              )}
+              <div className="mt-2">
+                {form.imagen ? (
+                  <div className="flex gap-2">
+                    <a
+                      href={form.imagen}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+                    >
+                      Ver Imagen
+                    </a>
+                    <a
+                      href={form.imagen}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={`reporte_${form.idReporte}_imagen`}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
+                    >
+                      Descargar Imagen
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No hay imagen adjunta</p>
+                )}
+              </div>
 
               {/* Archivo */}
-              {form.archivos && (
-                <div className="mt-2 flex gap-2">
-                  <button
-                    onClick={() => window.open(form.archivos, "_blank")}
-                    className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
-                  >
-                    Ver Archivo
-                  </button>
-                  <a
-                    href={form.archivos}
-                    download={`reporte_${form.idReporte}_archivo`}
-                    className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
-                  >
-                    Descargar Archivo
-                  </a>
-                </div>
-              )}
+              <div className="mt-2">
+                {form.archivos ? (
+                  <div className="flex gap-2">
+                    <a
+                      href={form.archivos}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700"
+                    >
+                      Ver Archivo
+                    </a>
+                    <a
+                      href={form.archivos}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      download={`reporte_${form.idReporte}_archivo`}
+                      className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
+                    >
+                      Descargar Archivo
+                    </a>
+                  </div>
+                ) : (
+                  <p className="text-gray-500 italic">No hay archivo adjunto</p>
+                )}
+              </div>
             </div>
 
             {/* Descripción */}
@@ -155,7 +185,9 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-2">
                 Descripción
               </h3>
-              <p className="text-gray-700 whitespace-pre-line">{form.descripcion}</p>
+              <p className="text-gray-700 whitespace-pre-line">
+                {form.descripcion}
+              </p>
             </div>
           </div>
         </div>
