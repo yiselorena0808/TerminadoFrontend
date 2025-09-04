@@ -1,119 +1,84 @@
-import React, { useState, useEffect } from "react"
+import React, { useEffect, useState } from "react";
 
-interface Blog {
-  id: number
-  id_usuario: number
-  nombre_usuario: string
-  titulo: string
-  fecha_Actividad: string
-  descripcion: string
-  imagen?: string
-  archivo?: string
+interface Evento {
+  id: number;
+  titulo: string;
+  descripcion: string;
+  fecha_Actividad: string;
+  imagen: string;
+  archivo: string;
+  estado: string;
 }
 
-export default function BlogListaRealtime() {
-  const [blogs, setBlogs] = useState<Blog[]>([])
-  const [notificacion, setNotificacion] = useState<Blog | null>(null)
-
-  const API_LISTAR = import.meta.env.VITE_API_lISTARBLOG
+const EventTimeline: React.FC = () => {
+  const [eventos, setEventos] = useState<Evento[]>([]);
+  const apiURL = import.meta.env.VITE_API_BLOGS; // GET /blogs
 
   useEffect(() => {
-    const fetchBlogs = async () => {
-      try {
-        const res = await fetch(API_LISTAR)
-        const data = await res.json()
-
-
-        if (blogs.length > 0 && data[0]?.id !== blogs[0]?.id) {
-          setNotificacion(data[0])
-          setTimeout(() => setNotificacion(null), 4000)
-        }
-
-        setBlogs(data)
-      } catch (error) {
-        console.error("Error al listar blogs:", error)
-      }
-    }
-
-    fetchBlogs()
-    const interval = setInterval(fetchBlogs, 5000) 
-    return () => clearInterval(interval)
-  }, [API_LISTAR, blogs])
+    const fetchData = async () => {
+      const res = await fetch(apiURL);
+      const data = await res.json();
+      setEventos(data);
+    };
+    fetchData();
+  }, []);
 
   return (
-    <div className="p-6 max-w-3xl mx-auto relative">
-      <h1 className="text-3xl font-extrabold mb-6 text-center">
-        Blog de Actividades
-      </h1>
-
-      {/* 🔔 Notificación */}
-      {notificacion && (
-        <div className="fixed top-5 right-5 bg-white shadow-lg rounded-2xl p-4 border-l-4 border-blue-500 w-80 animate-slideIn">
-          <h2 className="font-bold text-lg text-blue-600">
-            Nueva actividad 🎉
-          </h2>
-          <p className="text-sm text-gray-700">{notificacion.titulo}</p>
-          <span className="text-xs text-gray-500">
-            {notificacion.nombre_usuario} •{" "}
-            {new Date(notificacion.fecha_Actividad).toLocaleDateString()}
-          </span>
-        </div>
-      )}
-
-      {/* Lista de publicaciones */}
-      <div className="space-y-6">
-        {blogs.map((b) => (
+    <div className="relative p-10">
+      <h1 className="text-4xl font-bold text-center mb-12">📅 Eventos</h1>
+      <div className="relative border-l-4 border-blue-500 ml-4">
+        {eventos.map((evento, index) => (
           <div
-            key={b.id}
-            className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition"
+            key={evento.id}
+            className="mb-10 ml-6 relative group hover:scale-105 transition"
           >
-            {b.imagen && (
-              <img
-                src={b.imagen}
-                alt={b.titulo}
-                className="w-full h-52 object-cover"
-              />
-            )}
-            <div className="p-5">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
-                  {b.nombre_usuario[0]}
-                </div>
-                <div>
-                  <p className="font-semibold">{b.nombre_usuario}</p>
-                  <p className="text-sm text-gray-500">
-                    {new Date(b.fecha_Actividad).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-              <h2 className="text-xl font-bold mb-2">{b.titulo}</h2>
-              <p className="text-gray-700 leading-relaxed">{b.descripcion}</p>
-              {b.archivo && (
-                <a
-                  href={b.archivo}
-                  target="_blank"
-                  className="text-blue-600 underline text-sm"
+            {/* Punto en la línea */}
+            <div className="absolute -left-3 w-6 h-6 bg-blue-500 rounded-full border-4 border-white"></div>
+
+            {/* Card del evento */}
+            <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-xl">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold">{evento.titulo}</h2>
+                <span
+                  className={`px-3 py-1 text-sm rounded-lg ${
+                    evento.estado === "Finalizado"
+                      ? "bg-green-200 text-green-800"
+                      : evento.estado === "Pendiente"
+                      ? "bg-yellow-200 text-yellow-800"
+                      : "bg-blue-200 text-blue-800"
+                  }`}
                 >
-                  📎 Ver archivo
+                  {evento.estado}
+                </span>
+              </div>
+              <p className="text-gray-600 mt-2">{evento.descripcion}</p>
+              <p className="text-gray-500 text-sm mt-2">
+                {new Date(evento.fecha_Actividad).toLocaleDateString()}
+              </p>
+
+              {evento.imagen && (
+                <img
+                  src={evento.imagen}
+                  alt={evento.titulo}
+                  className="mt-3 rounded-lg h-40 object-cover w-full"
+                />
+              )}
+
+              {evento.archivo && (
+                <a
+                  href={evento.archivo}
+                  download
+                  className="inline-block mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                >
+                  Descargar archivo
                 </a>
               )}
             </div>
           </div>
         ))}
       </div>
-
-      {/* CSS animación */}
-      <style>
-        {`
-          @keyframes slideIn {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
-          .animate-slideIn {
-            animation: slideIn 0.5s ease-out;
-          }
-        `}
-      </style>
     </div>
-  )
-}
+  );
+};
+
+export default EventTimeline;

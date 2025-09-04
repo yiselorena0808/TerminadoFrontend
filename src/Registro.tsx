@@ -117,9 +117,10 @@ const Registro: React.FC = () => {
       <nav className="bg-[#142943] shadow-md">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-center space-x-8 h-14 items-center">
-            <Link to="/registro" className="px-4 py-2 font-medium text-sm text-white">Registrar Usuario</Link>
-            <Link to="/registroEmpresa" className="px-4 py-2 font-medium text-sm text-white">Registrar Empresa</Link>
-            <Link to="/registroArea" className="px-4 py-2 font-medium text-sm text-white">Registrar Área</Link>
+            <Link to="/registroEmpresa" className="px-4 py-2 font-medium text-sm text-white">Registrar una empresa</Link>
+            <Link to="/registroArea" className="px-4 py-2 font-medium text-sm text-white">Registrar una área</Link>
+            <Link to="/registro" className="px-4 py-2 font-medium text-sm text-white">Registrar un usuario</Link>
+          
           </div>
         </div>
       </nav>

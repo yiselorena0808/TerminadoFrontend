@@ -23,7 +23,7 @@ import Perfil from './perfil';
 import NavbarUser from './User/NavUser';
 import ListarGestionesUser from './User/GestionEppUser';
 import LectorGestion from './User/LectorGestion';
-import BlogListaRealtime from './Eventos';
+import CalendarEventos from './Eventos';
 import BlogFormulario from './BlogConFormulario';
 
 function App() {
@@ -41,7 +41,7 @@ function App() {
           <Route path="gestionEpp" element={<ListarGestiones  />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
 
-          <Route path="blog" element={<BlogListaRealtime></BlogListaRealtime>} />
+          <Route path="blog" element={<CalendarEventos></CalendarEventos>} />
           <Route path='crearBlog' element={<BlogFormulario></BlogFormulario>}></Route>
           
           <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />

@@ -72,9 +72,9 @@ const RegistroArea: React.FC = () => {
   };
 
   const links = [
-    { path: "/registro", label: "Registrar un usuario" },
-    { path: "/registroEmpresa", label: "Registrar una empresa" },
+        { path: "/registroEmpresa", label: "Registrar una empresa" },
     { path: "/registroArea", label: "Registrar una área" },
+    { path: "/registro", label: "Registrar un usuario" }
   ];
 
   return (
