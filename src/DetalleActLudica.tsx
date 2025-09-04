@@ -6,11 +6,10 @@ import {
   FileText,
   Image as ImageIcon,
   FileDown,
-  Trash2,
-  Save,
   Activity,
 } from "lucide-react";
 
+// Tipo de actividad
 interface ActividadLudica {
   id: number;
   idUsuario: number;
@@ -28,7 +27,11 @@ const DetalleActividadLudica: React.FC = () => {
   const actividad = location.state as ActividadLudica | undefined;
 
   const [descripcion, setDescripcion] = useState(actividad?.descripcion || "");
+  const [respuestaAdmin, setRespuestaAdmin] = useState("");
   const [mensaje, setMensaje] = useState("");
+
+  // Simulación de usuario admin
+  const isAdmin = true; // reemplaza con tu lógica de autenticación
 
   if (!actividad) {
     return <p className="p-6 text-center text-white">No hay datos.</p>;
@@ -44,6 +47,39 @@ const DetalleActividadLudica: React.FC = () => {
           day: "numeric",
         });
   };
+
+  // Función para enviar comentario del admin
+  const handleEnviarRespuesta = async () => {
+    if (!respuestaAdmin.trim()) {
+      setMensaje("El comentario no puede estar vacío");
+      return;
+    }
+
+    try {
+      const apiBase = import.meta.env.VITE_API_BASE;
+      const token = localStorage.getItem("token"); // si usas JWT
+      const res = await fetch(`${apiBase}/actividad/${actividad.id}/responder`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ comentario: respuestaAdmin }),
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        setMensaje("Respuesta enviada correctamente");
+        setRespuestaAdmin("");
+      } else {
+        setMensaje(data.mensaje || "Error al enviar respuesta");
+      }
+    } catch (error) {
+      console.error(error);
+      setMensaje("Error de conexión");
+    }
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center relative px-6 py-10"
@@ -67,36 +103,27 @@ const DetalleActividadLudica: React.FC = () => {
         <div className="bg-white/95 rounded-2xl shadow-2xl overflow-hidden border">
           {/* Header */}
           <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-8 text-white">
-            <h2 className="text-3xl font-bold">
-              🎨 {actividad.nombreActividad}
-            </h2>
+            <h2 className="text-3xl font-bold">🎨 {actividad.nombreActividad}</h2>
             <p className="text-pink-100">{actividad.nombreUsuario}</p>
           </div>
 
-          {/* Body */}
+          {/* Body de la actividad */}
           <div className="p-8 space-y-5">
-            {/* Usuario */}
             <p className="flex items-center gap-2 text-gray-700">
               <User className="w-5 h-5 text-pink-600" />
-              <span className="font-semibold">Usuario:</span>{" "}
-              {actividad.nombreUsuario}
+              <span className="font-semibold">Usuario:</span> {actividad.nombreUsuario}
             </p>
 
-            {/* Nombre actividad */}
             <p className="flex items-center gap-2 text-gray-700">
               <Activity className="w-5 h-5 text-pink-600" />
-              <span className="font-semibold">Actividad:</span>{" "}
-              {actividad.nombreActividad}
+              <span className="font-semibold">Actividad:</span> {actividad.nombreActividad}
             </p>
 
-            {/* Fecha */}
             <p className="flex items-center gap-2 text-gray-700">
               <Calendar className="w-5 h-5 text-pink-600" />
-              <span className="font-semibold">Fecha:</span>{" "}
-              {formatearFecha(actividad.fechaActividad)}
+              <span className="font-semibold">Fecha:</span> {formatearFecha(actividad.fechaActividad)}
             </p>
 
-            {/* Editable descripción */}
             <div className="space-y-2">
               <p className="flex items-center gap-2 text-gray-700">
                 <FileText className="w-5 h-5 text-pink-600" />
@@ -110,7 +137,6 @@ const DetalleActividadLudica: React.FC = () => {
               />
             </div>
 
-            {/* Imagen / Video */}
             {actividad.imagenVideo && (
               <div className="flex items-center gap-2">
                 <ImageIcon className="w-5 h-5 text-pink-600" />
@@ -125,7 +151,6 @@ const DetalleActividadLudica: React.FC = () => {
               </div>
             )}
 
-            {/* Archivo */}
             {actividad.archivoAdjunto && (
               <div className="flex items-center gap-2">
                 <FileDown className="w-5 h-5 text-pink-600" />
@@ -139,14 +164,34 @@ const DetalleActividadLudica: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Mensaje */}
-          {mensaje && (
-            <div className="px-8 pb-4 text-center text-green-700 font-semibold">
-              {mensaje}
-            </div>
-          )}
         </div>
+
+        {/* Sección de comentario del administrador (fuera del formulario) */}
+        {isAdmin && (
+          <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
+            <h3 className="text-lg font-semibold mb-2">Comentario del Administrador</h3>
+            <textarea
+              className="w-full border rounded-lg p-3"
+              rows={4}
+              value={respuestaAdmin}
+              onChange={(e) => setRespuestaAdmin(e.target.value)}
+              placeholder="Escribe tu comentario..."
+            />
+            <button
+              onClick={handleEnviarRespuesta}
+              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              Enviar Respuesta
+            </button>
+          </div>
+        )}
+
+        {/* Mensaje */}
+        {mensaje && (
+          <div className="mt-4 px-8 text-center text-green-700 font-semibold">
+            {mensaje}
+          </div>
+        )}
       </div>
     </div>
   );
