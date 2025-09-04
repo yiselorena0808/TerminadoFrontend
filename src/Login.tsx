@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const Login: React.FC = () => {
   const [correo_electronico, setCorreo] = useState("");
@@ -22,10 +23,15 @@ const Login: React.FC = () => {
       const mensaje = data.mensaje || data.msj || "Error desconocido";
 
       if (!res.ok || mensaje !== "Login correcto") {
-        alert(mensaje);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: mensaje,
+        });
         return;
       }
-      
+
+      // Guardar datos en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
@@ -36,16 +42,29 @@ const Login: React.FC = () => {
         console.warn("El usuario no tiene idEmpresa");
       }
 
-      navigate("/nav/inicio", { replace: true });
-      window.location.reload();
+      // Mostrar alerta de éxito
+      Swal.fire({
+        icon: "success",
+        title: "Inicio de sesión exitoso",
+        text: "Bienvenido al sistema",
+        timer: 2000,
+        showConfirmButton: false,
+      }).then(() => {
+        navigate("/nav/inicio", { replace: true });
+        window.location.reload();
+      });
     } catch (error) {
-      alert("Error de conexión con el servidor");
+      Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudo conectar con el servidor",
+      });
     }
   };
 
   return (
     <div
-    className="flex items-center justify-center w-screen h-screen bg-cover bg-center"
+      className="flex items-center justify-center w-screen h-screen bg-cover bg-center"
       style={{
         backgroundImage:
           "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://cdn2.hubspot.net/hubfs/3530961/Blogs-Pensemos-23_07_18.jpg')",
