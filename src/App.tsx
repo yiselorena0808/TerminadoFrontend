@@ -38,7 +38,7 @@ function App() {
           <Route path="/navUser" element={<NavbarUser></NavbarUser>}></Route>
           <Route path="inicio" element={<Bienvenida  />} />
 
-          <Route path="gestionEpp" element={<ListarGestiones  />} />
+          <Route path="gestionEpp" element={<ListarGestiones></ListarGestiones>} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
 
           <Route path="blog" element={<CalendarEventos></CalendarEventos>} />

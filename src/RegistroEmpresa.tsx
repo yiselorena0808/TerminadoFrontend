@@ -32,9 +32,9 @@ const RegistroEmpresa: React.FC = () => {
 
     const data = await res.json();
 
-    if (data.mensaje === "Registro correcto") {
+    if (data.mensaje === "empresa creada") {
       alert("Registro exitoso");
-      navigate("/");
+      navigate("/registro");
     } else {
       alert("Registrado correctamente");
     }

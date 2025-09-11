@@ -7,7 +7,7 @@ import "jspdf-autotable";
 interface ListaChequeo {
   id: number;
   id_usuario: number;
-  usuarioNombre: string;
+  usuario_nombre: string;
   fecha: string;
   hora: string;
   modelo: string;
@@ -15,9 +15,14 @@ interface ListaChequeo {
   soat: string;
   tecnico: string;
   kilometraje: string;
+  id_empresa: number;
 }
 
-const ListasChequeoRecibidas: React.FC = () => {
+interface Props {
+  idEmpresa: number; // ID de empresa para filtrar
+}
+
+const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
   const navigate = useNavigate();
   const [listas, setListas] = useState<ListaChequeo[]>([]);
   const [busqueda, setBusqueda] = useState("");
@@ -28,9 +33,15 @@ const ListasChequeoRecibidas: React.FC = () => {
     try {
       const res = await fetch(apiListarCheq);
       const data = await res.json();
-      setListas(data.datos);
+      if (data.datos && Array.isArray(data.datos)) {
+        setListas(data.datos);
+      } else {
+        setListas([]);
+        console.warn("No se recibieron datos válidos de la API");
+      }
     } catch (error) {
       console.error("Error al obtener listas:", error);
+      setListas([]);
     }
   };
 
@@ -42,11 +53,12 @@ const ListasChequeoRecibidas: React.FC = () => {
     navigate("/nav/detalleListasChequeo", { state: item });
   };
 
-  const ir = () => {
+  const irCrear = () => {
     navigate("/nav/crearListasChequeo");
   };
 
   const formatearFecha = (fechaIso: string) => {
+    if (!fechaIso) return "Sin fecha";
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
@@ -55,21 +67,22 @@ const ListasChequeoRecibidas: React.FC = () => {
     });
   };
 
-  const filtrar = (item: ListaChequeo) =>
-    `${item.usuarioNombre} ${item.modelo} ${item.marca}`
-      .toLowerCase()
-      .includes(busqueda.toLowerCase());
+  // Filtrar por búsqueda y por empresa
+  const listasFiltradas = listas.filter(
+    (item) =>
+      item.id_empresa === idEmpresa &&
+      `${item.usuario_nombre} ${item.modelo} ${item.marca}`
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
+  );
 
-  const listasFiltradas = listas.filter(filtrar);
-
-  
   const descargarPDF = (lista: ListaChequeo) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("Reporte Lista de Chequeo", 20, 20);
 
     doc.setFontSize(12);
-    doc.text(`Usuario: ${lista.usuarioNombre}`, 20, 40);
+    doc.text(`Usuario: ${lista.usuario_nombre}`, 20, 40);
     doc.text(`Fecha: ${formatearFecha(lista.fecha)} ${lista.hora}`, 20, 50);
     doc.text(`Marca: ${lista.marca}`, 20, 60);
     doc.text(`Modelo: ${lista.modelo}`, 20, 70);
@@ -89,14 +102,14 @@ const ListasChequeoRecibidas: React.FC = () => {
       }}
     >
       <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-extrabold text-3xl text-gray-800">
             📋 Listas de Chequeo Recibidas
           </h3>
         </div>
+
         <button
-          onClick={ir}
+          onClick={irCrear}
           className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
         >
           <FaPlus /> Crear Lista de chequeo
@@ -121,7 +134,7 @@ const ListasChequeoRecibidas: React.FC = () => {
         {/* Listado */}
         {listasFiltradas.length === 0 ? (
           <p className="text-gray-600 italic">
-            No hay listas que coincidan con la búsqueda.
+            No hay listas que coincidan con la búsqueda para esta empresa.
           </p>
         ) : (
           listasFiltradas.map((item) => (
@@ -131,11 +144,10 @@ const ListasChequeoRecibidas: React.FC = () => {
             >
               <div>
                 <div className="font-bold text-gray-800">
-                  {item.usuarioNombre} – {formatearFecha(item.fecha)} {item.hora}
+                  {item.usuario_nombre} – {formatearFecha(item.fecha)} {item.hora}
                 </div>
                 <div className="text-gray-600 text-sm">
-                  Marca: {item.marca} | Modelo: {item.modelo} | KM:{" "}
-                  {item.kilometraje} | Técnico: {item.tecnico}
+                  Marca: {item.marca} | Modelo: {item.modelo} | KM: {item.kilometraje} | Técnico: {item.tecnico}
                 </div>
                 <div className="text-gray-500 text-sm mt-1">
                   SOAT: {item.soat}
@@ -150,7 +162,6 @@ const ListasChequeoRecibidas: React.FC = () => {
                   Abrir
                 </button>
 
-                {/* Botón PDF */}
                 <button
                   onClick={() => descargarPDF(item)}
                   className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"

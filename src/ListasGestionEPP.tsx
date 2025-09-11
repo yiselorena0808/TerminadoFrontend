@@ -13,27 +13,36 @@ interface Gestion {
   productos: string;
   cantidad: number;
   importancia: string;
-  fechaCreacion: string;
+  fecha_creacion: string;
   estado: string;
+  id_empresa: number; // <-- para filtrar
 }
 
-const ListarGestiones: React.FC = () => {
+interface Props {
+  idEmpresa: number; // ID de empresa para filtrar
+}
+
+const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
   const navigate = useNavigate();
   const [listas, setListas] = useState<Gestion[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
 
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
-
   const apiListarGestiones = import.meta.env.VITE_API_LISTARGESTIONES;
-  
+
   const obtenerListas = async () => {
     try {
       const res = await fetch(apiListarGestiones);
       const data = await res.json();
-      setListas(data.datos);
+      if (data.datos && Array.isArray(data.datos)) {
+        setListas(data.datos);
+      } else {
+        setListas([]);
+      }
     } catch (error) {
       console.error("Error al obtener gestiones:", error);
+      setListas([]);
     }
   };
 
@@ -57,7 +66,6 @@ const ListarGestiones: React.FC = () => {
     });
   };
 
-
   const descargarPDF = (gestion: Gestion) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -70,14 +78,16 @@ const ListarGestiones: React.FC = () => {
     doc.text(`Productos: ${gestion.productos}`, 20, 70);
     doc.text(`Cantidad: ${gestion.cantidad}`, 20, 80);
     doc.text(`Importancia: ${gestion.importancia}`, 20, 90);
-    doc.text(`Fecha: ${formatearFecha(gestion.fechaCreacion)}`, 20, 100);
+    doc.text(`Fecha: ${formatearFecha(gestion.fecha_creacion)}`, 20, 100);
     doc.text(`Estado: ${gestion.estado}`, 20, 110);
 
     doc.save(`gestion_${gestion.id}.pdf`);
   };
 
+  // Filtrar por estado, búsqueda y id_empresa
   const gestionesFiltradas = listas.filter(
     (item) =>
+      item.id_empresa === idEmpresa &&
       (estadoFiltro === "Todos" || item.estado === estadoFiltro) &&
       `${item.nombre} ${item.apellido} ${item.cargo}`
         .toLowerCase()
@@ -106,7 +116,6 @@ const ListarGestiones: React.FC = () => {
 
         {/* Barra de búsqueda + filtro de estado */}
         <div className="flex justify-between items-center mb-6">
-          {/* Buscar */}
           <div className="flex w-80 shadow-lg rounded-full overflow-hidden border-2 border-indigo-300 bg-white">
             <input
               type="text"
@@ -120,7 +129,6 @@ const ListarGestiones: React.FC = () => {
             </span>
           </div>
 
-          {/* Filtro por estado */}
           <select
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
@@ -134,9 +142,11 @@ const ListarGestiones: React.FC = () => {
           </select>
         </div>
 
-        {/* Listado general */}
+        {/* Listado */}
         {gestionesFiltradas.length === 0 ? (
-          <p className="text-gray-600 italic">No hay gestiones disponibles.</p>
+          <p className="text-gray-600 italic">
+            No hay gestiones disponibles para esta empresa.
+          </p>
         ) : (
           gestionesFiltradas.map((item) => (
             <div
@@ -145,17 +155,14 @@ const ListarGestiones: React.FC = () => {
             >
               <div>
                 <div className="font-bold text-gray-800">
-                  {item.nombre} {item.apellido} – {formatearFecha(item.fechaCreacion)}
+                  {item.nombre} {item.apellido} – {formatearFecha(item.fecha_creacion)}
                 </div>
                 <div className="text-gray-600 text-sm">
                   Cargo: {item.cargo} | Estado:{" "}
-                  <span className="font-semibold text-indigo-600">
-                    {item.estado}
-                  </span>
+                  <span className="font-semibold text-indigo-600">{item.estado}</span>
                 </div>
               </div>
 
-              {/* Botones */}
               <div className="flex gap-4 items-center">
                 <button
                   onClick={() => abrirDetalle(item)}
@@ -164,7 +171,6 @@ const ListarGestiones: React.FC = () => {
                   Abrir
                 </button>
 
-                {/* Descargar PDF */}
                 <button
                   onClick={() => descargarPDF(item)}
                   className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"

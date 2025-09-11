@@ -6,22 +6,46 @@ import "jspdf-autotable";
 
 interface ActividadLudica {
   id: number;
-  idUsuario: number;
-  nombreUsuario: string;
-  nombreActividad: string;
-  fechaActividad: string;
+  id_usuario: number;
+  nombre_usuario: string;
+  nombre_actividad: string;
+  fecha_actividad: string | null;
   descripcion: string;
-  imagenVideo: string;
-  archivoAdjunto: string;
+  imagen_video: string;
+  archivo_adjunto: string;
+  id_empresa: number;
 }
 
-const ListasActividadesLudicas: React.FC = () => {
+interface Props {
+  idEmpresa: number;
+}
+
+const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
   const navigate = useNavigate();
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
-  
+
   const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
 
+  const obtenerActividades = async () => {
+    try {
+      const res = await fetch(apiListarAct);
+      const data = await res.json();
+      if (data.datos && Array.isArray(data.datos)) {
+        setActividades(data.datos);
+      } else {
+        setActividades([]);
+        console.warn("No se recibieron datos válidos de la API");
+      }
+    } catch (error) {
+      console.error("Error al obtener actividades lúdicas:", error);
+      setActividades([]);
+    }
+  };
+
+  useEffect(() => {
+    obtenerActividades();
+  }, []);
 
   const descargarPDF = (actividad: ActividadLudica) => {
     const doc = new jsPDF();
@@ -30,52 +54,32 @@ const ListasActividadesLudicas: React.FC = () => {
     doc.text("Reporte Actividad Lúdica", 20, 20);
 
     doc.setFontSize(12);
-    doc.text(`Actividad: ${actividad.nombreActividad}`, 20, 40);
-    doc.text(`Usuario: ${actividad.nombreUsuario}`, 20, 50);
+    doc.text(`Actividad: ${actividad.nombre_actividad}`, 20, 40);
+    doc.text(`Usuario: ${actividad.nombre_usuario}`, 20, 50);
     doc.text(
       `Fecha: ${
-        actividad.fechaActividad
-          ? new Date(actividad.fechaActividad).toLocaleDateString("es-CO")
+        actividad.fecha_actividad
+          ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO")
           : "Sin fecha"
       }`,
       20,
       60
     );
-
-    doc.text(
-      doc.splitTextToSize(
-        actividad.descripcion || "Sin descripción",
-        170
-      ),
-      20,
-      80
-    );
-
+    doc.text(doc.splitTextToSize(actividad.descripcion || "Sin descripción", 170), 20, 80);
     doc.save(`actividad_${actividad.id}.pdf`);
   };
 
-  const obtenerActividades = async () => {
-    try {
-      const res = await fetch(apiListarAct);
-      const data = await res.json();
-      setActividades(data.datos);
-    } catch (error) {
-      console.error("Error al obtener actividades lúdicas:", error);
-    }
-  };
-
-  useEffect(() => {
-    obtenerActividades();
-  }, []);
-
-  const ir = () => {
+  const irCrear = () => {
     navigate("/nav/crearActLudica");
   };
 
-  const actividadesFiltradas = actividades.filter((item) =>
-    `${item.nombreUsuario} ${item.nombreActividad}`
-      .toLowerCase()
-      .includes(busqueda.toLowerCase())
+  // Filtramos por búsqueda y por empresa
+  const actividadesFiltradas = actividades.filter(
+    (item) =>
+      item.id_empresa === idEmpresa &&
+      `${item.nombre_usuario} ${item.nombre_actividad}`
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
   );
 
   return (
@@ -90,8 +94,9 @@ const ListasActividadesLudicas: React.FC = () => {
         <h3 className="font-extrabold text-center mb-6 text-3xl text-indigo-900">
           🎉 Actividades Lúdicas
         </h3>
+
         <button
-          onClick={ir}
+          onClick={irCrear}
           className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
         >
           <FaPlus /> Crear Actividad
@@ -116,7 +121,7 @@ const ListasActividadesLudicas: React.FC = () => {
         {/* Lista de actividades */}
         {actividadesFiltradas.length === 0 ? (
           <p className="text-center text-gray-600 italic">
-            No se encontraron actividades.
+            No se encontraron actividades para esta empresa.
           </p>
         ) : (
           actividadesFiltradas.map((item) => (
@@ -124,31 +129,22 @@ const ListasActividadesLudicas: React.FC = () => {
               key={item.id}
               className="flex justify-between items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
             >
-              {/* Info de la actividad */}
               <div>
-                <div className="font-bold text-gray-800 text-lg">
-                  {item.nombreActividad}
-                </div>
+                <div className="font-bold text-gray-800 text-lg">{item.nombre_actividad}</div>
                 <div className="text-sm text-gray-600">
-                  Usuario:{" "}
-                  <span className="font-medium">{item.nombreUsuario}</span>
+                  Usuario: <span className="font-medium">{item.nombre_usuario}</span>
                 </div>
                 <div className="text-sm text-gray-600">
                   Fecha:{" "}
-                  {item.fechaActividad
-                    ? new Date(item.fechaActividad).toLocaleDateString(
-                        "es-CO",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )
+                  {item.fecha_actividad
+                    ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                      })
                     : "Sin fecha"}
                 </div>
-                <div className="text-gray-500 text-sm mt-1 line-clamp-2">
-                  {item.descripcion}
-                </div>
+                <div className="text-gray-500 text-sm mt-1 line-clamp-2">{item.descripcion}</div>
               </div>
 
               {/* Botones */}
@@ -162,7 +158,6 @@ const ListasActividadesLudicas: React.FC = () => {
                   <FaEye /> Ver
                 </button>
 
-                {/* Descargar PDF generado */}
                 <button
                   onClick={() => descargarPDF(item)}
                   className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"

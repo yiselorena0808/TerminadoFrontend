@@ -63,9 +63,9 @@ const RegistroArea: React.FC = () => {
     });
 
     const data = await res.json();
-    if (data.mensaje === "Registro correcto") {
+    if (data.mensaje === "Área creada") {
       alert("Área registrada con éxito");
-      navigate("/");
+      navigate("/registro");
     } else {
        alert("Registrado correctamente");
     }
