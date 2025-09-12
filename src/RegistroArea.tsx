@@ -22,20 +22,24 @@ const RegistroArea: React.FC = () => {
   const apiRegisterArea = import.meta.env.VITE_API_REGISTROAREA;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
 
+  // Cargar empresas activas
   useEffect(() => {
   const fetchEmpresas = async () => {
     try {
       const res = await fetch(apiEmpresas);
-      const data = await res.json();
+  const data = await res.json()
+if (data.datos) {
+  setEmpresas(data.datos.map((e: any) => ({
+    id_empresa: e.id_empresa,
+    nombre: e.nombre,
+  })))
+}
 
-      if (data.datos) {
-        const empresasNormalizadas = data.datos.map((e: any) => ({
-          id_empresa: e.id_empresa ?? e.idEmpresa,
-          nombre: e.nombre,
-        }));
-        setEmpresas(empresasNormalizadas);
+
+      if (Array.isArray(data.datos)) {
+        setEmpresas(data.datos) // ya solo tiene id_empresa y nombre
       } else {
-        console.error("Formato inesperado en la respuesta:", data);
+        console.error("Formato inesperado:", data);
       }
     } catch (err) {
       console.error("Error cargando empresas:", err);
@@ -44,37 +48,47 @@ const RegistroArea: React.FC = () => {
   fetchEmpresas();
 }, []);
 
-
+  // Registrar área
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch(apiRegisterArea, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id_empresa: id_empresa,
-        nombre,
-        codigo,
-        descripcion,
-        estado,
-        esquema,
-        alias,
-      }),
-    });
+    if (!id_empresa) {
+      alert("Selecciona una empresa.");
+      return;
+    }
 
-    const data = await res.json();
-    if (data.mensaje === "Área creada") {
-      alert("Área registrada con éxito");
-      navigate("/registro");
-    } else {
-       alert("Registrado correctamente");
+    try {
+      const res = await fetch(apiRegisterArea, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_empresa,
+          nombre,
+          codigo,
+          descripcion,
+          estado,
+          esquema,
+          alias,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.mensaje === "Área creada") {
+        alert("Área registrada con éxito");
+        navigate("/registro");
+      } else {
+        alert("Error al registrar área");
+      }
+    } catch (err) {
+      console.error("Error al registrar área:", err);
+      alert("Error al registrar área");
     }
   };
 
   const links = [
-        { path: "/registroEmpresa", label: "Registrar una empresa" },
-    { path: "/registroArea", label: "Registrar una área" },
-    { path: "/registro", label: "Registrar un usuario" }
+    { path: "/registroEmpresa", label: "Registrar una empresa" },
+    { path: "/registroArea", label: "Registrar un área" },
+    { path: "/registro", label: "Registrar un usuario" },
   ];
 
   return (
@@ -86,7 +100,7 @@ const RegistroArea: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Barra de navegación superior */}
+      {/* Barra de navegación */}
       <nav className="bg-[#142943] shadow-md">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-center space-x-8 h-14 items-center">
@@ -136,30 +150,26 @@ const RegistroArea: React.FC = () => {
 
               <form className="space-y-4" onSubmit={registrar}>
                 {/* SELECT de empresa */}
-                <select
+               <select
                   value={id_empresa}
                   onChange={(e) => setIdEmpresa(Number(e.target.value))}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900"
                   required
                 >
                   <option value="">-- Selecciona una empresa --</option>
                   {empresas.map((empresa) => (
-                    <option key={empresa.id_empresa} value={empresa.id_empresa}>
-                      {empresa.nombre}
-                    </option>
-                  ))}
+                  <option key={empresa.id_empresa} value={empresa.id_empresa}>
+                    {empresa.nombre}
+                  </option>
+                ))}
                 </select>
+
 
                 <input
                   type="text"
                   placeholder="Nombre del área"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                   required
                 />
 
@@ -168,9 +178,7 @@ const RegistroArea: React.FC = () => {
                   placeholder="Código del área"
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                   required
                 />
 
@@ -179,9 +187,7 @@ const RegistroArea: React.FC = () => {
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <label className="flex items-center text-gray-200">
@@ -199,9 +205,7 @@ const RegistroArea: React.FC = () => {
                   placeholder="Esquema"
                   value={esquema}
                   onChange={(e) => setEsquema(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <input
@@ -209,9 +213,7 @@ const RegistroArea: React.FC = () => {
                   placeholder="Alias"
                   value={alias}
                   onChange={(e) => setAlias(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 
-                             focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                             text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <button

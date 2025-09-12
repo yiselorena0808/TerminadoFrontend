@@ -12,7 +12,7 @@ import ListasReportes from './ListasReportes';
 import ListasActividadesLudicas from './ListasActLudicas';
 import AdmUsuarios from './ListasUsuarios';
 import Gestion from './CrearGestionEpp';
-import ActividadForm from './CrearActLudica';
+import CrearActividadLudica from './CrearActLudica';
 import ReportesC from './CrearReporte';
 import DetalleReporte from './DetalleReporte';
 import DetalleListaChequeo from './DetalleListaChqueo';
@@ -64,9 +64,7 @@ function App() {
 
           <Route path="actLudica" element={<ListasActividadesLudicas />} />
           <Route path="detalleActLudica" element={<DetalleActividad/>} />
-          <Route path="crearActLudica" element={<ActividadForm onSubmit={function (datos: { id_usuario: number; nombre_usuario: string; nombre_actividad: string; fecha_actividad: string; descripcion: string; imagen_video: string; archivo_adjunto: string; }): void {
-            throw new Error('Function not implemented.');
-          } } />} />
+          <Route path="crearActLudica" element={<CrearActividadLudica></CrearActividadLudica>} />
           <Route path='perfil' element={<Perfil></Perfil>}></Route>
           
           <Route path="usuarios" element={<AdmUsuarios />} />

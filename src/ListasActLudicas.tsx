@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaTrash, FaDownload, FaEye, FaPlus, FaFilePdf } from "react-icons/fa";
+import { FaEye, FaPlus, FaFilePdf } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -24,22 +24,58 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
   const navigate = useNavigate();
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [cargando, setCargando] = useState(true);
+  const [error, setError] = useState("");
 
-  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
-
+  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES 
+  
   const obtenerActividades = async () => {
     try {
-      const res = await fetch(apiListarAct);
-      const data = await res.json();
+      setCargando(true);
+      setError("");
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setError("Usuario no autenticado");
+        setCargando(false);
+        return;
+      }
+
+      const response = await fetch(apiListarAct, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      });
+
+      if (response.status === 401) {
+        setError("Sesión expirada. Por favor, inicia sesión nuevamente.");
+        localStorage.removeItem("token");
+        localStorage.removeItem("usuario");
+        setCargando(false);
+        return;
+      }
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
       if (data.datos && Array.isArray(data.datos)) {
         setActividades(data.datos);
+      } else if (Array.isArray(data)) {
+        setActividades(data);
       } else {
         setActividades([]);
-        console.warn("No se recibieron datos válidos de la API");
+        setError("No se recibieron datos válidos de la API");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al obtener actividades lúdicas:", error);
+      setError(error.message || "Error al cargar actividades");
       setActividades([]);
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -73,7 +109,6 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
     navigate("/nav/crearActLudica");
   };
 
-  // Filtramos por búsqueda y por empresa
   const actividadesFiltradas = actividades.filter(
     (item) =>
       item.id_empresa === idEmpresa &&
@@ -81,6 +116,14 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
         .toLowerCase()
         .includes(busqueda.toLowerCase())
   );
+
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Cargando actividades...</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -94,6 +137,12 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
         <h3 className="font-extrabold text-center mb-6 text-3xl text-indigo-900">
           🎉 Actividades Lúdicas
         </h3>
+
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
+            {error}
+          </div>
+        )}
 
         <button
           onClick={irCrear}
@@ -121,7 +170,9 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
         {/* Lista de actividades */}
         {actividadesFiltradas.length === 0 ? (
           <p className="text-center text-gray-600 italic">
-            No se encontraron actividades para esta empresa.
+            {actividades.length === 0 
+              ? "No se encontraron actividades." 
+              : "No hay actividades que coincidan con la búsqueda."}
           </p>
         ) : (
           actividadesFiltradas.map((item) => (

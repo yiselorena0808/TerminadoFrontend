@@ -1,132 +1,130 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const ReportesC: React.FC = () => {
-  const [form, setForm] = useState({
-    id_usuario: "",
-    nombre_usuario: "",
-    cargo: "",
-    cedula: "",
-    fecha: "",
-    lugar: "",
-    descripcion: "",
-    imagen: "",
-    archivos: "",
-    estado: "",
-  });
-
-  const [mensaje, setMensaje] = useState<string>("");
+const CrearActividadLudica: React.FC = () => {
   const navigate = useNavigate();
 
-  const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
+  const [usuario, setUsuario] = useState<{ nombre: string } | null>(null);
+  const [form, setForm] = useState({
+    nombre_actividad: "",
+    fecha_actividad: "",
+    descripcion: "",
+    imagen_video: "",
+    archivo_adjunto: "",
+  });
+  const [mensaje, setMensaje] = useState("");
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
+  // Verifica que la variable de entorno esté correctamente configurada
+  const apiCrearActividad = import.meta.env.VITE_API_CREARACTIVIDAD || "https://backsst.onrender.com/crearActividadLudica";
+
+  useEffect(() => {
+    const usuarioLogueado = localStorage.getItem("usuario");
+    if (usuarioLogueado) {
+      const parsed = JSON.parse(usuarioLogueado);
+      setUsuario({ nombre: parsed.nombre });
+    }
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const idUsuarioNum = parseInt(form.id_usuario);
-    if (isNaN(idUsuarioNum)) {
-      alert("ID de usuario debe ser un número válido.");
-      return;
-    }
-
     try {
-      const response = await fetch(apiCrearReporte, {
+      const token = localStorage.getItem("token");
+      console.log("Token:", token); // Debug
+      console.log("URL:", apiCrearActividad); // Debug
+      
+      if (!token) {
+        setMensaje("Usuario no logueado");
+        return;
+      }
+
+      const response = await fetch(apiCrearActividad, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`, // ← ESPACIO AÑADIDO después de "Bearer"
+        },
         body: JSON.stringify({
-          ...form,
-          id_usuario: idUsuarioNum,
+          nombre_actividad: form.nombre_actividad,
+          fecha_actividad: form.fecha_actividad,
+          descripcion: form.descripcion,
+          imagen_video: form.imagen_video,
+          archivo_adjunto: form.archivo_adjunto,
         }),
       });
 
+      console.log("Status:", response.status); // Debug
+      
       const data = await response.json();
-      setMensaje(data.mensaje || "Reporte enviado correctamente");
+      console.log("Respuesta del backend:", data);
+
+      if (response.ok) {
+        setMensaje(data.mensaje || "Actividad creada correctamente");
+        setForm({
+          nombre_actividad: "",
+          fecha_actividad: "",
+          descripcion: "",
+          imagen_video: "",
+          archivo_adjunto: "",
+        });
+      } else {
+        // Maneja específicamente el error 401
+        if (response.status === 401) {
+          setMensaje("Sesión expirada. Por favor, inicia sesión nuevamente.");
+          localStorage.removeItem("token");
+          localStorage.removeItem("usuario");
+        } else {
+          setMensaje(data.error || data.errors?.[0] || "Ocurrió un error al crear la actividad");
+        }
+      }
     } catch (error) {
-      console.error("Error al enviar:", error);
-      setMensaje("No se pudo enviar el reporte ");
+      console.error("Error al crear actividad:", error);
+      setMensaje("Ocurrió un error de conexión");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://img.freepik.com/vector-gratis/equipo-construccion-trabajadores_24908-56103.jpg?semt=ais_hybrid&w=740&q=80')",
-      }}
-    >
-      <div className="w-full max-w-3xl bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 text-white">
-        <h2 className="text-4xl font-bold text-center mb-6 drop-shadow-lg">
-          Registro de Reportes
-        </h2>
+    <div className="flex items-center justify-center min-h-screen bg-gray-100">
+      <div className="w-full max-w-3xl bg-white rounded-3xl shadow-2xl p-10">
+        <h2 className="text-3xl font-bold text-center mb-6">Crear Actividad Lúdica</h2>
 
         {mensaje && (
-          <div className="mb-4 p-3 rounded-lg bg-blue-300 text-blue-900 text-center font-medium shadow">
+          <div className={`mb-4 p-3 rounded-lg text-center ${
+            mensaje.includes("correctamente") 
+              ? "bg-green-200 text-green-900" 
+              : "bg-red-200 text-red-900"
+          }`}>
             {mensaje}
           </div>
         )}
 
+        {usuario && (
+          <p className="mb-4 text-gray-700">
+            Usuario logueado: <strong>{usuario.nombre}</strong>
+          </p>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="number"
-            name="id_usuario"
-            placeholder="ID Usuario"
-            value={form.id_usuario}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
             type="text"
-            name="nombre_usuario"
-            placeholder="Nombre Usuario"
-            value={form.nombre_usuario}
+            name="nombre_actividad"
+            placeholder="Nombre de la actividad"
+            value={form.nombre_actividad}
             onChange={handleChange}
             required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="cargo"
-            placeholder="Cargo"
-            value={form.cargo}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="cedula"
-            placeholder="Cédula"
-            value={form.cedula}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-lg"
           />
           <input
             type="date"
-            name="fecha"
-            value={form.fecha}
+            name="fecha_actividad"
+            value={form.fecha_actividad}
             onChange={handleChange}
             required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="lugar"
-            placeholder="Lugar"
-            value={form.lugar}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-lg"
           />
           <textarea
             name="descripcion"
@@ -135,48 +133,36 @@ const ReportesC: React.FC = () => {
             onChange={handleChange}
             required
             rows={3}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-lg"
           />
           <input
             type="text"
-            name="imagen"
-            placeholder="Imagen (URL)"
-            value={form.imagen}
+            name="imagen_video"
+            placeholder="URL imagen/video"
+            value={form.imagen_video}
             onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-lg"
           />
           <input
             type="text"
-            name="archivos"
-            placeholder="Archivos (URL)"
-            value={form.archivos}
+            name="archivo_adjunto"
+            placeholder="URL archivo adjunto"
+            value={form.archivo_adjunto}
             onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
+            className="w-full p-3 border rounded-lg"
           />
-          <select
-            name="estado"
-            value={form.estado}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">Seleccione un estado</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Revisado">Revisado</option>
-            <option value="Finalizado">Finalizado</option>
-          </select>
 
           <div className="flex gap-4">
             <button
               type="submit"
-              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transition"
+              className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
             >
-              Enviar Reporte
+              Crear Actividad
             </button>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-gray-500 to-gray-700 rounded-lg shadow-lg hover:scale-105 transition"
+              className="flex-1 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-700 transition"
             >
               Volver
             </button>
@@ -187,4 +173,4 @@ const ReportesC: React.FC = () => {
   );
 };
 
-export default ReportesC;
+export default CrearActividadLudica;

@@ -28,10 +28,11 @@ const Login: React.FC = () => {
           title: "Error",
           text: mensaje,
         });
+        console.warn("Login fallido:", mensaje);
         return;
       }
 
-      // Guardar datos en localStorage
+      
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
@@ -42,7 +43,12 @@ const Login: React.FC = () => {
         console.warn("El usuario no tiene idEmpresa");
       }
 
-      // Mostrar alerta de éxito
+      
+      console.log("Login exitoso");
+      console.log("Token guardado:", localStorage.getItem("token"));
+      console.log("Usuario guardado:", localStorage.getItem("usuario"));
+
+      
       Swal.fire({
         icon: "success",
         title: "Inicio de sesión exitoso",
@@ -51,7 +57,7 @@ const Login: React.FC = () => {
         showConfirmButton: false,
       }).then(() => {
         navigate("/nav/inicio", { replace: true });
-        window.location.reload();
+
       });
     } catch (error) {
       Swal.fire({
@@ -59,6 +65,7 @@ const Login: React.FC = () => {
         title: "Error de conexión",
         text: "No se pudo conectar con el servidor",
       });
+      console.error("Error de conexión:", error);
     }
   };
 
