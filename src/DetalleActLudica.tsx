@@ -8,6 +8,8 @@ import {
   FileDown,
   Activity,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 // Tipo de actividad
 interface ActividadLudica {
@@ -57,7 +59,7 @@ const DetalleActividadLudica: React.FC = () => {
 
     try {
       const apiBase = import.meta.env.VITE_API_BASE;
-      const token = localStorage.getItem("token"); // si usas JWT
+      const token = localStorage.getItem("token");
       const res = await fetch(`${apiBase}/actividad/${actividad.id}/responder`, {
         method: "POST",
         headers: {
@@ -78,6 +80,29 @@ const DetalleActividadLudica: React.FC = () => {
       console.error(error);
       setMensaje("Error de conexión");
     }
+  };
+
+  // Función para descargar PDF
+  const descargarPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text("Detalle Actividad Lúdica", 20, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Nombre de la actividad: ${actividad.nombreActividad}`, 20, 35);
+    doc.text(`Usuario: ${actividad.nombreUsuario}`, 20, 45);
+    doc.text(`Fecha: ${formatearFecha(actividad.fechaActividad)}`, 20, 55);
+    doc.text("Descripción:", 20, 65);
+    doc.text(doc.splitTextToSize(descripcion || "Sin descripción", 170), 20, 72);
+
+    if (actividad.imagenVideo) {
+      doc.text(`Imagen/Video: ${actividad.imagenVideo}`, 20, 100);
+    }
+    if (actividad.archivoAdjunto) {
+      doc.text(`Archivo adjunto: ${actividad.archivoAdjunto}`, 20, 110);
+    }
+
+    doc.save(`actividad_${actividad.id}.pdf`);
   };
 
   return (
@@ -102,9 +127,17 @@ const DetalleActividadLudica: React.FC = () => {
         {/* Card principal */}
         <div className="bg-white/95 rounded-2xl shadow-2xl overflow-hidden border">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-8 text-white">
-            <h2 className="text-3xl font-bold">🎨 {actividad.nombreActividad}</h2>
-            <p className="text-pink-100">{actividad.nombreUsuario}</p>
+          <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-8 text-white flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-bold">🎨 {actividad.nombreActividad}</h2>
+              <p className="text-pink-100">{actividad.nombreUsuario}</p>
+            </div>
+            <button
+              onClick={descargarPDF}
+              className="px-4 py-2 bg-red-600 rounded-lg shadow hover:bg-red-700 text-white"
+            >
+              Descargar PDF
+            </button>
           </div>
 
           {/* Body de la actividad */}
@@ -137,8 +170,9 @@ const DetalleActividadLudica: React.FC = () => {
               />
             </div>
 
+            {/* Imagen/Video */}
             {actividad.imagenVideo && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <ImageIcon className="w-5 h-5 text-pink-600" />
                 <a
                   href={actividad.imagenVideo}
@@ -148,25 +182,50 @@ const DetalleActividadLudica: React.FC = () => {
                 >
                   Ver Imagen/Video
                 </a>
+                <button
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = actividad.imagenVideo;
+                    link.download = `media_${actividad.id}`;
+                    link.click();
+                  }}
+                  className="text-green-600 underline"
+                >
+                  Descargar
+                </button>
               </div>
             )}
 
+            {/* Archivo adjunto */}
             {actividad.archivoAdjunto && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-4">
                 <FileDown className="w-5 h-5 text-pink-600" />
                 <a
                   href={actividad.archivoAdjunto}
-                  download
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 underline"
+                >
+                  Ver Archivo
+                </a>
+                <button
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = actividad.archivoAdjunto;
+                    link.download =
+                      actividad.archivoAdjunto.split("/").pop() || `archivo_${actividad.id}`;
+                    link.click();
+                  }}
                   className="text-green-600 underline"
                 >
-                  Descargar archivo
-                </a>
+                  Descargar
+                </button>
               </div>
             )}
           </div>
         </div>
 
-        {/* Sección de comentario del administrador (fuera del formulario) */}
+        {/* Sección de comentario del administrador */}
         {isAdmin && (
           <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-2">Comentario del Administrador</h3>

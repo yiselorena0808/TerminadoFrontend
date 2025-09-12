@@ -27,13 +27,13 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES 
-  
+  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
+
   const obtenerActividades = async () => {
     try {
       setCargando(true);
       setError("");
-      
+
       const token = localStorage.getItem("token");
       if (!token) {
         setError("Usuario no autenticado");
@@ -43,9 +43,9 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
 
       const response = await fetch(apiListarAct, {
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
       });
 
       if (response.status === 401) {
@@ -61,7 +61,7 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
       }
 
       const data = await response.json();
-      
+
       if (data.datos && Array.isArray(data.datos)) {
         setActividades(data.datos);
       } else if (Array.isArray(data)) {
@@ -83,28 +83,6 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
     obtenerActividades();
   }, []);
 
-  const descargarPDF = (actividad: ActividadLudica) => {
-    const doc = new jsPDF();
-
-    doc.setFontSize(18);
-    doc.text("Reporte Actividad Lúdica", 20, 20);
-
-    doc.setFontSize(12);
-    doc.text(`Actividad: ${actividad.nombre_actividad}`, 20, 40);
-    doc.text(`Usuario: ${actividad.nombre_usuario}`, 20, 50);
-    doc.text(
-      `Fecha: ${
-        actividad.fecha_actividad
-          ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO")
-          : "Sin fecha"
-      }`,
-      20,
-      60
-    );
-    doc.text(doc.splitTextToSize(actividad.descripcion || "Sin descripción", 170), 20, 80);
-    doc.save(`actividad_${actividad.id}.pdf`);
-  };
-
   const irCrear = () => {
     navigate("/nav/crearActLudica");
   };
@@ -116,6 +94,41 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
         .toLowerCase()
         .includes(busqueda.toLowerCase())
   );
+
+  const descargarPDF = (actividad: ActividadLudica) => {
+  const doc = new jsPDF();
+  doc.setFontSize(16);
+  doc.text("Detalle Actividad Lúdica", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Nombre de la actividad: ${actividad.nombre_actividad || "Sin nombre"}`, 20, 35);
+  doc.text(`Usuario: ${actividad.nombre_usuario || "Sin usuario"}`, 20, 45);
+  doc.text(
+    `Fecha: ${
+      actividad.fecha_actividad
+        ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+        : "Sin fecha"
+    }`,
+    20,
+    55
+  );
+  doc.text("Descripción:", 20, 65);
+  doc.text(doc.splitTextToSize(actividad.descripcion || "Sin descripción", 170), 20, 72);
+
+  if (actividad.imagen_video) {
+    doc.text(`Imagen/Video: ${actividad.imagen_video}`, 20, 100);
+  }
+  if (actividad.archivo_adjunto) {
+    doc.text(`Archivo adjunto: ${actividad.archivo_adjunto}`, 20, 110);
+  }
+
+  doc.save(`actividad_${actividad.id}.pdf`);
+};
+
 
   if (cargando) {
     return (
@@ -170,36 +183,71 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
         {/* Lista de actividades */}
         {actividadesFiltradas.length === 0 ? (
           <p className="text-center text-gray-600 italic">
-            {actividades.length === 0 
-              ? "No se encontraron actividades." 
+            {actividades.length === 0
+              ? "No se encontraron actividades."
               : "No hay actividades que coincidan con la búsqueda."}
           </p>
         ) : (
           actividadesFiltradas.map((item) => (
             <div
               key={item.id}
-              className="flex justify-between items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
+              className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
             >
-              <div>
-                <div className="font-bold text-gray-800 text-lg">{item.nombre_actividad}</div>
-                <div className="text-sm text-gray-600">
-                  Usuario: <span className="font-medium">{item.nombre_usuario}</span>
+              <div className="flex-1 md:flex md:items-center gap-4">
+                {/* Imagen o video */}
+                {item.imagen_video && (
+                  <div className="w-32 h-32 flex-shrink-0">
+                    {item.imagen_video.endsWith(".mp4") || item.imagen_video.endsWith(".webm") ? (
+                      <video
+                        src={item.imagen_video}
+                        controls
+                        className="w-32 h-32 object-cover rounded"
+                      />
+                    ) : (
+                      <img
+                        src={item.imagen_video}
+                        alt={item.nombre_actividad}
+                        className="w-32 h-32 object-cover rounded"
+                      />
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <div className="font-bold text-gray-800 text-lg">{item.nombre_actividad}</div>
+                  <div className="text-sm text-gray-600">
+                    Usuario: <span className="font-medium">{item.nombre_usuario}</span>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    Fecha:{" "}
+                    {item.fecha_actividad
+                      ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })
+                      : "Sin fecha"}
+                  </div>
+                  <div className="text-gray-500 text-sm mt-1">{item.descripcion}</div>
+
+                  {/* Archivo adjunto */}
+                  {item.archivo_adjunto && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <a
+                        href={item.archivo_adjunto}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline"
+                      >
+                        Ver archivo adjunto
+                      </a>
+                    </div>
+                  )}
                 </div>
-                <div className="text-sm text-gray-600">
-                  Fecha:{" "}
-                  {item.fecha_actividad
-                    ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })
-                    : "Sin fecha"}
-                </div>
-                <div className="text-gray-500 text-sm mt-1 line-clamp-2">{item.descripcion}</div>
               </div>
 
               {/* Botones */}
-              <div className="flex gap-3 items-center">
+              <div className="flex gap-3 mt-4 md:mt-0 items-center">
                 <button
                   onClick={() =>
                     navigate("/nav/detalleActLudica", { state: item })

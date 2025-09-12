@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlus, FaFilePdf } from "react-icons/fa";
+import { FaSearch, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 interface ListaChequeo {
   id: number;
@@ -76,23 +74,6 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
         .includes(busqueda.toLowerCase())
   );
 
-  const descargarPDF = (lista: ListaChequeo) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Reporte Lista de Chequeo", 20, 20);
-
-    doc.setFontSize(12);
-    doc.text(`Usuario: ${lista.usuario_nombre}`, 20, 40);
-    doc.text(`Fecha: ${formatearFecha(lista.fecha)} ${lista.hora}`, 20, 50);
-    doc.text(`Marca: ${lista.marca}`, 20, 60);
-    doc.text(`Modelo: ${lista.modelo}`, 20, 70);
-    doc.text(`Kilometraje: ${lista.kilometraje}`, 20, 80);
-    doc.text(`Técnico: ${lista.tecnico}`, 20, 90);
-    doc.text(`SOAT: ${lista.soat}`, 20, 100);
-
-    doc.save(`listaChequeo_${lista.id}.pdf`);
-  };
-
   return (
     <div
       className="p-6 min-h-screen bg-cover bg-center"
@@ -160,14 +141,6 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
                   className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
                 >
                   Abrir
-                </button>
-
-                <button
-                  onClick={() => descargarPDF(item)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                  title="Descargar PDF"
-                >
-                  <FaFilePdf />
                 </button>
               </div>
             </div>
