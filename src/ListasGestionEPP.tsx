@@ -15,11 +15,11 @@ interface Gestion {
   importancia: string;
   fecha_creacion: string;
   estado: string;
-  id_empresa: number; // <-- para filtrar
+  id_empresa: number;
 }
 
 interface Props {
-  idEmpresa: number; // ID de empresa para filtrar
+  idEmpresa: number; 
 }
 
 const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
@@ -84,7 +84,6 @@ const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
     doc.save(`gestion_${gestion.id}.pdf`);
   };
 
-  // Filtrar por estado, búsqueda y id_empresa
   const gestionesFiltradas = listas.filter(
     (item) =>
       item.id_empresa === idEmpresa &&
