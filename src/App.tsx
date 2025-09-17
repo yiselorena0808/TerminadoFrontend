@@ -11,9 +11,7 @@ import ListasChequeoRecibidas from './ListasChequeo';
 import ListasReportes from './ListasReportes';
 import ListasActividadesLudicas from './ListasActLudicas';
 import AdmUsuarios from './ListasUsuarios';
-import Gestion from './CrearGestionEpp';
 import CrearActividadLudica from './CrearActLudica';
-import ReportesC from './CrearReporte';
 import DetalleReporte from './DetalleReporte';
 import DetalleListaChequeo from './DetalleListaChqueo';
 import DetalleActividad from './DetalleActLudica';
@@ -25,6 +23,9 @@ import ListarGestionesUser from './User/GestionEppUser';
 import LectorGestion from './User/LectorGestion';
 import CalendarEventos from './Eventos';
 import BlogFormulario from './BlogConFormulario';
+import CrearReporte from './CrearReporte';
+import GestionEppForm from './CrearGestionEpp';
+import DashboardReportes from './DashboardReportes';
 
 function App() {
   return (
@@ -36,7 +37,7 @@ function App() {
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
          <Route path="/nav" element={<Navba />}>
           <Route path="/navUser" element={<NavbarUser></NavbarUser>}></Route>
-          <Route path="inicio" element={<Bienvenida  />} />
+          <Route path="inicio" element={<DashboardReportes></DashboardReportes>} />
 
           <Route path="gestionEpp" element={<ListarGestiones></ListarGestiones>} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
@@ -47,9 +48,7 @@ function App() {
           <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />
           <Route path="lectorUser" element={<LectorGestion />} />
 
-          <Route path="creargestionEpp" element={<Gestion onSubmit={function (datos: { id_usuario: number; nombre: string; apellido: string; cedula: number; cargo: string; productos: string; cantidad: number; importancia: string; estado: string | null; fecha_creacion: string; }): void {
-            throw new Error('Function not implemented.');
-          } }/>} />
+          <Route path="creargestionEpp" element={<GestionEppForm></GestionEppForm>} ></Route>
 
           <Route path="ListasChequeo" element={<ListasChequeoRecibidas  />} />
           <Route path="detalleListasChequeo" element={<DetalleListaChequeo />} />
@@ -58,11 +57,9 @@ function App() {
 
           <Route path="reportesC" element={<ListasReportes></ListasReportes>} />
           <Route path="detalleReportes" element={<DetalleReporte />} />
-          <Route path="crearReportes" element={<ReportesC onSubmit={function (datos: {id_usuario: number; nombre_usuario: string; cargo: string; cedula: string; fecha:Date; lugar: string; descripcion: string; imagen: string; archivos: string; estado: string }): void {
-            throw new Error('Function not implemented.');
-          } } />} />
+          <Route path="crearReportes" element={<CrearReporte></CrearReporte>}></Route>
 
-          <Route path="actLudica" element={<ListasActividadesLudicas />} />
+          <Route path="actLudica" element={<ListasActividadesLudicas></ListasActividadesLudicas>} />
           <Route path="detalleActLudica" element={<DetalleActividad/>} />
           <Route path="crearActLudica" element={<CrearActividadLudica></CrearActividadLudica>} />
           <Route path='perfil' element={<Perfil></Perfil>}></Route>

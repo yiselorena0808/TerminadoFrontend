@@ -1,212 +1,117 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
-const ReportesC: React.FC = () => {
-  const [form, setForm] = useState({
-    id_usuario: "",
-    nombre_usuario: "",
+const CrearReporte: React.FC = () => {
+  const navigate = useNavigate();
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+
+  const [formData, setFormData] = useState({
     cargo: "",
     cedula: "",
     fecha: "",
     lugar: "",
     descripcion: "",
-    imagen: "",
-    archivos: "",
-    estado: "",
   });
 
-  const [mensaje, setMensaje] = useState<string>("");
-  const navigate = useNavigate();
+  const [imagen, setImagen] = useState<File | null>(null);
+  const [archivos, setArchivos] = useState<File | null>(null);
 
   const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setForm({ ...form, [name]: value });
-  };
+  
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (!u) {
+      alert("Usuario no autenticado. Por favor inicia sesión.");
+      navigate("/login");
+      return;
+    }
+    setUsuario(u);
+  }, []);
 
-  // Función para convertir archivo a base64
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      setForm({ ...form, archivos: reader.result as string });
-    };
-    reader.readAsDataURL(file); // Convierte a base64
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const idUsuarioNum = parseInt(form.id_usuario);
-    if (isNaN(idUsuarioNum)) {
-      alert("ID de usuario debe ser un número válido.");
-      return;
-    }
+    if (!usuario) return alert("Usuario no autenticado");
+
+    const token = localStorage.getItem("token");
+    if (!token) return alert("No hay token en localStorage");
 
     try {
-      const response = await fetch(apiCrearReporte, {
+      const data = new FormData();
+
+      // Agregar datos del formulario
+      Object.entries(formData).forEach(([key, value]) => data.append(key, value));
+
+      // Agregar archivos
+      if (imagen) data.append("imagen", imagen);
+      if (archivos) data.append("archivos", archivos);
+
+      // Agregar datos del usuario logueado
+      data.append("id_usuario", usuario.id.toString());
+      data.append("nombre_usuario", usuario.nombre);
+      data.append("id_empresa", usuario.id_empresa.toString());
+
+      // Enviar POST con token en Authorization
+      const res = await fetch(apiCrearReporte, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...form,
-          id_usuario: idUsuarioNum,
-        }),
+        headers: {
+          Authorization: `Bearer ${token}`, // Muy importante: solo el token
+        },
+        body: data,
       });
 
-      const data = await response.json();
-      setMensaje(data.mensaje || "Reporte enviado correctamente");
+      if (!res.ok) {
+        const result = await res.json();
+        console.error(" Error en respuesta:", result);
+        return alert(result.error || "Error al enviar reporte");
+      }
+
+      const result = await res.json();
+      console.log("Reporte creado:", result);
+      alert("Reporte creado correctamente");
+      navigate("/nav/crearReportes");
     } catch (error) {
-      console.error("Error al enviar:", error);
-      setMensaje("No se pudo enviar el reporte");
+      console.error("Error al enviar reporte:", error);
+      alert("Ocurrió un error al enviar el reporte");
     }
   };
 
   return (
-    <div
-      className="flex items-center justify-center min-h-screen bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://img.freepik.com/vector-gratis/equipo-construccion-trabajadores_24908-56103.jpg?semt=ais_hybrid&w=740&q=80')",
-      }}
-    >
-      <div className="w-full max-w-3xl bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-10 text-white">
-        <h2 className="text-4xl font-bold text-center mb-6 drop-shadow-lg">
-          Registro de Reportes
-        </h2>
+    <div className="p-6 min-h-screen bg-gray-100 flex justify-center">
+      <form onSubmit={handleSubmit} className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-3xl">
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">📋 Crear Reporte</h2>
 
-        {mensaje && (
-          <div className="mb-4 p-3 rounded-lg bg-blue-300 text-blue-900 text-center font-medium shadow">
-            {mensaje}
-          </div>
-        )}
+        <div className="grid grid-cols-2 gap-4">
+          <input type="text" name="cargo" placeholder="Cargo" value={formData.cargo} onChange={handleChange} className="border p-2 rounded" />
+          <input type="text" name="cedula" placeholder="Cédula" value={formData.cedula} onChange={handleChange} className="border p-2 rounded" />
+          <input type="date" name="fecha" value={formData.fecha} onChange={handleChange} className="border p-2 rounded" />
+          <input type="text" name="lugar" placeholder="Lugar" value={formData.lugar} onChange={handleChange} className="border p-2 rounded" />
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="number"
-            name="id_usuario"
-            placeholder="ID Usuario"
-            value={form.id_usuario}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="nombre_usuario"
-            placeholder="Nombre Usuario"
-            value={form.nombre_usuario}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="cargo"
-            placeholder="Cargo"
-            value={form.cargo}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="cedula"
-            placeholder="Cédula"
-            value={form.cedula}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="date"
-            name="fecha"
-            value={form.fecha}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="lugar"
-            placeholder="Lugar"
-            value={form.lugar}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <textarea
-            name="descripcion"
-            placeholder="Descripción"
-            value={form.descripcion}
-            onChange={handleChange}
-            required
-            rows={3}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
-          <input
-            type="text"
-            name="imagen"
-            placeholder="Imagen (URL)"
-            value={form.imagen}
-            onChange={handleChange}
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white placeholder-gray-200 focus:ring-2 focus:ring-blue-400"
-          />
+        <textarea name="descripcion" placeholder="Descripción" value={formData.descripcion} onChange={handleChange} className="border p-2 rounded w-full mt-4" />
 
-          {/* Input para seleccionar archivo desde escritorio */}
-          <div>
-            <label className="block mb-1 text-white font-semibold">Archivo:</label>
-            <input
-              type="file"
-              accept="*"
-              onChange={handleFileChange}
-              className="w-full p-2 rounded-lg text-gray-800 bg-white border border-blue-200"
-            />
-            {form.archivos && (
-              <p className="mt-2 text-sm text-green-300 truncate">
-                Archivo cargado (base64)
-              </p>
-            )}
-          </div>
+        <div className="mt-4">
+          <label>Imagen:</label>
+          <input type="file" accept="image/*" onChange={(e) => setImagen(e.target.files?.[0] || null)} />
+        </div>
 
-          <select
-            name="estado"
-            value={form.estado}
-            onChange={handleChange}
-            required
-            className="w-full p-3 rounded-lg bg-white/20 border border-blue-200 text-white focus:ring-2 focus:ring-blue-400"
-          >
-            <option value="">Seleccione un estado</option>
-            <option value="Pendiente">Pendiente</option>
-            <option value="Revisado">Revisado</option>
-            <option value="Finalizado">Finalizado</option>
-          </select>
+        <div className="mt-4">
+          <label>Archivos:</label>
+          <input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx" onChange={(e) => setArchivos(e.target.files?.[0] || null)} />
+        </div>
 
-          <div className="flex gap-4">
-            <button
-              type="submit"
-              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-blue-700 rounded-lg shadow-lg hover:scale-105 transition"
-            >
-              Enviar Reporte
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="flex-1 py-3 text-lg font-bold text-white bg-gradient-to-r from-gray-500 to-gray-700 rounded-lg shadow-lg hover:scale-105 transition"
-            >
-              Volver
-            </button>
-          </div>
-        </form>
-      </div>
+        <button type="submit" className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded">
+          Enviar Reporte
+        </button>
+      </form>
     </div>
   );
 };
 
-export default ReportesC;
+export default CrearReporte;

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaFilePdf } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface Reporte {
   id_reporte: number;
@@ -16,6 +17,7 @@ interface Reporte {
   imagen: string;
   archivos: string;
   estado: string;
+  id_empresa: number;
 }
 
 const ListarReportes: React.FC = () => {
@@ -23,16 +25,55 @@ const ListarReportes: React.FC = () => {
   const [listas, setListas] = useState<Reporte[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
 
+  // Obtener usuario desde token
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
+  }, []);
+
+  // Obtener reportes filtrados por id_empresa
   const obtenerListas = async () => {
+    if (!usuario) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Usuario no autenticado");
+
     try {
-      const res = await fetch(apiListarReportes, { credentials: 'include' });
+      const res = await fetch(apiListarReportes, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
       const data = await res.json();
+
       if (data.datos && Array.isArray(data.datos)) {
-        setListas(data.datos);
+        // Filtrar por id_empresa y mapear a formato esperado
+        const filtrados: Reporte[] = data.datos
+          .filter((r: any) => Number(r.idEmpresa ?? r.id_empresa) === Number(usuario.id_empresa))
+          .map((r: any) => ({
+            id_reporte: r.idReporte ?? r.id_reporte,
+            id_usuario: r.idUsuario ?? r.id_usuario,
+            nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
+            cargo: r.cargo,
+            cedula: r.cedula,
+            fecha: r.fecha,
+            lugar: r.lugar,
+            descripcion: r.descripcion,
+            imagen: r.imagen ?? "",
+            archivos: r.archivos ?? "",
+            estado: r.estado,
+            id_empresa: r.idEmpresa ?? r.id_empresa,
+          }));
+
+        setListas(filtrados);
       } else {
         setListas([]);
         console.warn("No se recibieron datos válidos de la API");
@@ -44,8 +85,8 @@ const ListarReportes: React.FC = () => {
   };
 
   useEffect(() => {
-    obtenerListas();
-  }, []);
+    if (usuario) obtenerListas();
+  }, [usuario]);
 
   const abrirDetalle = (item: Reporte) => {
     navigate("/nav/detalleReportes", { state: item });

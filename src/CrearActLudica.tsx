@@ -30,8 +30,7 @@ const CrearActividadLudica: React.FC = () => {
       })
       const data = await response.json()
       if (!response.ok) return alert(data.error || 'Error al crear actividad')
-      alert('Actividad creada correctamente ✅')
-      // reset
+      alert('Actividad creada correctamente')
       setNombreActividad('')
       setFechaActividad('')
       setDescripcion('')

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import ActualizarUsuarioModal from "./Actualizarusuarios";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface Empresa {
   idEmpresa: number;
@@ -44,73 +45,102 @@ const AdmUsuarios: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [filtro, setFiltro] = useState<string>("");
   const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
-  const [idTenantLogueado, setIdTenantLogueado] = useState<number | null>(null);
+  const [usuarioLogueado, setUsuarioLogueado] = useState<UsuarioToken | null>(null);
 
-  const apiListar= import.meta.env.VITE_API_LISTARUSUARIOS
-  const apiEliminar= import.meta.env.VITE_API_ELIMINARUSUARIO
-  const apiActualizar= import.meta.env.VITE_API_ACTUALIZARUSUARIO
+  const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
+  const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
+  const apiActualizar = import.meta.env.VITE_API_ACTUALIZARUSUARIO;
+
+  // Obtener usuario logueado desde token
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuarioLogueado(u);
+  }, []);
 
   const obtenerUsuarios = async () => {
-    try {
-      const res = await fetch(apiListar);
-      const data: Usuario[] = await res.json();
-      setUsuarios(data);
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Usuario no autenticado");
+
+    const res = await fetch(apiListar, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    const data = await res.json();
+
+    // Asegurarnos de que data.datos sea un array
+    const usuariosApi = Array.isArray(data.datos) ? data.datos : [];
+    if (usuariosApi.length === 0) {
+      console.warn("No se recibieron datos válidos de la API o está vacío");
     }
-  };
+
+    const usuarioLogueado = JSON.parse(localStorage.getItem("usuario") || "{}");
+    const filtrados = usuariosApi.filter((u: any) => u.idEmpresa === usuarioLogueado.idEmpresa);
+
+    setUsuarios(filtrados);
+  } catch (error) {
+    console.error("Error al cargar usuarios:", error);
+    setUsuarios([]);
+  }
+};
+
+
 
   const eliminarUsuario = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
 
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Usuario no autenticado");
+
     try {
-      const res = await fetch(
-        apiEliminar + id,
-        {
-          method: "DELETE",
-        }
-      );
+      const res = await fetch(`${apiEliminar}${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       const data = await res.json();
       alert(data.mensaje);
       obtenerUsuarios();
     } catch (error) {
+      console.error("No se pudo eliminar el usuario:", error);
       alert("No se pudo eliminar el usuario.");
     }
   };
 
   const actualizarUsuario = async (usuario: Usuario) => {
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Usuario no autenticado");
+
     try {
-      const res = await fetch(
-       apiActualizar + usuario.id,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(usuario),
-        }
-      );
+      const res = await fetch(`${apiActualizar}${usuario.id}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(usuario),
+      });
       const data = await res.json();
       alert(data.mensaje);
       setUsuarioAEditar(null);
       obtenerUsuarios();
     } catch (error) {
+      console.error("Error al actualizar usuario:", error);
       alert("Error al actualizar usuario");
     }
   };
 
   useEffect(() => {
-    const usuarioLogueado = localStorage.getItem("usuario");
-    if (usuarioLogueado) {
-      const datos = JSON.parse(usuarioLogueado);
-      setIdTenantLogueado(datos.idEmpresa); 
-    }
-    obtenerUsuarios();
-  }, []);
+    if (usuarioLogueado) obtenerUsuarios();
+  }, [usuarioLogueado]);
 
-  const usuariosDeMismaEmpresa = usuarios.filter(
-    (u) => idTenantLogueado !== null && u.idEmpresa === idTenantLogueado
-  );
-
-  const usuariosFiltrados = usuariosDeMismaEmpresa.filter(
+  const usuariosFiltrados = usuarios.filter(
     (u) =>
       u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
       u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
@@ -146,69 +176,30 @@ const AdmUsuarios: React.FC = () => {
             <thead className="bg-blue-900 text-white">
               <tr>
                 <th className="px-4 py-3 text-left text-sm font-semibold">ID</th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Nombre
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Apellido
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Usuario
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Correo
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Cargo
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Empresa
-                </th>
-                <th className="px-4 py-3 text-left text-sm font-semibold">
-                  Área
-                </th>
-                <th
-                  className="px-4 py-3 text-center text-sm font-semibold"
-                  colSpan={2}
-                >
-                  Acciones
-                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Nombre</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Apellido</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Usuario</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Correo</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Cargo</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Empresa</th>
+                <th className="px-4 py-3 text-left text-sm font-semibold">Área</th>
+                <th className="px-4 py-3 text-center text-sm font-semibold" colSpan={2}>Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-blue-200">
               {usuariosFiltrados.map((u, idx) => (
                 <tr
                   key={u.id}
-                  className={
-                    idx % 2 === 0
-                      ? "bg-blue-50 hover:bg-blue-100"
-                      : "bg-blue-100 hover:bg-blue-200"
-                  }
+                  className={idx % 2 === 0 ? "bg-blue-50 hover:bg-blue-100" : "bg-blue-100 hover:bg-blue-200"}
                 >
-                  <td className="px-4 py-2 text-sm text-blue-900 font-medium">
-                    {u.id}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-800">
-                    {u.nombre}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-800">
-                    {u.apellido}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-700">
-                    {u.nombreUsuario}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-700">
-                    {u.correoElectronico}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-800">
-                    {u.cargo}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-800">
-                    {u.empresa?.nombre}
-                  </td>
-                  <td className="px-4 py-2 text-sm text-blue-800">
-                    {u.area?.descripcion}
-                  </td>
+                  <td className="px-4 py-2 text-sm text-blue-900 font-medium">{u.id}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.nombre}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.apellido}</td>
+                  <td className="px-4 py-2 text-sm text-blue-700">{u.nombreUsuario}</td>
+                  <td className="px-4 py-2 text-sm text-blue-700">{u.correoElectronico}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.cargo}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.empresa?.nombre}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.area?.descripcion}</td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}
@@ -229,10 +220,7 @@ const AdmUsuarios: React.FC = () => {
               ))}
               {usuariosFiltrados.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={10}
-                    className="px-4 py-6 text-center text-blue-500 font-medium"
-                  >
+                  <td colSpan={10} className="px-4 py-6 text-center text-blue-500 font-medium">
                     No se encontraron usuarios.
                   </td>
                 </tr>

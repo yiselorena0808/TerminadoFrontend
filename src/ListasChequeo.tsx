@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaSearch, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface ListaChequeo {
   id: number;
@@ -16,20 +17,25 @@ interface ListaChequeo {
   id_empresa: number;
 }
 
-interface Props {
-  idEmpresa: number; // ID de empresa para filtrar
-}
-
-const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
+const ListasChequeoRecibidas: React.FC = () => {
   const navigate = useNavigate();
   const [listas, setListas] = useState<ListaChequeo[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
   const apiListarCheq = import.meta.env.VITE_API_LISTARCHEQUEO;
 
   const obtenerListas = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     try {
-      const res = await fetch(apiListarCheq);
+      const res = await fetch(apiListarCheq, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
       const data = await res.json();
       if (data.datos && Array.isArray(data.datos)) {
         setListas(data.datos);
@@ -44,6 +50,8 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
   };
 
   useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
     obtenerListas();
   }, []);
 
@@ -65,24 +73,21 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
     });
   };
 
-  // Filtrar por búsqueda y por empresa
-  const listasFiltradas = listas.filter(
-    (item) =>
-      item.id_empresa === idEmpresa &&
-      `${item.usuario_nombre} ${item.modelo} ${item.marca}`
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
-  );
+  // Antes: estabas filtrando también por id_empresa
+const listasFiltradas = listas.filter((item) =>
+  `${item.usuario_nombre} ${item.modelo} ${item.marca}`
+    .toLowerCase()
+    .includes(busqueda.toLowerCase())
+);
 
   return (
-    <div
-      className="p-6 min-h-screen bg-cover bg-center"
+    <div className="p-6 min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
     >
-      <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
+      <div className="bg-white rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-extrabold text-3xl text-gray-800">
             📋 Listas de Chequeo Recibidas
@@ -115,7 +120,7 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
         {/* Listado */}
         {listasFiltradas.length === 0 ? (
           <p className="text-gray-600 italic">
-            No hay listas que coincidan con la búsqueda para esta empresa.
+            No hay listas que coincidan con la búsqueda para tu empresa.
           </p>
         ) : (
           listasFiltradas.map((item) => (
@@ -128,7 +133,8 @@ const ListasChequeoRecibidas: React.FC<Props> = ({ idEmpresa }) => {
                   {item.usuario_nombre} – {formatearFecha(item.fecha)} {item.hora}
                 </div>
                 <div className="text-gray-600 text-sm">
-                  Marca: {item.marca} | Modelo: {item.modelo} | KM: {item.kilometraje} | Técnico: {item.tecnico}
+                  Marca: {item.marca} | Modelo: {item.modelo} | KM: {item.kilometraje} | Técnico:{" "}
+                  {item.tecnico}
                 </div>
                 <div className="text-gray-500 text-sm mt-1">
                   SOAT: {item.soat}
