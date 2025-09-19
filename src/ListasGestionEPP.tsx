@@ -19,7 +19,7 @@ interface Gestion {
 }
 
 interface Props {
-  idEmpresa: number; 
+  idEmpresa: number;
 }
 
 const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
@@ -33,7 +33,25 @@ const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
 
   const obtenerListas = async () => {
     try {
-      const res = await fetch(apiListarGestiones);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        console.error("No hay token disponible");
+        return;
+      }
+
+      const res = await fetch(apiListarGestiones, {
+        headers: {
+          "Authorization": `Bearer ${token}`, // 👈 aquí va el token
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) {
+        console.error("Error en la petición:", res.status);
+        setListas([]);
+        return;
+      }
+
       const data = await res.json();
       if (data.datos && Array.isArray(data.datos)) {
         setListas(data.datos);

@@ -107,7 +107,7 @@ const listasFiltradas = listas.filter((item) =>
             <input
               type="text"
               className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar por usuario, modelo o marca..."
+              placeholder="Buscar por marca.."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
             />

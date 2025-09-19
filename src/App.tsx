@@ -26,6 +26,7 @@ import BlogFormulario from './BlogConFormulario';
 import CrearReporte from './CrearReporte';
 import GestionEppForm from './CrearGestionEpp';
 import DashboardReportes from './DashboardReportes';
+import CrearGestionEpp from './CrearGestionEpp';
 
 function App() {
   return (
@@ -48,7 +49,7 @@ function App() {
           <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />
           <Route path="lectorUser" element={<LectorGestion />} />
 
-          <Route path="creargestionEpp" element={<GestionEppForm></GestionEppForm>} ></Route>
+          <Route path="creargestionEpp" element={<CrearGestionEpp></CrearGestionEpp>} ></Route>
 
           <Route path="ListasChequeo" element={<ListasChequeoRecibidas  />} />
           <Route path="detalleListasChequeo" element={<DetalleListaChequeo />} />

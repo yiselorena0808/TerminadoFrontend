@@ -12,6 +12,7 @@ const CrearReporte: React.FC = () => {
     fecha: "",
     lugar: "",
     descripcion: "",
+    estado: "",
   });
 
   const [imagen, setImagen] = useState<File | null>(null);
@@ -19,7 +20,6 @@ const CrearReporte: React.FC = () => {
 
   const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
 
-  
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -30,7 +30,7 @@ const CrearReporte: React.FC = () => {
     setUsuario(u);
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
@@ -57,18 +57,17 @@ const CrearReporte: React.FC = () => {
       data.append("nombre_usuario", usuario.nombre);
       data.append("id_empresa", usuario.id_empresa.toString());
 
-      // Enviar POST con token en Authorization
       const res = await fetch(apiCrearReporte, {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${token}`, // Muy importante: solo el token
+          Authorization: `Bearer ${token}`,
         },
         body: data,
       });
 
       if (!res.ok) {
         const result = await res.json();
-        console.error(" Error en respuesta:", result);
+        console.error("Error en respuesta:", result);
         return alert(result.error || "Error al enviar reporte");
       }
 
@@ -92,6 +91,13 @@ const CrearReporte: React.FC = () => {
           <input type="text" name="cedula" placeholder="Cédula" value={formData.cedula} onChange={handleChange} className="border p-2 rounded" />
           <input type="date" name="fecha" value={formData.fecha} onChange={handleChange} className="border p-2 rounded" />
           <input type="text" name="lugar" placeholder="Lugar" value={formData.lugar} onChange={handleChange} className="border p-2 rounded" />
+
+          {/* NUEVO SELECT ESTADO */}
+          <select name="estado" value={formData.estado} onChange={handleChange} className="border p-2 rounded col-span-2">
+            <option value="Pendiente">Pendiente</option>
+            <option value="Revisado">Revisado</option>
+            <option value="Finalizado">Finalizado</option>
+          </select>
         </div>
 
         <textarea name="descripcion" placeholder="Descripción" value={formData.descripcion} onChange={handleChange} className="border p-2 rounded w-full mt-4" />

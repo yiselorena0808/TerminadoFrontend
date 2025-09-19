@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ActualizarUsuarioModal from "./Actualizarusuarios";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface Empresa {
   idEmpresa: number;
   nombre: string;
-  direccion: string;
-  nit: string;
-  estado: boolean;
-  esquema: string;
-  alias: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface Area {
   idArea: number;
   descripcion: string;
-  idEmpresa: number;
-  estado: boolean;
-  esquema: string;
-  alias: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface Usuario {
@@ -34,11 +21,10 @@ interface Usuario {
   nombreUsuario: string;
   correoElectronico: string;
   cargo: string;
-  contrasena: string;
   createdAt: string;
   updatedAt: string;
-  empresa: Empresa;
-  area: Area;
+  empresa?: Empresa;
+  area?: Area;
 }
 
 const AdmUsuarios: React.FC = () => {
@@ -51,44 +37,56 @@ const AdmUsuarios: React.FC = () => {
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
   const apiActualizar = import.meta.env.VITE_API_ACTUALIZARUSUARIO;
 
-  // Obtener usuario logueado desde token
-  useEffect(() => {
-    const u = getUsuarioFromToken();
-    if (u) setUsuarioLogueado(u);
-  }, []);
+  // Función para obtener usuarios de la misma empresa
+  const obtenerUsuarios = async (id_empresa?: number) => {
+    const empresaId = id_empresa || usuarioLogueado?.idEmpresa;
+    console.log("ID de empresa usado:", empresaId);
 
-  const obtenerUsuarios = async () => {
-  try {
+    if (!empresaId) return alert("No se encontró la empresa del usuario");
+
     const token = localStorage.getItem("token");
     if (!token) return alert("Usuario no autenticado");
 
-    const res = await fetch(apiListar, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
+    try {
+      const url = `${apiListar}${empresaId}`;
+      console.log("URL fetch:", url);
 
-    const data = await res.json();
+      const res = await fetch(url, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-    // Asegurarnos de que data.datos sea un array
-    const usuariosApi = Array.isArray(data.datos) ? data.datos : [];
-    if (usuariosApi.length === 0) {
-      console.warn("No se recibieron datos válidos de la API o está vacío");
+      if (res.status === 401) return alert("Token inválido o expirado");
+
+      const data = await res.json();
+      console.log("Datos recibidos:", data);
+
+      setUsuarios(Array.isArray(data.datos) ? data.datos : []);
+    } catch (error) {
+      console.error("Error al cargar usuarios:", error);
+      setUsuarios([]);
     }
+  };
 
-    const usuarioLogueado = JSON.parse(localStorage.getItem("usuario") || "{}");
-    const filtrados = usuariosApi.filter((u: any) => u.idEmpresa === usuarioLogueado.idEmpresa);
-
-    setUsuarios(filtrados);
-  } catch (error) {
-    console.error("Error al cargar usuarios:", error);
-    setUsuarios([]);
-  }
-};
-
-
+  // Obtener usuario logueado y cargar usuarios automáticamente
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) {
+      const usuario = { ...u, idEmpresa: u.id_empresa };
+      setUsuarioLogueado(usuario);
+      obtenerUsuarios(usuario.idEmpresa);
+    } else {
+      const localUser = JSON.parse(localStorage.getItem("usuario") || "{}");
+      if (localUser?.id_empresa) {
+        const usuario = { ...localUser, idEmpresa: localUser.id_empresa };
+        setUsuarioLogueado(usuario);
+        obtenerUsuarios(usuario.idEmpresa);
+      }
+    }
+  }, []);
 
   const eliminarUsuario = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
@@ -135,10 +133,6 @@ const AdmUsuarios: React.FC = () => {
       alert("Error al actualizar usuario");
     }
   };
-
-  useEffect(() => {
-    if (usuarioLogueado) obtenerUsuarios();
-  }, [usuarioLogueado]);
 
   const usuariosFiltrados = usuarios.filter(
     (u) =>
@@ -198,8 +192,8 @@ const AdmUsuarios: React.FC = () => {
                   <td className="px-4 py-2 text-sm text-blue-700">{u.nombreUsuario}</td>
                   <td className="px-4 py-2 text-sm text-blue-700">{u.correoElectronico}</td>
                   <td className="px-4 py-2 text-sm text-blue-800">{u.cargo}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.empresa?.nombre}</td>
-                  <td className="px-4 py-2 text-sm text-blue-800">{u.area?.descripcion}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.empresa?.nombre || "-"}</td>
+                  <td className="px-4 py-2 text-sm text-blue-800">{u.area?.descripcion || "-"}</td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}

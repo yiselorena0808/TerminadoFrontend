@@ -140,7 +140,7 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
 
   return (
     <div
-      className="p-6 min-h-screen bg-cover bg-center"
+      className="p-3 min-h-screen bg-cover bg-center"
       style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",

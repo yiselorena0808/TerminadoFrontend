@@ -1,229 +1,241 @@
 import React, { useEffect, useState } from "react";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
-interface Cargo {
-  id_cargo: number;
-  cargo: string;
-}
-
-export default function GestionEppForm() {
-  const apiCrear = import.meta.env.VITE_API_CREARGESTION;
+const CrearGestionEpp: React.FC = () => {
   const apiCargos = import.meta.env.VITE_API_CARGOS;
+  const apiProductosCargo = import.meta.env.VITE_API_PRODUCTOS1; // ejemplo: http://localhost:3333/productos/cargo/
+  const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION;
 
-  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+  const [cargos, setCargos] = useState<any[]>([]);
+  const [productos, setProductos] = useState<any[]>([]);
+
   const [formData, setFormData] = useState({
     cedula: "",
-    id_cargo: 0,       
-    productos: "",
+    id_cargo: "",        // number
+    nombre_cargo: "",    // string para filtrar productos
+    id_producto: "",
     importancia: "",
-    estado: "",
-    fecha_creacion: new Date().toISOString().split("T")[0],
+    estado: "activo",
+    fecha_creacion: new Date().toISOString().slice(0, 10),
+    id_usuario: "",
     nombre: "",
     apellido: "",
-    id_empresa: 0,    
+    id_empresa: "",
   });
 
-  // Extraer datos del JWT
+  // Cargar usuario desde token
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = JSON.parse(atob(token.split(".")[1]));
-        const partes = (decoded.nombre || "").split(" ");
-        setFormData((prev) => ({
-          ...prev,
-          nombre: partes[0] || "",
-          apellido: partes.slice(1).join(" ") || "",
-          id_empresa: Number(decoded.id_empresa) || 0, 
-        }));
-      } catch (error) {
-        console.error("Error decodificando token", error);
-      }
+    const u = getUsuarioFromToken();
+    if (u) {
+      setUsuario(u);
+      setFormData((prev) => ({
+        ...prev,
+        id_usuario: u.id ?? "",
+        nombre: u.nombre ?? "",
+        apellido: u.apellido ?? "",
+        id_empresa: u.id_empresa ?? "",
+      }));
     }
   }, []);
 
-
+  // Cargar cargos
   useEffect(() => {
     const fetchCargos = async () => {
       try {
         const res = await fetch(apiCargos, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
+        if (!res.ok) throw new Error("Error al cargar cargos");
         const data = await res.json();
-        setCargos(data);
+        setCargos(Array.isArray(data) ? data : data.cargos ?? []);
       } catch (err) {
-        console.error("Error cargando cargos", err);
+        console.error(err);
       }
     };
     fetchCargos();
   }, []);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+  // Cargar productos según nombre del cargo seleccionado
+  useEffect(() => {
+    const fetchProductos = async () => {
+      if (!formData.nombre_cargo) return;
+      try {
+        const cargoEncoded = encodeURIComponent(formData.nombre_cargo);
+        const res = await fetch(`${apiProductosCargo}${cargoEncoded}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        if (!res.ok) throw new Error("Error al cargar productos");
+        const data = await res.json();
+        setProductos(Array.isArray(data) ? data : data.productos ?? []);
+      } catch (err) {
+        console.error("Error al cargar productos:", err);
+      }
+    };
+    fetchProductos();
+  }, [formData.nombre_cargo]);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCargoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedId = Number(e.target.value);
+    const selected = cargos.find((c) => c.idCargo === selectedId);
     setFormData((prev) => ({
       ...prev,
-      [name]: name === "id_cargo" ? Number(value) : value, 
+      id_cargo: selectedId,
+      nombre_cargo: selected?.cargo ?? "",
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    const token = localStorage.getItem("token");
-
- 
-    const payload = {
-      ...formData,
-      id_empresa: Number(formData.id_empresa),
-      id_cargo: Number(formData.id_cargo),
-    };
-
     try {
-      const response = await fetch(apiCrear, {
+      const res = await fetch(apiCrearGestionEpp, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(formData),
       });
 
-      const data = await response.json();
-      console.log(data);
-      alert(data.mensaje || "Error al crear gestión");
+      if (!res.ok) throw new Error("Error al crear gestión");
+      const data = await res.json();
+      alert("Gestión creada con éxito");
+      console.log("Nueva gestión:", data);
     } catch (err) {
-      console.error("Error enviando formulario:", err);
+      console.error(err);
+      alert("Error al crear gestión");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-lg mx-auto p-4 bg-white shadow rounded">
+    <div className="max-w-2xl mx-auto bg-white shadow-md p-6 rounded-lg">
       <h2 className="text-xl font-bold mb-4">Crear Gestión EPP</h2>
 
-      {/* Datos del JWT */}
-      <div>
-        <label className="block">Nombre</label>
-        <input
-          type="text"
-          name="nombre"
-          value={formData.nombre}
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100"
-        />
-      </div>
-      <div>
-        <label className="block">Apellido</label>
-        <input
-          type="text"
-          name="apellido"
-          value={formData.apellido}
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100"
-        />
-      </div>
-      <div>
-        <label className="block">ID Empresa</label>
-        <input
-          type="text"
-          name="id_empresa"
-          value={formData.id_empresa}
-          readOnly
-          className="w-full p-2 border rounded bg-gray-100"
-        />
-      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Datos del token solo lectura */}
+        <div>
+          <label className="block text-sm font-medium">Nombre</label>
+          <input
+            type="text"
+            value={usuario?.nombre ?? ""}
+            readOnly
+            className="w-full border rounded p-2 bg-gray-100"
+          />
+        </div>
 
-      {/* Campos editables */}
-      <div>
-        <label className="block">Cédula</label>
-        <input
-          type="text"
-          name="cedula"
-          value={formData.cedula}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
+        <div>
+          <label className="block text-sm font-medium">Apellido</label>
+          <input
+            type="text"
+            value={usuario?.apellido ?? ""}
+            readOnly
+            className="w-full border rounded p-2 bg-gray-100"
+          />
+        </div>
 
-      <div>
-        <label className="block">Cargo</label>
-        <select
-          name="id_cargo"
-          value={formData.id_cargo}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
+        <div>
+          <label className="block text-sm font-medium">Empresa</label>
+          <input
+            type="text"
+            value={usuario?.id_empresa ?? ""}
+            readOnly
+            className="w-full border rounded p-2 bg-gray-100"
+          />
+        </div>
+
+        {/* Campos del formulario */}
+        <div>
+          <label className="block text-sm font-medium">Cédula</label>
+          <input
+            type="text"
+            name="cedula"
+            value={formData.cedula}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Cargo</label>
+          <select
+            name="id_cargo"
+            value={formData.id_cargo}
+            onChange={handleCargoChange}
+            className="w-full border rounded p-2"
+            required
+          >
+            <option value="">-- Selecciona un cargo --</option>
+            {cargos.map((cargo) => (
+              <option key={cargo.idCargo} value={cargo.idCargo}>
+                {cargo.cargo}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Producto</label>
+          <select
+            name="id_producto"
+            value={formData.id_producto}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+            required
+          >
+            <option value="">-- Selecciona un producto --</option>
+            {productos.map((prod) => (
+              <option key={prod.idProducto} value={prod.idProducto}>
+                {prod.nombre}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Importancia</label>
+          <select
+            name="importancia"
+            value={formData.importancia}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+            required
+          >
+            <option value="">-- Selecciona importancia --</option>
+            <option value="alta">Alta</option>
+            <option value="media">Media</option>
+            <option value="baja">Baja</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium">Estado</label>
+          <select
+            name="estado"
+            value={formData.estado}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+          >
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
         >
-          <option value={0}>Seleccione un cargo</option>
-          {cargos.map((c) => (
-            <option key={c.id_cargo} value={c.id_cargo}>
-              {c.cargo}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className="block">Productos</label>
-        <input
-          type="text"
-          name="productos"
-          value={formData.productos}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
-
-      <div>
-        <label className="block">Importancia</label>
-        <select
-          name="importancia"
-          value={formData.importancia}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Seleccione</option>
-          <option value="alta">Alta</option>
-          <option value="media">Media</option>
-          <option value="baja">Baja</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block">Estado</label>
-        <select
-          name="estado"
-          value={formData.estado}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        >
-          <option value="">Seleccione</option>
-          <option value="activo">Pendiente</option>
-          <option value="inactivo">Revisado</option>
-          <option value="finalizado">Finalizado</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block">Fecha de creación</label>
-        <input
-          type="date"
-          name="fecha_creacion"
-          value={formData.fecha_creacion}
-          onChange={handleChange}
-          className="w-full p-2 border rounded"
-          required
-        />
-      </div>
-
-      <button
-        type="submit"
-        className="mt-4 w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 transition"
-      >
-        Guardar
-      </button>
-    </form>
+          Guardar
+        </button>
+      </form>
+    </div>
   );
-}
+};
+
+export default CrearGestionEpp;
