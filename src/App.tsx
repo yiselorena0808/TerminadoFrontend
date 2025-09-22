@@ -5,7 +5,6 @@ import Registro from './Registro';
 import RegistroArea from './RegistroArea';
 import RegistroEmpresa from './RegistroEmpresa';
 import Navba from './Navbar';
-import Bienvenida from './Bienvenida';
 import ListarGestiones from './ListasGestionEPP';
 import ListasChequeoRecibidas from './ListasChequeo';
 import ListasReportes from './ListasReportes';
@@ -22,11 +21,10 @@ import NavbarUser from './User/NavUser';
 import ListarGestionesUser from './User/GestionEppUser';
 import LectorGestion from './User/LectorGestion';
 import CalendarEventos from './Eventos';
-import BlogFormulario from './BlogConFormulario';
 import CrearReporte from './CrearReporte';
-import GestionEppForm from './CrearGestionEpp';
 import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
+import CrearEventos from './Eventos';
 
 function App() {
   return (
@@ -44,7 +42,7 @@ function App() {
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
 
           <Route path="blog" element={<CalendarEventos></CalendarEventos>} />
-          <Route path='crearBlog' element={<BlogFormulario></BlogFormulario>}></Route>
+          <Route path='crearBlog' element={<CrearEventos></CrearEventos>}></Route>
           
           <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />
           <Route path="lectorUser" element={<LectorGestion />} />
