@@ -25,6 +25,9 @@ import CrearReporte from './CrearReporte';
 import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
 import CrearEventos from './Eventos';
+import ForgotPasswordForm from './Correo';
+import ResetPasswordForm from './Recuperar';
+import Correo from './Correo';
 
 function App() {
   return (
@@ -34,6 +37,8 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
+        <Route path='/forgot' element={<ForgotPasswordForm></ForgotPasswordForm>}></Route>
+        <Route path='/reset' element={<Correo></Correo>}></Route>
          <Route path="/nav" element={<Navba />}>
           <Route path="/navUser" element={<NavbarUser></NavbarUser>}></Route>
           <Route path="inicio" element={<DashboardReportes></DashboardReportes>} />

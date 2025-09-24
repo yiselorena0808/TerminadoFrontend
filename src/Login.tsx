@@ -89,7 +89,9 @@ const Login: React.FC = () => {
             />
 
             <div className="flex items-center justify-between mb-4 text-sm">
-              <a href="#" className="underline hover:text-gray-300">¿Olvidaste tu contraseña?</a>
+              <a className="underline hover:text-gray-300" onClick={()=>navigate("/forgot")}>¿Olvidaste tu contraseña?</a>
+              </div>
+              <div>
               <span onClick={() => navigate("/registro")}
                 className="underline hover:text-gray-300 cursor-pointer">Registrarse</span>
             </div>

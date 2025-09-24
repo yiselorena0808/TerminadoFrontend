@@ -9,6 +9,7 @@ interface FormDataState {
 }
 
 const CrearEventos: React.FC = () => {
+  const apiEvent= import.meta.env.VITE_API_CREAREVENTO
   const [form, setForm] = useState<FormDataState>({
     titulo: '',
     descripcion: '',
@@ -38,13 +39,13 @@ const CrearEventos: React.FC = () => {
       if (form.imagen) formData.append('imagen', form.imagen)
       if (form.archivo) formData.append('archivo', form.archivo)
 
-      const token = localStorage.getItem('token') // ⚡ tu token JWT
+      const token = localStorage.getItem('token')
       if (!token) {
         setMensaje('No estás autenticado')
         return
       }
 
-      const res = await fetch('http://localhost:3333/crearBlog', {
+      const res = await fetch(apiEvent, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
