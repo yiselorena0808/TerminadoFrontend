@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
 
 interface UsuarioToken {
   id: number;
@@ -8,6 +10,7 @@ interface UsuarioToken {
 }
 
 const CrearListaChequeo: React.FC = () => {
+  const navigate = useNavigate();
   const apiCrearLista = import.meta.env.VITE_API_CREARCHEQUEO;
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
@@ -18,14 +21,13 @@ const CrearListaChequeo: React.FC = () => {
   const [soat, setSoat] = useState("");
   const [tecnico, setTecnico] = useState("");
   const [kilometraje, setKilometraje] = useState("");
-  const [mensaje, setMensaje] = useState<string | null>(null);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
-      const decoded = jwtDecode<any>(token); 
+      const decoded = jwtDecode<any>(token);
       setUsuario({
         id: decoded.id,
         nombre: decoded.nombre,
@@ -33,16 +35,33 @@ const CrearListaChequeo: React.FC = () => {
       });
     } catch (error) {
       console.error(" Token inválido", error);
-      setMensaje("Token inválido, inicia sesión otra vez");
+      showToast("error", "Token inválido, inicia sesión otra vez");
+      navigate("/login");
     }
   }, []);
+
+  const showToast = (icon: "success" | "error" | "warning", title: string) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+    });
+    if (icon === "success") {
+      setTimeout(() => {
+        navigate("/nav/ListasChequeo"); 
+      }, 1500);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
     if (!token) {
-      setMensaje("No hay token, inicia sesión");
-      return;
+      return showToast("error", "No hay token, inicia sesión");
     }
 
     try {
@@ -66,11 +85,12 @@ const CrearListaChequeo: React.FC = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setMensaje(data.error || "Error al crear la lista");
-        return;
+        return showToast("error", data.error || "Error al crear la lista");
       }
 
-      setMensaje("Lista creada correctamente");
+      showToast("success", "Lista de chequeo creada ✅");
+
+      // Resetear formulario
       setFecha("");
       setHora("");
       setModelo("");
@@ -80,15 +100,14 @@ const CrearListaChequeo: React.FC = () => {
       setKilometraje("");
     } catch (error) {
       console.error("Error creando lista:", error);
-      setMensaje("No se pudo crear la lista");
+      showToast("error", "No se pudo crear la lista");
     }
   };
 
   return (
     <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
-      <h2 className="text-2xl font-bold mb-4">Crear Lista de Chequeo</h2>
+      <h2 className="text-2xl font-bold mb-4">📝 Crear Lista de Chequeo</h2>
 
-      {/* Mostrar usuario logueado */}
       {usuario && (
         <div className="mb-4 p-3 bg-gray-100 rounded">
           <p>
@@ -100,14 +119,6 @@ const CrearListaChequeo: React.FC = () => {
         </div>
       )}
 
-      {/*  Mostrar mensajes */}
-      {mensaje && (
-        <div className="mb-4 p-2 bg-green-200 text-green-800 rounded">
-          {mensaje}
-        </div>
-      )}
-
-      {/* Formulario */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="date"

@@ -1,129 +1,173 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import Swal from "sweetalert2";
 
 const CrearActividadLudica: React.FC = () => {
-  const [nombreActividad, setNombreActividad] = useState('')
-  const [fechaActividad, setFechaActividad] = useState('')
-  const [descripcion, setDescripcion] = useState('')
-  const [imagenVideo, setImagenVideo] = useState<File | null>(null)
-  const [archivoAdjunto, setArchivoAdjunto] = useState<File | null>(null)
-  const [previewImagen, setPreviewImagen] = useState<string | null>(null)
+  const navigate = useNavigate();
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  const apiUrl = import.meta.env.VITE_API_CREARACTIVIDAD
+  const [formData, setFormData] = useState({
+    nombre_actividad: "",
+    fecha_actividad: "",
+    descripcion: "",
+  });
+
+  const [imagenVideo, setImagenVideo] = useState<File | null>(null);
+  const [archivoAdjunto, setArchivoAdjunto] = useState<File | null>(null);
+
+  const apiCrearActividad = import.meta.env.VITE_API_CREARACTIVIDAD;
+
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (!u) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "warning",
+        title: "Usuario no autenticado. Inicia sesión.",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
+      navigate("/login");
+      return;
+    }
+    setUsuario(u);
+  }, []);
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const showToast = (icon: "success" | "error" | "warning", title: string) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+    });
+    setTimeout(() => {
+      navigate("/nav/actLudica"); 
+    }, 1500);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const token = localStorage.getItem('token')
-    if (!token) return alert('No hay token, inicia sesión')
+    e.preventDefault();
 
-    const formData = new FormData()
-    formData.append('nombre_actividad', nombreActividad)
-    formData.append('fecha_actividad', fechaActividad)
-    formData.append('descripcion', descripcion)
-    if (imagenVideo) formData.append('imagen_video', imagenVideo)
-    if (archivoAdjunto) formData.append('archivo_adjunto', archivoAdjunto)
+    if (!usuario) return showToast("error", "Usuario no autenticado");
+
+    const token = localStorage.getItem("token");
+    if (!token) return showToast("error", "No hay token en localStorage");
 
     try {
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      })
-      const data = await response.json()
-      if (!response.ok) return alert(data.error || 'Error al crear actividad')
-      alert('Actividad creada correctamente')
-      setNombreActividad('')
-      setFechaActividad('')
-      setDescripcion('')
-      setImagenVideo(null)
-      setArchivoAdjunto(null)
-      setPreviewImagen(null)
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
+      const data = new FormData();
 
-  const handleImagenChange = (file: File | null) => {
-    setImagenVideo(file)
-    if (file) {
-      const reader = new FileReader()
-      reader.onloadend = () => setPreviewImagen(reader.result as string)
-      reader.readAsDataURL(file)
-    } else {
-      setPreviewImagen(null)
+      // Agregar datos del formulario
+      Object.entries(formData).forEach(([key, value]) =>
+        data.append(key, value)
+      );
+
+      // Archivos
+      if (imagenVideo) data.append("imagen_video", imagenVideo);
+      if (archivoAdjunto) data.append("archivo_adjunto", archivoAdjunto);
+
+      // Datos del usuario logueado
+      data.append("id_usuario", usuario.id.toString());
+      data.append("nombre_usuario", usuario.nombre);
+      data.append("id_empresa", usuario.id_empresa.toString());
+
+      const res = await fetch(apiCrearActividad, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: data,
+      });
+
+      if (!res.ok) {
+        const result = await res.json();
+        console.error("Error en respuesta:", result);
+        return showToast("error", result.error || "Error al crear actividad");
+      }
+
+      showToast("success", "Actividad lúdica creada 🎉");
+    } catch (error) {
+      console.error("Error al crear actividad:", error);
+      showToast("error", "Ocurrió un error al crear la actividad");
     }
-  }
+  };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Crear Actividad Lúdica</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          value={nombreActividad}
-          onChange={e => setNombreActividad(e.target.value)}
-          placeholder="Nombre actividad"
-          required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+    <div className="p-6 min-h-screen bg-gray-100 flex justify-center">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-3xl"
+      >
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">
+          🎭 Crear Actividad Lúdica
+        </h2>
 
-        <input
-          type="date"
-          value={fechaActividad}
-          onChange={e => setFechaActividad(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            type="text"
+            name="nombre_actividad"
+            placeholder="Nombre actividad"
+            value={formData.nombre_actividad}
+            onChange={handleChange}
+            className="border p-2 rounded col-span-2"
+          />
+          <input
+            type="date"
+            name="fecha_actividad"
+            value={formData.fecha_actividad}
+            onChange={handleChange}
+            className="border p-2 rounded col-span-2"
+          />
+        </div>
 
         <textarea
-          value={descripcion}
-          onChange={e => setDescripcion(e.target.value)}
+          name="descripcion"
           placeholder="Descripción"
-          required
-          className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+          value={formData.descripcion}
+          onChange={handleChange}
+          className="border p-2 rounded w-full mt-4"
         />
 
-        <div>
-          <label className="block mb-1 font-semibold">Imagen / Video:</label>
+        <div className="mt-4">
+          <label>Imagen / Video:</label>
           <input
             type="file"
             accept="image/*,video/*"
-            onChange={e => handleImagenChange(e.target.files?.[0] ?? null)}
-            className="mb-2"
+            onChange={(e) => setImagenVideo(e.target.files?.[0] || null)}
           />
-          {previewImagen && (
-            <img
-              src={previewImagen}
-              alt="Preview"
-              className="w-32 h-32 object-cover rounded border"
-            />
-          )}
         </div>
 
-        <div>
-          <label className="block mb-1 font-semibold">Archivo adjunto:</label>
+        <div className="mt-4">
+          <label>Archivo adjunto:</label>
           <input
             type="file"
             accept=".pdf,.doc,.docx,.xls,.xlsx"
-            onChange={e => setArchivoAdjunto(e.target.files?.[0] ?? null)}
-            className="mb-2"
+            onChange={(e) => setArchivoAdjunto(e.target.files?.[0] || null)}
           />
-          {archivoAdjunto && (
-            <div className="flex items-center space-x-2 text-gray-700">
-              <span className="material-icons">attach_file</span>
-              <span>{archivoAdjunto.name}</span>
-            </div>
-          )}
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+          className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
         >
           Crear Actividad
         </button>
       </form>
     </div>
-  )
-}
+  );
+};
 
-export default CrearActividadLudica
+export default CrearActividadLudica;

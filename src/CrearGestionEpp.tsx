@@ -2,9 +2,10 @@ import React, { useEffect, useState } from "react";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 const CrearGestionEpp: React.FC = () => {
-  const apiCargos = import.meta.env.VITE_API_CARGOS;
-  const apiProductosCargo = import.meta.env.VITE_API_PRODUCTOS1; // ejemplo: http://localhost:3333/productos/cargo/
-  const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION;
+  // APIs desde .env
+  const apiCargos = import.meta.env.VITE_API_CARGOS; // GET /cargos/listar
+  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO_ID; // GET /productos/cargo/:id
+  const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION; // POST /gestion-epp
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [cargos, setCargos] = useState<any[]>([]);
@@ -12,8 +13,8 @@ const CrearGestionEpp: React.FC = () => {
 
   const [formData, setFormData] = useState({
     cedula: "",
-    id_cargo: "",        // number
-    nombre_cargo: "",    // string para filtrar productos
+    id_cargo: "",
+    nombre_cargo: "",
     id_producto: "",
     importancia: "",
     estado: "activo",
@@ -56,13 +57,12 @@ const CrearGestionEpp: React.FC = () => {
     fetchCargos();
   }, []);
 
-  // Cargar productos según nombre del cargo seleccionado
+  // Cargar productos según cargo seleccionado
   useEffect(() => {
     const fetchProductos = async () => {
-      if (!formData.nombre_cargo) return;
+      if (!formData.id_cargo) return;
       try {
-        const cargoEncoded = encodeURIComponent(formData.nombre_cargo);
-        const res = await fetch(`${apiProductosCargo}${cargoEncoded}`, {
+        const res = await fetch(`${apiProductosPorCargo}${formData.id_cargo}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         });
         if (!res.ok) throw new Error("Error al cargar productos");
@@ -73,24 +73,27 @@ const CrearGestionEpp: React.FC = () => {
       }
     };
     fetchProductos();
-  }, [formData.nombre_cargo]);
+  }, [formData.id_cargo]);
 
+  // Manejar inputs genéricos
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Manejar selección de cargo
   const handleCargoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = Number(e.target.value);
     const selected = cargos.find((c) => c.idCargo === selectedId);
     setFormData((prev) => ({
       ...prev,
-      id_cargo: selectedId,
+      id_cargo: selectedId.toString(),
       nombre_cargo: selected?.cargo ?? "",
     }));
   };
 
+  // Guardar gestión
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -105,11 +108,23 @@ const CrearGestionEpp: React.FC = () => {
 
       if (!res.ok) throw new Error("Error al crear gestión");
       const data = await res.json();
-      alert("Gestión creada con éxito");
+      alert("Gestión creada con éxito ✅");
       console.log("Nueva gestión:", data);
+
+      // Resetear formulario
+      setFormData((prev) => ({
+        ...prev,
+        cedula: "",
+        id_cargo: "",
+        nombre_cargo: "",
+        id_producto: "",
+        importancia: "",
+        estado: "activo",
+      }));
+      setProductos([]);
     } catch (err) {
       console.error(err);
-      alert("Error al crear gestión");
+      alert("Error al crear gestión ❌");
     }
   };
 
@@ -118,7 +133,7 @@ const CrearGestionEpp: React.FC = () => {
       <h2 className="text-xl font-bold mb-4">Crear Gestión EPP</h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Datos del token solo lectura */}
+        {/* Nombre desde token */}
         <div>
           <label className="block text-sm font-medium">Nombre</label>
           <input
@@ -129,6 +144,7 @@ const CrearGestionEpp: React.FC = () => {
           />
         </div>
 
+        {/* Apellido desde token */}
         <div>
           <label className="block text-sm font-medium">Apellido</label>
           <input
@@ -139,6 +155,7 @@ const CrearGestionEpp: React.FC = () => {
           />
         </div>
 
+        {/* Empresa desde token */}
         <div>
           <label className="block text-sm font-medium">Empresa</label>
           <input
@@ -149,7 +166,7 @@ const CrearGestionEpp: React.FC = () => {
           />
         </div>
 
-        {/* Campos del formulario */}
+        {/* Cedula */}
         <div>
           <label className="block text-sm font-medium">Cédula</label>
           <input
@@ -162,6 +179,7 @@ const CrearGestionEpp: React.FC = () => {
           />
         </div>
 
+        {/* Cargo */}
         <div>
           <label className="block text-sm font-medium">Cargo</label>
           <select
@@ -180,6 +198,7 @@ const CrearGestionEpp: React.FC = () => {
           </select>
         </div>
 
+        {/* Producto */}
         <div>
           <label className="block text-sm font-medium">Producto</label>
           <select
@@ -198,6 +217,7 @@ const CrearGestionEpp: React.FC = () => {
           </select>
         </div>
 
+        {/* Importancia */}
         <div>
           <label className="block text-sm font-medium">Importancia</label>
           <select
@@ -214,6 +234,7 @@ const CrearGestionEpp: React.FC = () => {
           </select>
         </div>
 
+        {/* Estado */}
         <div>
           <label className="block text-sm font-medium">Estado</label>
           <select
@@ -227,6 +248,19 @@ const CrearGestionEpp: React.FC = () => {
           </select>
         </div>
 
+        {/* Fecha creación (auto) */}
+        <div>
+          <label className="block text-sm font-medium">Fecha de creación</label>
+          <input
+            type="date"
+            name="fecha_creacion"
+            value={formData.fecha_creacion}
+            readOnly
+            className="w-full border rounded p-2 bg-gray-100"
+          />
+        </div>
+
+        {/* Botón */}
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
