@@ -1,15 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
+interface Cargo {
+  id_cargo: number;
+  cargo: string;
+}
+
+interface Producto {
+  id_producto: number;
+  nombre: string;
+}
+
 const CrearGestionEpp: React.FC = () => {
-  // APIs desde .env
-  const apiCargos = import.meta.env.VITE_API_CARGOS; // GET /cargos/listar
-  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO_ID; // GET /productos/cargo/:id
-  const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION; // POST /gestion-epp
+  const apiCargos = import.meta.env.VITE_API_CARGOS; // /cargos/listar
+  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO_ID; // /productos/cargo/
+  const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION;
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
-  const [cargos, setCargos] = useState<any[]>([]);
-  const [productos, setProductos] = useState<any[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [error, setError] = useState<string>("");
+
+  const [loadingCargos, setLoadingCargos] = useState(false);
+  const [loadingProductos, setLoadingProductos] = useState(false);
 
   const [formData, setFormData] = useState({
     cedula: "",
@@ -25,94 +38,105 @@ const CrearGestionEpp: React.FC = () => {
     id_empresa: "",
   });
 
-  // Cargar usuario desde token
+  const token = localStorage.getItem("token");
+
+  // Cargar usuario
   useEffect(() => {
+    if (!token) return setError("No hay token disponible. Por favor inicia sesión.");
     const u = getUsuarioFromToken();
-    if (u) {
-      setUsuario(u);
-      setFormData((prev) => ({
-        ...prev,
-        id_usuario: u.id ?? "",
-        nombre: u.nombre ?? "",
-        apellido: u.apellido ?? "",
-        id_empresa: u.id_empresa ?? "",
-      }));
-    }
-  }, []);
+    if (!u) return setError("Token inválido. Por favor inicia sesión de nuevo.");
+    setUsuario(u);
+    setFormData((prev) => ({
+      ...prev,
+      id_usuario: u.id ?? "",
+      nombre: u.nombre ?? "",
+      apellido: u.apellido ?? "",
+      id_empresa: u.id_empresa ?? "",
+    }));
+  }, [token]);
 
   // Cargar cargos
   useEffect(() => {
+    if (!token) return;
+    setLoadingCargos(true);
     const fetchCargos = async () => {
       try {
-        const res = await fetch(apiCargos, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        });
-        if (!res.ok) throw new Error("Error al cargar cargos");
+        const res = await fetch(apiCargos, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error(`Error al cargar cargos: ${res.status}`);
         const data = await res.json();
-        setCargos(Array.isArray(data) ? data : data.cargos ?? []);
-      } catch (err) {
+        const cargosArray: Cargo[] = Array.isArray(data) ? data : data.cargos ?? [];
+        setCargos(cargosArray.filter(c => c?.id_cargo && c.cargo));
+      } catch (err: any) {
         console.error(err);
+        setError(err.message);
+      } finally {
+        setLoadingCargos(false);
       }
     };
     fetchCargos();
-  }, []);
+  }, [token]);
 
   // Cargar productos según cargo seleccionado
   useEffect(() => {
+    if (!token || !formData.id_cargo) return;
+    setLoadingProductos(true);
     const fetchProductos = async () => {
-      if (!formData.id_cargo) return;
       try {
         const res = await fetch(`${apiProductosPorCargo}${formData.id_cargo}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error("Error al cargar productos");
+        if (!res.ok) throw new Error(`Error al cargar productos: ${res.status}`);
         const data = await res.json();
-        setProductos(Array.isArray(data) ? data : data.productos ?? []);
-      } catch (err) {
-        console.error("Error al cargar productos:", err);
+        const productosArray: Producto[] = Array.isArray(data) ? data : data.productos ?? [];
+        setProductos(productosArray.filter(p => p?.id_producto && p.nombre));
+      } catch (err: any) {
+        console.error(err);
+        setError(err.message);
+      } finally {
+        setLoadingProductos(false);
       }
     };
     fetchProductos();
-  }, [formData.id_cargo]);
+  }, [token, formData.id_cargo]);
 
-  // Manejar inputs genéricos
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  // Handlers
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Manejar selección de cargo
   const handleCargoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = Number(e.target.value);
-    const selected = cargos.find((c) => c.idCargo === selectedId);
-    setFormData((prev) => ({
+    const selectedId = e.target.value;
+    const selected = cargos.find(c => c.id_cargo.toString() === selectedId);
+    setFormData(prev => ({
       ...prev,
-      id_cargo: selectedId.toString(),
+      id_cargo: selectedId,
       nombre_cargo: selected?.cargo ?? "",
+      id_producto: "", // reset producto al cambiar cargo
     }));
   };
 
-  // Guardar gestión
+  const handleProductoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setFormData(prev => ({ ...prev, id_producto: e.target.value }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!token) return alert("No hay token. Por favor inicia sesión.");
+
     try {
       const res = await fetch(apiCrearGestionEpp, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(formData),
       });
-
-      if (!res.ok) throw new Error("Error al crear gestión");
+      if (!res.ok) throw new Error(`Error al crear gestión: ${res.status}`);
       const data = await res.json();
       alert("Gestión creada con éxito ✅");
       console.log("Nueva gestión:", data);
-
-      // Resetear formulario
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
         cedula: "",
         id_cargo: "",
@@ -122,51 +146,37 @@ const CrearGestionEpp: React.FC = () => {
         estado: "activo",
       }));
       setProductos([]);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      alert("Error al crear gestión ❌");
+      alert(err.message);
     }
   };
+
+  if (error) {
+    return <div className="max-w-2xl mx-auto p-6 text-red-600 font-bold">{error}</div>;
+  }
 
   return (
     <div className="max-w-2xl mx-auto bg-white shadow-md p-6 rounded-lg">
       <h2 className="text-xl font-bold mb-4">Crear Gestión EPP</h2>
-
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Nombre desde token */}
-        <div>
-          <label className="block text-sm font-medium">Nombre</label>
-          <input
-            type="text"
-            value={usuario?.nombre ?? ""}
-            readOnly
-            className="w-full border rounded p-2 bg-gray-100"
-          />
-        </div>
 
-        {/* Apellido desde token */}
-        <div>
-          <label className="block text-sm font-medium">Apellido</label>
-          <input
-            type="text"
-            value={usuario?.apellido ?? ""}
-            readOnly
-            className="w-full border rounded p-2 bg-gray-100"
-          />
-        </div>
+        {/* Nombre, Apellido y Empresa */}
+        {["nombre", "apellido", "id_empresa"].map((field) => (
+          <div key={field}>
+            <label className="block text-sm font-medium">
+              {field === "id_empresa" ? "Empresa" : field.charAt(0).toUpperCase() + field.slice(1)}
+            </label>
+            <input
+              type="text"
+              value={usuario?.[field as keyof UsuarioToken] ?? ""}
+              readOnly
+              className="w-full border rounded p-2 bg-gray-100"
+            />
+          </div>
+        ))}
 
-        {/* Empresa desde token */}
-        <div>
-          <label className="block text-sm font-medium">Empresa</label>
-          <input
-            type="text"
-            value={usuario?.id_empresa ?? ""}
-            readOnly
-            className="w-full border rounded p-2 bg-gray-100"
-          />
-        </div>
-
-        {/* Cedula */}
+        {/* Cédula */}
         <div>
           <label className="block text-sm font-medium">Cédula</label>
           <input
@@ -182,39 +192,48 @@ const CrearGestionEpp: React.FC = () => {
         {/* Cargo */}
         <div>
           <label className="block text-sm font-medium">Cargo</label>
-          <select
-            name="id_cargo"
-            value={formData.id_cargo}
-            onChange={handleCargoChange}
-            className="w-full border rounded p-2"
-            required
-          >
-            <option value="">-- Selecciona un cargo --</option>
-            {cargos.map((cargo) => (
-              <option key={cargo.idCargo} value={cargo.idCargo}>
-                {cargo.cargo}
-              </option>
-            ))}
-          </select>
+          {loadingCargos ? (
+            <div className="text-gray-500">Cargando cargos...</div>
+          ) : (
+            <select
+              name="id_cargo"
+              value={formData.id_cargo}
+              onChange={handleCargoChange}
+              className="w-full border rounded p-2"
+              required
+            >
+              <option value="">-- Selecciona un cargo --</option>
+              {cargos.map(cargo => (
+                <option key={cargo.id_cargo} value={cargo.id_cargo.toString()}>
+                  {cargo.cargo}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Producto */}
         <div>
           <label className="block text-sm font-medium">Producto</label>
-          <select
-            name="id_producto"
-            value={formData.id_producto}
-            onChange={handleChange}
-            className="w-full border rounded p-2"
-            required
-          >
-            <option value="">-- Selecciona un producto --</option>
-            {productos.map((prod) => (
-              <option key={prod.idProducto} value={prod.idProducto}>
-                {prod.nombre}
-              </option>
-            ))}
-          </select>
+          {loadingProductos ? (
+            <div className="text-gray-500">Cargando productos...</div>
+          ) : (
+            <select
+              name="id_producto"
+              value={formData.id_producto}
+              onChange={handleProductoChange}
+              className="w-full border rounded p-2"
+              required
+              disabled={!formData.id_cargo || productos.length === 0}
+            >
+              <option value="">-- Selecciona un producto --</option>
+              {productos.map(p => (
+                <option key={p.id_producto} value={p.id_producto.toString()}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Importancia */}
@@ -248,19 +267,6 @@ const CrearGestionEpp: React.FC = () => {
           </select>
         </div>
 
-        {/* Fecha creación (auto) */}
-        <div>
-          <label className="block text-sm font-medium">Fecha de creación</label>
-          <input
-            type="date"
-            name="fecha_creacion"
-            value={formData.fecha_creacion}
-            readOnly
-            className="w-full border rounded p-2 bg-gray-100"
-          />
-        </div>
-
-        {/* Botón */}
         <button
           type="submit"
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

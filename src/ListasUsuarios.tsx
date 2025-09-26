@@ -99,7 +99,6 @@ const AdmUsuarios: React.FC = () => {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
         },
       });
       const data = await res.json();

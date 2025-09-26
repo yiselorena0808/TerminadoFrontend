@@ -20,55 +20,66 @@ import Perfil from './perfil';
 import NavbarUser from './User/NavUser';
 import ListarGestionesUser from './User/GestionEppUser';
 import LectorGestion from './User/LectorGestion';
-import CalendarEventos from './Eventos';
 import CrearReporte from './CrearReporte';
 import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
 import CrearEventos from './Eventos';
 import ForgotPasswordForm from './Correo';
-import ResetPasswordForm from './Recuperar';
+import ListaPublicaciones from './ListaEventos';
 import Correo from './Correo';
+
+// 👇 Importaciones nuevas
+import Productos from './CrearProducto';
+import CargoProducto from './Adicionales';
 
 function App() {
   return (
     <Router>
       <Routes>
+        {/* Login y registro */}
         <Route path="/" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
-        <Route path='/forgot' element={<ForgotPasswordForm></ForgotPasswordForm>}></Route>
-        <Route path='/reset' element={<Correo></Correo>}></Route>
-         <Route path="/nav" element={<Navba />}>
-          <Route path="/navUser" element={<NavbarUser></NavbarUser>}></Route>
-          <Route path="inicio" element={<DashboardReportes></DashboardReportes>} />
+        <Route path="/forgot" element={<ForgotPasswordForm />} />
+        <Route path="/reset" element={<Correo />} />
 
-          <Route path="gestionEpp" element={<ListarGestiones></ListarGestiones>} />
+        {/* Panel principal con Navbar */}
+        <Route path="/nav" element={<Navba />}>
+          <Route path="navUser" element={<NavbarUser />} />
+          <Route path="inicio" element={<DashboardReportes />} />
+
+          {/* Gestión EPP */}
+          <Route path="gestionEpp" element={<ListarGestiones />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
+          <Route path="creargestionEpp" element={<CrearGestionEpp />} />
 
-          <Route path="blog" element={<CalendarEventos></CalendarEventos>} />
-          <Route path='crearBlog' element={<CrearEventos></CrearEventos>}></Route>
-          
-          <Route path="gUser" element={<ListarGestionesUser></ListarGestionesUser>} />
-          <Route path="lectorUser" element={<LectorGestion />} />
+          {/* Blog/Eventos */}
+          <Route path="blog" element={<ListaPublicaciones />} />
+          <Route path="crearBlog" element={<CrearEventos />} />
 
-          <Route path="creargestionEpp" element={<CrearGestionEpp></CrearGestionEpp>} ></Route>
-
-          <Route path="ListasChequeo" element={<ListasChequeoRecibidas  />} />
+          {/* Listas de Chequeo */}
+          <Route path="ListasChequeo" element={<ListasChequeoRecibidas />} />
           <Route path="detalleListasChequeo" element={<DetalleListaChequeo />} />
-          <Route path="crearListasChequeo" element={<CrearListaChequeo></CrearListaChequeo>} ></Route>
+          <Route path="crearListasChequeo" element={<CrearListaChequeo />} />
 
-
-          <Route path="reportesC" element={<ListasReportes></ListasReportes>} />
+          {/* Reportes */}
+          <Route path="reportesC" element={<ListasReportes />} />
           <Route path="detalleReportes" element={<DetalleReporte />} />
-          <Route path="crearReportes" element={<CrearReporte></CrearReporte>}></Route>
+          <Route path="crearReportes" element={<CrearReporte />} />
 
-          <Route path="actLudica" element={<ListasActividadesLudicas></ListasActividadesLudicas>} />
-          <Route path="detalleActLudica" element={<DetalleActividad/>} />
-          <Route path="crearActLudica" element={<CrearActividadLudica></CrearActividadLudica>} />
-          <Route path='perfil' element={<Perfil></Perfil>}></Route>
-          
+          {/* Actividades Lúdicas */}
+          <Route path="actLudica" element={<ListasActividadesLudicas />} />
+          <Route path="detalleActLudica" element={<DetalleActividad />} />
+          <Route path="crearActLudica" element={<CrearActividadLudica />} />
+
+          {/* Otros */}
+          <Route path="perfil" element={<Perfil />} />
           <Route path="usuarios" element={<AdmUsuarios />} />
+
+          {/* 🚀 Panel Admin */}
+          <Route path="adicionales" element={<CargoProducto></CargoProducto>} />
+          <Route path="prod" element={<Productos />} />
         </Route>
       </Routes>
     </Router>
