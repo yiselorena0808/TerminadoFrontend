@@ -1,71 +1,73 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
-
-interface Empresa {
-  id_empresa: number;
-  nombre: string;
-}
+import Swal from "sweetalert2";
 
 const RegistroArea: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const [empresas, setEmpresas] = useState<Empresa[]>([]);
-  const [id_empresa, setIdEmpresa] = useState<number | "">("");
   const [nombre, setNombre] = useState("");
   const [codigo, setCodigo] = useState("");
   const [descripcion, setDescripcion] = useState("");
+  const [id_empresa, setIdEmpresa] = useState<number | "">("");
   const [estado, setEstado] = useState(true);
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
+  const [empresas, setEmpresas] = useState<
+    { id_empresa: number; nombre: string }[]
+  >([]);
 
-  const apiRegisterArea = import.meta.env.VITE_API_REGISTROAREA;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
+  const apiCrearArea = import.meta.env.VITE_API_REGISTROAREA;
 
-  // Cargar empresas activas
   useEffect(() => {
-  const fetchEmpresas = async () => {
-    try {
-      const res = await fetch(apiEmpresas);
-  const data = await res.json()
-if (data.datos) {
-  setEmpresas(data.datos.map((e: any) => ({
-    id_empresa: e.id_empresa,
-    nombre: e.nombre,
-  })))
-}
+    const fetchEmpresas = async () => {
+      try {
+        const res = await fetch(apiEmpresas);
+        const data = await res.json();
 
+        console.log("🔍 Empresas recibidas del backend:", data);
 
-      if (Array.isArray(data.datos)) {
-        setEmpresas(data.datos) // ya solo tiene id_empresa y nombre
-      } else {
-        console.error("Formato inesperado:", data);
+        if (Array.isArray(data.datos)) {
+          const empresasLimpias = data.datos
+            .filter((e: any) => e.id_empresa || e.idEmpresa)
+            .map((e: any) => ({
+              id_empresa: Number(e.id_empresa ?? e.idEmpresa),
+              nombre: e.nombre ?? e.nombre_empresa ?? "Sin nombre",
+            }));
+
+          setEmpresas(empresasLimpias);
+        } else {
+          console.error("Formato inesperado:", data);
+        }
+      } catch (err) {
+        console.error("Error cargando empresas:", err);
       }
-    } catch (err) {
-      console.error("Error cargando empresas:", err);
-    }
-  };
-  fetchEmpresas();
-}, []);
+    };
+    fetchEmpresas();
+  }, []);
 
-  // Registrar área
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!id_empresa) {
-      alert("Selecciona una empresa.");
+      Swal.fire({
+        icon: "warning",
+        title: "Campo requerido",
+        text: "Debe seleccionar una empresa",
+      });
       return;
     }
 
     try {
-      const res = await fetch(apiRegisterArea, {
+      const res = await fetch(apiCrearArea, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id_empresa,
           nombre,
           codigo,
           descripcion,
+          id_empresa,
           estado,
           esquema,
           alias,
@@ -73,15 +75,40 @@ if (data.datos) {
       });
 
       const data = await res.json();
-      if (data.mensaje === "Área creada") {
-        alert("Área registrada con éxito");
-        navigate("/registro");
+
+      if (res.ok) {
+        Swal.fire({
+          icon: "success",
+          title: "¡Éxito!",
+          text: "Área registrada con éxito ✅",
+          confirmButtonColor: "#1E3A5F",
+        }).then(() => {
+          navigate("/registroArea");
+        });
+
+        // limpiar formulario
+        setNombre("");
+        setCodigo("");
+        setDescripcion("");
+        setIdEmpresa("");
+        setEstado(true);
+        setEsquema("");
+        setAlias("");
       } else {
-        alert("Error al registrar área");
+        console.error("❌ Error al registrar área:", data);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Error al registrar el área",
+        });
       }
     } catch (err) {
-      console.error("Error al registrar área:", err);
-      alert("Error al registrar área");
+      console.error("❌ Error en la petición:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudo conectar con el servidor",
+      });
     }
   };
 
@@ -129,12 +156,12 @@ if (data.datos) {
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">¡Registra un área!</h2>
               <p className="text-gray-200 text-sm">
-                Organiza y gestiona las áreas vinculadas a tu empresa.
+                Ingresa los datos requeridos para crear un área dentro de tu empresa.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
               <img
-                src="https://cdn-icons-png.flaticon.com/512/3135/3135706.png"
+                src="https://cdn-icons-png.flaticon.com/512/3449/3449677.png"
                 alt="Área"
                 className="w-full h-full object-cover"
               />
@@ -145,67 +172,72 @@ if (data.datos) {
           <div className="md:w-1/2 p-8 flex items-center">
             <div className="w-full">
               <h3 className="text-2xl font-bold mb-6 text-white text-center">
-                Registro de Área
+                Registrar Área
               </h3>
 
               <form className="space-y-4" onSubmit={registrar}>
-                {/* SELECT de empresa */}
-               <select
-                  value={id_empresa}
-                  onChange={(e) => setIdEmpresa(Number(e.target.value))}
-                  required
-                >
-                  <option value="">-- Selecciona una empresa --</option>
-                  {empresas.map((empresa) => (
-                  <option key={empresa.id_empresa} value={empresa.id_empresa}>
-                    {empresa.nombre}
-                  </option>
-                ))}
-                </select>
-
-
                 <input
                   type="text"
-                  placeholder="Nombre del área"
+                  placeholder="Nombre"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                   required
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
                 />
 
                 <input
                   type="text"
-                  placeholder="Código del área"
+                  placeholder="Código"
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                   required
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
                 />
 
                 <textarea
                   placeholder="Descripción"
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
-                  rows={3}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
                 />
 
-                <label className="flex items-center text-gray-200">
-                  <input
-                    type="checkbox"
-                    checked={estado}
-                    onChange={(e) => setEstado(e.target.checked)}
-                    className="mr-2"
-                  />
-                  Estado activo
-                </label>
+                <select
+                  value={id_empresa === "" ? "" : String(id_empresa)}
+                  onChange={(e) =>
+                    setIdEmpresa(
+                      e.target.value === "" ? "" : Number(e.target.value)
+                    )
+                  }
+                  required
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
+                >
+                  <option value="">-- Selecciona una empresa --</option>
+                  {empresas.map((empresa) => (
+                    <option
+                      key={`empresa-${empresa.id_empresa}`}
+                      value={empresa.id_empresa}
+                    >
+                      {empresa.nombre}
+                    </option>
+                  ))}
+                </select>
 
                 <input
                   type="text"
                   placeholder="Esquema"
                   value={esquema}
                   onChange={(e) => setEsquema(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
                 />
 
                 <input
@@ -213,22 +245,30 @@ if (data.datos) {
                   placeholder="Alias"
                   value={alias}
                   onChange={(e) => setAlias(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
+                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
+                  text-gray-900 placeholder-gray-500"
                 />
+
+                <div className="flex items-center space-x-2 text-sm">
+                  <input
+                    type="checkbox"
+                    id="estado"
+                    checked={estado}
+                    onChange={(e) => setEstado(e.target.checked)}
+                    className="w-4 h-4 border-[#1E3A5F] text-[#1E3A5F] focus:ring-[#1E3A5F]"
+                  />
+                  <label htmlFor="estado" className="text-gray-200">
+                    Estado activo
+                  </label>
+                </div>
 
                 <button
                   type="submit"
                   className="w-full py-2 rounded-lg bg-[#1E3A5F] text-white font-semibold hover:bg-[#142943] transition"
                 >
-                  Registrar Área
+                  Registrar área
                 </button>
-
-                <div className="text-center text-sm mt-4 text-gray-200">
-                  ¿Quieres ver las áreas registradas?{" "}
-                  <a href="/areas" className="text-blue-200 font-semibold">
-                    Ver lista
-                  </a>
-                </div>
               </form>
             </div>
           </div>

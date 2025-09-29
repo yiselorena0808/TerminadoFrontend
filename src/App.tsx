@@ -18,8 +18,6 @@ import DetalleGestionEPP from './DetalleGestionEpp';
 import CrearListaChequeo from './CrearListaChequeo';
 import Perfil from './perfil';
 import NavbarUser from './User/NavUser';
-import ListarGestionesUser from './User/GestionEppUser';
-import LectorGestion from './User/LectorGestion';
 import CrearReporte from './CrearReporte';
 import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
@@ -27,6 +25,7 @@ import CrearEventos from './Eventos';
 import ForgotPasswordForm from './Correo';
 import ListaPublicaciones from './ListaEventos';
 import Correo from './Correo';
+import ResetPasswordForm from './Recuperar';
 
 // 👇 Importaciones nuevas
 import Productos from './CrearProducto';
@@ -41,8 +40,8 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
-        <Route path="/forgot" element={<ForgotPasswordForm />} />
-        <Route path="/reset" element={<Correo />} />
+        <Route path="/forgot" element={<Correo></Correo>} />
+        <Route path="/reset" element={<ResetPasswordForm></ResetPasswordForm>} />
 
         {/* Panel principal con Navbar */}
         <Route path="/nav" element={<Navba />}>
@@ -77,7 +76,7 @@ function App() {
           <Route path="perfil" element={<Perfil />} />
           <Route path="usuarios" element={<AdmUsuarios />} />
 
-          {/* 🚀 Panel Admin */}
+          {/* Panel Admin */}
           <Route path="adicionales" element={<CargoProducto></CargoProducto>} />
           <Route path="prod" element={<Productos />} />
         </Route>
