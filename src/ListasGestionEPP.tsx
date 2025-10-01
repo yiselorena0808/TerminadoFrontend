@@ -41,7 +41,7 @@ const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
 
       const res = await fetch(apiListarGestiones, {
         headers: {
-          "Authorization": `Bearer ${token}`, // 👈 aquí va el token
+          "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });

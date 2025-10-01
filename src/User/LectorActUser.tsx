@@ -11,7 +11,7 @@ import {
   Activity,
 } from "lucide-react";
 
-interface ActividadLudica {
+interface LectorActividadLudica {
   id: number;
   idUsuario: number;
   nombreUsuario: string;

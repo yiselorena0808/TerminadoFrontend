@@ -13,7 +13,7 @@ interface Producto {
 
 const CrearGestionEpp: React.FC = () => {
   const apiCargos = import.meta.env.VITE_API_CARGOS; // /cargos/listar
-  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO_ID; // /productos/cargo/
+  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO; // /productos/cargo/
   const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION;
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
@@ -26,9 +26,9 @@ const CrearGestionEpp: React.FC = () => {
 
   const [formData, setFormData] = useState({
     cedula: "",
-    id_cargo: "",
-    nombre_cargo: "",
-    id_producto: "",
+    cargo: "", // string en el modelo
+    productos: [] as string[], // IDs de productos
+    cantidad: 1,
     importancia: "",
     estado: "activo",
     fecha_creacion: new Date().toISOString().slice(0, 10),
@@ -78,11 +78,11 @@ const CrearGestionEpp: React.FC = () => {
 
   // Cargar productos según cargo seleccionado
   useEffect(() => {
-    if (!token || !formData.id_cargo) return;
+    if (!token || !formData.cargo) return;
     setLoadingProductos(true);
     const fetchProductos = async () => {
       try {
-        const res = await fetch(`${apiProductosPorCargo}${formData.id_cargo}`, {
+        const res = await fetch(`${apiProductosPorCargo}${formData.cargo}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error(`Error al cargar productos: ${res.status}`);
@@ -97,7 +97,7 @@ const CrearGestionEpp: React.FC = () => {
       }
     };
     fetchProductos();
-  }, [token, formData.id_cargo]);
+  }, [token, formData.cargo]);
 
   // Handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -105,18 +105,16 @@ const CrearGestionEpp: React.FC = () => {
   };
 
   const handleCargoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = e.target.value;
-    const selected = cargos.find(c => c.id_cargo.toString() === selectedId);
     setFormData(prev => ({
       ...prev,
-      id_cargo: selectedId,
-      nombre_cargo: selected?.cargo ?? "",
-      id_producto: "", // reset producto al cambiar cargo
+      cargo: e.target.value,
+      productos: [], // reset productos al cambiar cargo
     }));
   };
 
   const handleProductoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, id_producto: e.target.value }));
+    const selected = Array.from(e.target.selectedOptions).map(o => o.value);
+    setFormData(prev => ({ ...prev, productos: selected }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -139,9 +137,9 @@ const CrearGestionEpp: React.FC = () => {
       setFormData(prev => ({
         ...prev,
         cedula: "",
-        id_cargo: "",
-        nombre_cargo: "",
-        id_producto: "",
+        cargo: "",
+        productos: [],
+        cantidad: 1,
         importancia: "",
         estado: "activo",
       }));
@@ -196,15 +194,15 @@ const CrearGestionEpp: React.FC = () => {
             <div className="text-gray-500">Cargando cargos...</div>
           ) : (
             <select
-              name="id_cargo"
-              value={formData.id_cargo}
+              name="cargo"
+              value={formData.cargo}
               onChange={handleCargoChange}
               className="w-full border rounded p-2"
               required
             >
               <option value="">-- Selecciona un cargo --</option>
               {cargos.map(cargo => (
-                <option key={cargo.id_cargo} value={cargo.id_cargo.toString()}>
+                <option key={cargo.id_cargo} value={cargo.cargo}>
                   {cargo.cargo}
                 </option>
               ))}
@@ -212,21 +210,21 @@ const CrearGestionEpp: React.FC = () => {
           )}
         </div>
 
-        {/* Producto */}
+        {/* Productos */}
         <div>
-          <label className="block text-sm font-medium">Producto</label>
+          <label className="block text-sm font-medium">Productos</label>
           {loadingProductos ? (
             <div className="text-gray-500">Cargando productos...</div>
           ) : (
             <select
-              name="id_producto"
-              value={formData.id_producto}
+              multiple
+              name="productos"
+              value={formData.productos}
               onChange={handleProductoChange}
               className="w-full border rounded p-2"
               required
-              disabled={!formData.id_cargo || productos.length === 0}
+              disabled={!formData.cargo || productos.length === 0}
             >
-              <option value="">-- Selecciona un producto --</option>
               {productos.map(p => (
                 <option key={p.id_producto} value={p.id_producto.toString()}>
                   {p.nombre}
@@ -234,6 +232,20 @@ const CrearGestionEpp: React.FC = () => {
               ))}
             </select>
           )}
+        </div>
+
+        {/* Cantidad */}
+        <div>
+          <label className="block text-sm font-medium">Cantidad</label>
+          <input
+            type="number"
+            name="cantidad"
+            min="1"
+            value={formData.cantidad}
+            onChange={handleChange}
+            className="w-full border rounded p-2"
+            required
+          />
         </div>
 
         {/* Importancia */}

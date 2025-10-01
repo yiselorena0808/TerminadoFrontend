@@ -22,7 +22,7 @@ import CrearReporte from './CrearReporte';
 import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
 import CrearEventos from './Eventos';
-import ForgotPasswordForm from './Correo';
+import InicioUser from '../src/User/InicioUser';
 import ListaPublicaciones from './ListaEventos';
 import Correo from './Correo';
 import ResetPasswordForm from './Recuperar';
@@ -49,7 +49,7 @@ function App() {
           <Route path="inicio" element={<DashboardReportes />} />
 
           {/* Gestión EPP */}
-          <Route path="gestionEpp" element={<ListarGestiones />} />
+          <Route path="gestionEpp" element={<ListarGestiones></ListarGestiones>} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
           <Route path="creargestionEpp" element={<CrearGestionEpp />} />
 
@@ -79,6 +79,10 @@ function App() {
           {/* Panel Admin */}
           <Route path="adicionales" element={<CargoProducto></CargoProducto>} />
           <Route path="prod" element={<Productos />} />
+
+
+          {/*USER */}
+          <Route path='inicioUser' element={<InicioUser></InicioUser>}></Route>
         </Route>
       </Routes>
     </Router>

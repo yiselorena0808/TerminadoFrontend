@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 
 interface UsuarioToken {
-  id: number;
-  nombre: string;
+  id_usuario: number;
+  usuario_nombre: string;
   id_empresa: number;
 }
 
@@ -29,8 +29,8 @@ const CrearListaChequeo: React.FC = () => {
     try {
       const decoded = jwtDecode<any>(token);
       setUsuario({
-        id: decoded.id,
-        nombre: decoded.nombre,
+        id_usuario: decoded.id,
+        usuario_nombre: decoded.nombre,
         id_empresa: decoded.id_empresa ?? decoded.idEmpresa,
       });
     } catch (error) {
@@ -79,6 +79,9 @@ const CrearListaChequeo: React.FC = () => {
           soat,
           tecnico,
           kilometraje,
+          id_usuario: usuario?.id_usuario,          
+          usuario_nombre: usuario?.usuario_nombre,
+          id_empresa: usuario?.id_empresa, 
         }),
       });
 
@@ -90,7 +93,6 @@ const CrearListaChequeo: React.FC = () => {
 
       showToast("success", "Lista de chequeo creada ✅");
 
-      // Resetear formulario
       setFecha("");
       setHora("");
       setModelo("");
@@ -111,10 +113,10 @@ const CrearListaChequeo: React.FC = () => {
       {usuario && (
         <div className="mb-4 p-3 bg-gray-100 rounded">
           <p>
-            <strong>Usuario:</strong> {usuario.nombre}
+            <strong>Usuario:</strong> {usuario.usuario_nombre}
           </p>
           <p>
-            <strong>ID Usuario:</strong> {usuario.id}
+            <strong>ID Usuario:</strong> {usuario.id_usuario}
           </p>
         </div>
       )}

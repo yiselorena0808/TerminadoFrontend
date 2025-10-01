@@ -35,6 +35,8 @@ interface Usuario {
   area?: Area;
 }
 
+const ADMIN_ROLES = ["SGVA", "Ingeniero", "Inspector de interventoria","administrador","Administrador"];
+
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -59,7 +61,8 @@ const Sidebar: React.FC = () => {
     window.location.href = "/";
   };
 
-  const menuItems = [
+  // Menú para administradores
+  const adminMenu = [
     { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicio" },
     { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportesC" },
     { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
@@ -67,9 +70,20 @@ const Sidebar: React.FC = () => {
     { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
     { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
     { icon: <AiOutlineUser className="text-4xl" />, label: "Lista de Usuarios", path: "/nav/usuarios" },
-     { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/adicionales" },
-  
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/adicionales" },
   ];
+
+  // Menú para usuarios normales
+  const userMenu = [
+    { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicioUser" },
+    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/mis-chequeos" },
+    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Mis Reportes", path: "/nav/mis-reportes" },
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+  ];
+
+  const isAdmin = usuario && ADMIN_ROLES.includes(usuario.cargo);
+  const menuItems = isAdmin ? adminMenu : userMenu;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
