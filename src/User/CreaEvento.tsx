@@ -20,7 +20,6 @@ const MiEvento: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
 
-  // Extraer usuario del token
   useEffect(() => {
     const user = getUsuarioFromToken();
     setUsuario(user);
