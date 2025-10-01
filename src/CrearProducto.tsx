@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
+interface Cargo {
+  id_cargo: number;
+  cargo: string;
+}
+
 interface Producto {
   id: number;
   nombre: string;
@@ -9,201 +14,108 @@ interface Producto {
   estado: string;
 }
 
-const Productos: React.FC = () => {
+const ProductosPage: React.FC = () => {
   const token = localStorage.getItem("token");
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [nuevoProducto, setNuevoProducto] = useState({
-    nombre: "",
-    descripcion: "",
-    id_cargo: 0,
-    estado: "activo",
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [nuevo, setNuevo] = useState<Producto>({
+    id: 0, nombre: "", descripcion: "", id_cargo: 0, estado: "activo"
   });
-  const [editando, setEditando] = useState<Producto | null>(null);
 
-  const fetchProductos = async () => {
-    try {
-      const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setProductos(data);
-    } catch (err) {
-      console.error("Error cargando productos:", err);
-    }
+  const listarProductos = async () => {
+    const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setProductos(await res.json());
   };
 
-  useEffect(() => {
-    fetchProductos();
-  }, []);
+  const listarCargos = async () => {
+    const res = await fetch(import.meta.env.VITE_API_CARGOS, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setCargos(await res.json());
+  };
 
   const crearProducto = async () => {
-    try {
-      const res = await fetch(import.meta.env.VITE_API_CREARPRODUCTO, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(nuevoProducto),
-      });
-
-      if (!res.ok) throw new Error("Error creando producto");
-
-      setNuevoProducto({ nombre: "", descripcion: "", id_cargo: 0, estado: "activo" });
-      fetchProductos();
-      Swal.fire("Éxito", "Producto creado correctamente", "success");
-    } catch (err) {
-      console.error(err);
-    }
+    await fetch(import.meta.env.VITE_API_CREARPRODUCTO, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(nuevo),
+    });
+    setNuevo({ id: 0, nombre: "", descripcion: "", id_cargo: 0, estado: "activo" });
+    listarProductos();
+    Swal.fire("Éxito", "Producto creado", "success");
   };
 
   const eliminarProducto = async (id: number) => {
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_ELIMINARPRODUCTO}${id}`,
-        {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!res.ok) throw new Error("Error eliminando producto");
-
-      setProductos((prev) => prev.filter((p) => p.id !== id));
-      Swal.fire("Eliminado", "Producto eliminado correctamente", "success");
-    } catch (err) {
-      console.error(err);
-    }
+    const confirm = await Swal.fire({ title: "¿Eliminar producto?", showCancelButton: true });
+    if (!confirm.isConfirmed) return;
+    await fetch(`${import.meta.env.VITE_API_ELIMINARPRODUCTO}${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    listarProductos();
+    Swal.fire("Eliminado", "Producto eliminado", "success");
   };
 
-  const actualizarProducto = async () => {
-    if (!editando) return;
-
-    try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_ACTUALIZARPRODUCTO}${editando.id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(editando),
-        }
-      );
-
-      if (!res.ok) throw new Error("Error actualizando producto");
-
-      setEditando(null);
-      fetchProductos();
-      Swal.fire("Éxito", "Producto actualizado", "success");
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  useEffect(() => {
+    listarProductos();
+    listarCargos();
+  }, []);
 
   return (
-    <div className="p-6 bg-white rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">📦 Gestión de Productos</h2>
+    <div className="p-8">
+      <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Productos</h1>
 
-      {/* Crear */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2 mb-6">
-        <input
+      <div className="bg-white shadow-md rounded p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
+        <input 
           type="text"
           placeholder="Nombre"
-          value={nuevoProducto.nombre}
-          onChange={(e) =>
-            setNuevoProducto({ ...nuevoProducto, nombre: e.target.value })
-          }
-          className="border px-3 py-2 rounded"
+          value={nuevo.nombre}
+          onChange={(e) => setNuevo({ ...nuevo, nombre: e.target.value })}
+          className="border p-2 rounded w-full mb-2"
         />
-        <input
-          type="text"
+        <textarea
           placeholder="Descripción"
-          value={nuevoProducto.descripcion}
-          onChange={(e) =>
-            setNuevoProducto({ ...nuevoProducto, descripcion: e.target.value })
-          }
-          className="border px-3 py-2 rounded"
+          value={nuevo.descripcion}
+          onChange={(e) => setNuevo({ ...nuevo, descripcion: e.target.value })}
+          className="border p-2 rounded w-full mb-2"
         />
-        <input
-          type="number"
-          placeholder="ID Cargo"
-          value={nuevoProducto.id_cargo}
-          onChange={(e) =>
-            setNuevoProducto({ ...nuevoProducto, id_cargo: Number(e.target.value) })
-          }
-          className="border px-3 py-2 rounded"
-        />
-        <button
-          onClick={crearProducto}
-          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"
+        <select
+          value={nuevo.id_cargo}
+          onChange={(e) => setNuevo({ ...nuevo, id_cargo: Number(e.target.value) })}
+          className="border p-2 rounded w-full mb-2"
         >
-          Crear
-        </button>
+          <option value={0}>-- Seleccionar Cargo --</option>
+          {cargos.map((c) => <option key={c.id_cargo} value={c.id_cargo}>{c.cargo}</option>)}
+        </select>
+        <select
+          value={nuevo.estado}
+          onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value })}
+          className="border p-2 rounded w-full mb-4"
+        >
+          <option value="activo">Activo</option>
+          <option value="inactivo">Inactivo</option>
+        </select>
+        <button onClick={crearProducto} className="bg-green-600 text-white px-4 py-2 rounded">Crear</button>
       </div>
 
-      {/* Listar */}
-      <ul className="space-y-3">
-        {productos.map((producto) => (
-          <li
-            key={producto.id}
-            className="flex justify-between items-center border p-3 rounded"
-          >
-            {editando?.id === producto.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editando.nombre}
-                  onChange={(e) =>
-                    setEditando({ ...editando, nombre: e.target.value })
-                  }
-                  className="border px-2 py-1 rounded w-1/3"
-                />
-                <input
-                  type="text"
-                  value={editando.descripcion}
-                  onChange={(e) =>
-                    setEditando({ ...editando, descripcion: e.target.value })
-                  }
-                  className="border px-2 py-1 rounded w-1/3"
-                />
-              </>
-            ) : (
-              <span>
-                <strong>{producto.nombre}</strong> - {producto.descripcion}{" "}
-                (Cargo ID: {producto.id_cargo})
-              </span>
-            )}
-
-            <div className="flex gap-2">
-              {editando?.id === producto.id ? (
-                <button
-                  onClick={actualizarProducto}
-                  className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-                >
-                  Guardar
-                </button>
-              ) : (
-                <button
-                  onClick={() => setEditando(producto)}
-                  className="bg-yellow-400 text-white px-3 py-1 rounded hover:bg-yellow-500"
-                >
-                  Editar
-                </button>
-              )}
-              <button
-                onClick={() => eliminarProducto(producto.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              >
-                Eliminar
-              </button>
+      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {productos.map((p) => (
+          <div key={p.id} className="bg-white shadow-lg rounded p-4">
+            <h3 className="font-bold text-lg">{p.nombre}</h3>
+            <p>{p.descripcion}</p>
+            <p className="text-sm text-gray-600">Estado: {p.estado}</p>
+            <div className="mt-3 flex gap-2">
+              <button className="bg-yellow-500 text-white px-3 py-1 rounded">Editar</button>
+              <button onClick={() => eliminarProducto(p.id)} className="bg-red-500 text-white px-3 py-1 rounded">Eliminar</button>
             </div>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
 
-export default Productos;
+export default ProductosPage;

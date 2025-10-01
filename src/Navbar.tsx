@@ -76,9 +76,11 @@ const Sidebar: React.FC = () => {
   // Menú para usuarios normales
   const userMenu = [
     { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicioUser" },
-    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/mis-chequeos" },
-    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Mis Reportes", path: "/nav/mis-reportes" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
+    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
+    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Mis Reportes", path: "/nav/LectorUserRepo" },
+    { icon: <AiOutlineBook className="text-4xl" />, label: "Mis Actividades Lúdicas", path: "/nav/LectorUserAct" },
+    { icon: <AiOutlineTool className="text-4xl" />, label: "Mis Gestión EPP", path: "/nav/gestionEpp" },
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/EventosUser" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 

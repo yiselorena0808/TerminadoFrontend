@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 
 import Login from './Login'; 
 import Registro from './Registro';
@@ -26,10 +26,21 @@ import InicioUser from '../src/User/InicioUser';
 import ListaPublicaciones from './ListaEventos';
 import Correo from './Correo';
 import ResetPasswordForm from './Recuperar';
+import Navbare from './Adicionales';
 
-// 👇 Importaciones nuevas
-import Productos from './CrearProducto';
-import CargoProducto from './Adicionales';
+import CargosPage from './CrearCargo';
+import ProductosPage from './CrearProducto';
+import LectorChequeo from './User/LectorListasChequeoUser';
+import CrearListChequeo from './User/CreaListChequeo';
+import LectorListaReportes from './User/LectorListasReporteUser';
+import CrearListReporte from './User/CrearListRepo';
+import MiDetalleListaChequeo from './User/DetalleListChe';
+import MiDetalleReporte from './User/DetalleListRepo';
+import LectorListasActividadesLudicas from './User/LectorListAct';
+import UserActividadLudica from './User/CreaActUser';
+import MiDetalleActividadLudica from './User/DetalleActUser';
+import ListaEventosEmpresa from './User/ListaEventosEmpresa';
+import MiEvento from './User/CreaEvento';
 
 function App() {
   return (
@@ -40,8 +51,8 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
-        <Route path="/forgot" element={<Correo></Correo>} />
-        <Route path="/reset" element={<ResetPasswordForm></ResetPasswordForm>} />
+        <Route path="/forgot" element={<Correo />} />
+        <Route path="/reset" element={<ResetPasswordForm />} />
 
         {/* Panel principal con Navbar */}
         <Route path="/nav" element={<Navba />}>
@@ -49,7 +60,7 @@ function App() {
           <Route path="inicio" element={<DashboardReportes />} />
 
           {/* Gestión EPP */}
-          <Route path="gestionEpp" element={<ListarGestiones></ListarGestiones>} />
+          <Route path="gestionEpp" element={<ListarGestiones />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
           <Route path="creargestionEpp" element={<CrearGestionEpp />} />
 
@@ -76,13 +87,28 @@ function App() {
           <Route path="perfil" element={<Perfil />} />
           <Route path="usuarios" element={<AdmUsuarios />} />
 
-          {/* Panel Admin */}
-          <Route path="adicionales" element={<CargoProducto></CargoProducto>} />
-          <Route path="prod" element={<Productos />} />
-
+          {/* Panel Admin con Navbare */}
+          <Route path="adicionales" element={<Navbare />}>
+            <Route path="cargos" element={<CargosPage />} />
+            <Route path="productos" element={<ProductosPage />} />
+            {/* Redirigir por defecto a cargos */}
+            <Route path="*" element={<Navigate to="cargos" />} />
+          </Route>
 
           {/*USER */}
-          <Route path='inicioUser' element={<InicioUser></InicioUser>}></Route>
+          <Route path="inicioUser" element={<InicioUser />} />
+          <Route path='lectorUserChe' element={<LectorChequeo></LectorChequeo>}></Route>
+          <Route path='creaListChe' element={<CrearListChequeo></CrearListChequeo>}></Route>
+          <Route path='LectorUserRepo' element={<LectorListaReportes></LectorListaReportes>}></Route>
+          <Route path='creaListRepo' element={<CrearListReporte></CrearListReporte>}></Route>
+          <Route path='MidetalleChe' element={<MiDetalleListaChequeo></MiDetalleListaChequeo>}></Route>
+          <Route path='MidetalleRepo' element={<MiDetalleReporte></MiDetalleReporte>}></Route>
+          <Route path='LectorUserAct' element={<LectorListasActividadesLudicas></LectorListasActividadesLudicas>}></Route>
+          <Route path='creaActUser' element={<UserActividadLudica></UserActividadLudica>}></Route>
+          <Route path='MidetalleAct' element={<MiDetalleActividadLudica></MiDetalleActividadLudica>}></Route>
+          <Route path='EventosUser' element={<ListaEventosEmpresa></ListaEventosEmpresa>}></Route>
+           <Route path='MiEvento' element={<MiEvento></MiEvento>}></Route>
+        
         </Route>
       </Routes>
     </Router>
