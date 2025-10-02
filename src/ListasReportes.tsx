@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFilePdf } from "react-icons/fa";
+import { FaFilePdf, FaHardHat, FaMapMarkerAlt, FaExclamationTriangle } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
@@ -30,13 +30,11 @@ const ListarReportes: React.FC = () => {
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
 
-  // Obtener usuario desde token
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (u) setUsuario(u);
   }, []);
 
-  // Obtener reportes filtrados por id_empresa
   const obtenerListas = async () => {
     if (!usuario) return;
 
@@ -46,16 +44,11 @@ const ListarReportes: React.FC = () => {
     try {
       const res = await fetch(apiListarReportes, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
 
       if (data.datos && Array.isArray(data.datos)) {
-        // Filtrar por id_empresa y mapear a formato esperado
         const filtrados: Reporte[] = data.datos
           .filter((r: any) => Number(r.idEmpresa ?? r.id_empresa) === Number(usuario.id_empresa))
           .map((r: any) => ({
@@ -76,7 +69,6 @@ const ListarReportes: React.FC = () => {
         setListas(filtrados);
       } else {
         setListas([]);
-        console.warn("No se recibieron datos válidos de la API");
       }
     } catch (error) {
       console.error("Error al obtener reportes:", error);
@@ -107,7 +99,7 @@ const ListarReportes: React.FC = () => {
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("Reporte de Incidente", 20, 20);
+    doc.text("Reporte de Incidente - SST", 20, 20);
     doc.setFontSize(12);
     doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
     doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
@@ -127,32 +119,49 @@ const ListarReportes: React.FC = () => {
         .includes(busqueda.toLowerCase())
   );
 
+  const getBadgeColor = (estado: string) => {
+    switch (estado) {
+      case "Pendiente":
+        return "bg-yellow-100 text-yellow-800 border-yellow-400";
+      case "Revisado":
+        return "bg-blue-100 text-blue-800 border-blue-400";
+      case "Finalizado":
+        return "bg-green-100 text-green-800 border-green-400";
+      default:
+        return "bg-gray-100 text-gray-600 border-gray-300";
+    }
+  };
+
   return (
-    <div className="p-6 min-h-screen">
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
-          📋 Listado de Reportes
-        </h3>
+    <div className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
+     style={{
+        backgroundImage:
+          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
+      }}
+    >
+      {/* Encabezado estilo SST */}
+      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+        <FaHardHat className="text-4xl" />
+        <div>
+          <h2 className="text-3xl font-bold">SST - Reportes de Seguridad</h2>
+          <p className="text-yellow-200">Prevención, control y seguimiento de incidentes</p>
+        </div>
+      </div>
 
-        <button
-          onClick={() => navigate("/nav/crearReportes")}
-          className="mb-6 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
-        >
-          Crear Reporte
-        </button>
-
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+        {/* Filtros y acción */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
-            placeholder="Buscar..."
+            placeholder="Buscar reporte por usuario, cargo o fecha..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="px-4 py-2 border rounded-lg flex-1"
+            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500"
           />
           <select
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="px-4 py-2 border rounded-lg"
+            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
           >
             {estados.map((estado) => (
               <option key={estado} value={estado}>
@@ -160,40 +169,64 @@ const ListarReportes: React.FC = () => {
               </option>
             ))}
           </select>
+          <button
+            onClick={() => navigate("/nav/crearReportes")}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition"
+          >
+            + Crear Reporte
+          </button>
         </div>
 
+        {/* Reportes */}
         {reportesFiltrados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6">No hay reportes disponibles</p>
+          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+            <FaExclamationTriangle className="text-yellow-500" />
+            No hay reportes registrados
+          </p>
         ) : (
-          reportesFiltrados.map((item) => (
-            <div
-              key={item.id_reporte}
-              className="flex justify-between items-center p-4 mb-3 border rounded-xl bg-gray-50"
-            >
-              <div>
-                <p className="font-bold">
-                  {item.nombre_usuario} – {formatearFecha(item.fecha)}
+          <div className="grid md:grid-cols-2 gap-6">
+            {reportesFiltrados.map((item) => (
+              <div
+                key={item.id_reporte}
+                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+              >
+                <div className="mb-4">
+                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    {item.nombre_usuario}
+                    <span
+                      className={`ml-2 px-2 py-1 text-xs rounded-full border ${getBadgeColor(
+                        item.estado
+                      )}`}
+                    >
+                      {item.estado}
+                    </span>
+                  </h4>
+                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
+                </div>
+
+                <p className="text-gray-700 mb-2">
+                  <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
+                  {item.lugar}
                 </p>
-                <p>
-                  Cargo: {item.cargo} | Estado: {item.estado}
-                </p>
+                <p className="text-gray-600 text-sm mb-4">{item.descripcion}</p>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => abrirDetalle(item)}
+                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+                  >
+                    Abrir
+                  </button>
+                  <button
+                    onClick={() => descargarPDF(item)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
+                  >
+                    <FaFilePdf /> PDF
+                  </button>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => abrirDetalle(item)}
-                  className="bg-indigo-600 text-white px-4 py-1 rounded hover:bg-indigo-700 transition"
-                >
-                  Abrir
-                </button>
-                <button
-                  onClick={() => descargarPDF(item)}
-                  className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition"
-                >
-                  <FaFilePdf />
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

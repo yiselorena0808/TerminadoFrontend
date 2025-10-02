@@ -1,207 +1,154 @@
 import React, { useEffect, useState } from "react";
-import { FaFilePdf } from "react-icons/fa";
+import { FaSearch, FaPlus, FaHardHat, FaExclamationTriangle, FaBox } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
-interface Gestion {
+interface EPP {
   id: number;
   nombre: string;
-  apellido: string;
-  cedula: number;
-  cargo: string;
-  productos: string;
+  descripcion: string;
   cantidad: number;
-  importancia: string;
-  fecha_creacion: string;
-  estado: string;
+  fecha: string;
+  id_usuario: number;
+  usuario_nombre: string;
   id_empresa: number;
 }
 
-interface Props {
-  idEmpresa: number;
-}
-
-const ListarGestiones: React.FC<Props> = ({ idEmpresa }) => {
+const GestionEPP: React.FC = () => {
   const navigate = useNavigate();
-  const [listas, setListas] = useState<Gestion[]>([]);
+  const [epps, setEpps] = useState<EPP[]>([]);
   const [busqueda, setBusqueda] = useState("");
-  const [estadoFiltro, setEstadoFiltro] = useState("Todos");
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
-  const apiListarGestiones = import.meta.env.VITE_API_LISTARGESTIONES;
+  const apiListarEpp = import.meta.env.VITE_API_LISTAREPP;
 
-  const obtenerListas = async () => {
+  const obtenerEpps = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        console.error("No hay token disponible");
-        return;
-      }
-
-      const res = await fetch(apiListarGestiones, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+      const res = await fetch(apiListarEpp, {
+        headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) {
-        console.error("Error en la petición:", res.status);
-        setListas([]);
-        return;
-      }
 
       const data = await res.json();
       if (data.datos && Array.isArray(data.datos)) {
-        setListas(data.datos);
+        setEpps(data.datos);
       } else {
-        setListas([]);
+        setEpps([]);
+        console.warn("No se recibieron datos válidos de la API");
       }
     } catch (error) {
-      console.error("Error al obtener gestiones:", error);
-      setListas([]);
+      console.error("Error al obtener EPP:", error);
+      setEpps([]);
     }
   };
 
   useEffect(() => {
-    obtenerListas();
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
+    obtenerEpps();
   }, []);
 
-  const abrirDetalle = (item: Gestion) => {
-    navigate("/nav/detalleGestionEpp", { state: item });
+  const irCrear = () => {
+    navigate("/nav/creargestionEpp");
   };
 
-  const formatearFecha = (fechaIso: string): string => {
+  const formatearFecha = (fechaIso: string) => {
     if (!fechaIso) return "Sin fecha";
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
-  const descargarPDF = (gestion: Gestion) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Reporte Gestión EPP", 20, 20);
-
-    doc.setFontSize(12);
-    doc.text(`Nombre: ${gestion.nombre} ${gestion.apellido}`, 20, 40);
-    doc.text(`Cédula: ${gestion.cedula}`, 20, 50);
-    doc.text(`Cargo: ${gestion.cargo}`, 20, 60);
-    doc.text(`Productos: ${gestion.productos}`, 20, 70);
-    doc.text(`Cantidad: ${gestion.cantidad}`, 20, 80);
-    doc.text(`Importancia: ${gestion.importancia}`, 20, 90);
-    doc.text(`Fecha: ${formatearFecha(gestion.fecha_creacion)}`, 20, 100);
-    doc.text(`Estado: ${gestion.estado}`, 20, 110);
-
-    doc.save(`gestion_${gestion.id}.pdf`);
-  };
-
-  const gestionesFiltradas = listas.filter(
-    (item) =>
-      item.id_empresa === idEmpresa &&
-      (estadoFiltro === "Todos" || item.estado === estadoFiltro) &&
-      `${item.nombre} ${item.apellido} ${item.cargo}`
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
+  const eppsFiltrados = epps.filter((item) =>
+    `${item.nombre} ${item.descripcion}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase())
   );
 
   return (
     <div
-      className="p-6 min-h-screen bg-cover bg-center"
+      className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
       style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
     >
-      <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
-          📋 Listas de Gestión
-        </h3>
+      {/* Encabezado estilo SST */}
+      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+        <FaHardHat className="text-4xl" />
+        <div>
+          <h2 className="text-3xl font-bold">SST - Gestión de EPP</h2>
+          <p className="text-yellow-200">Control y entrega de equipos de protección</p>
+        </div>
+      </div>
 
-        <button
-          onClick={() => navigate("/nav/crearGestionEpp")}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
-        >
-          Crear Gestión
-        </button>
-
-        {/* Barra de búsqueda + filtro de estado */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex w-80 shadow-lg rounded-full overflow-hidden border-2 border-indigo-300 bg-white">
+      {/* Contenedor principal */}
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+        {/* Filtros y acción */}
+        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+          <div className="flex items-center border rounded-lg px-3 py-2 flex-1">
+            <FaSearch className="text-gray-400 mr-2" />
             <input
               type="text"
-              className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar ..."
+              placeholder="Buscar EPP por nombre o descripción..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
+              className="flex-1 outline-none"
             />
-            <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              🔍
-            </span>
           </div>
-
-          <select
-            value={estadoFiltro}
-            onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="ml-4 px-4 py-2 border border-indigo-300 rounded-lg shadow bg-white text-gray-700"
+          <button
+            onClick={irCrear}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
           >
-            {estados.map((estado) => (
-              <option key={estado} value={estado}>
-                {estado}
-              </option>
-            ))}
-          </select>
+            <FaPlus /> Crear EPP
+          </button>
         </div>
 
         {/* Listado */}
-        {gestionesFiltradas.length === 0 ? (
-          <p className="text-gray-600 italic">
-            No hay gestiones disponibles para esta empresa.
+        {eppsFiltrados.length === 0 ? (
+          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+            <FaExclamationTriangle className="text-yellow-500" />
+            No hay equipos registrados
           </p>
         ) : (
-          gestionesFiltradas.map((item) => (
-            <div
-              key={item.id}
-              className="flex justify-between items-center p-4 my-3 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
-            >
-              <div>
-                <div className="font-bold text-gray-800">
-                  {item.nombre} {item.apellido} – {formatearFecha(item.fecha_creacion)}
+          <div className="grid md:grid-cols-2 gap-6">
+            {eppsFiltrados.map((item) => (
+              <div
+                key={item.id}
+                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+              >
+                <div className="mb-4">
+                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <FaBox className="text-yellow-600" />
+                    {item.nombre}
+                  </h4>
+                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
                 </div>
-                <div className="text-gray-600 text-sm">
-                  Cargo: {item.cargo} | Estado:{" "}
-                  <span className="font-semibold text-indigo-600">{item.estado}</span>
+
+                <p className="text-gray-700 mb-2">{item.descripcion}</p>
+                <p className="text-gray-600 text-sm mb-2">Cantidad: {item.cantidad}</p>
+                <p className="text-gray-500 text-sm">Registrado por: {item.usuario_nombre}</p>
+
+                <div className="flex justify-end mt-4">
+                  <button
+                    onClick={() => navigate("/nav/detalleEpp", { state: item })}
+                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+                  >
+                    Abrir
+                  </button>
                 </div>
               </div>
-
-              <div className="flex gap-4 items-center">
-                <button
-                  onClick={() => abrirDetalle(item)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
-                >
-                  Abrir
-                </button>
-
-                <button
-                  onClick={() => descargarPDF(item)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                  title="Descargar PDF"
-                >
-                  <FaFilePdf />
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>
   );
 };
 
-export default ListarGestiones;
+export default GestionEPP;

@@ -58,6 +58,39 @@ const ProductosPage: React.FC = () => {
     Swal.fire("Eliminado", "Producto eliminado", "success");
   };
 
+  const editarProducto = async (producto: Producto) => {
+    const { value: formValues } = await Swal.fire({
+      title: "Editar Producto",
+      html: `
+        <input id="swal-nombre" class="swal2-input" placeholder="Nombre" value="${producto.nombre}">
+        <textarea id="swal-descripcion" class="swal2-textarea" placeholder="Descripción">${producto.descripcion}</textarea>
+        <select id="swal-estado" class="swal2-select">
+          <option value="activo" ${producto.estado === "activo" ? "selected" : ""}>Activo</option>
+          <option value="inactivo" ${producto.estado === "inactivo" ? "selected" : ""}>Inactivo</option>
+        </select>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      preConfirm: () => {
+        return {
+          nombre: (document.getElementById("swal-nombre") as HTMLInputElement).value,
+          descripcion: (document.getElementById("swal-descripcion") as HTMLTextAreaElement).value,
+          estado: (document.getElementById("swal-estado") as HTMLSelectElement).value,
+        };
+      },
+    });
+
+    if (formValues) {
+      await fetch(`${import.meta.env.VITE_API_ACTUALIZARPRODUCTO}${producto.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ ...producto, ...formValues }),
+      });
+      listarProductos();
+      Swal.fire("Actualizado", "Producto modificado correctamente", "success");
+    }
+  };
+
   useEffect(() => {
     listarProductos();
     listarCargos();
@@ -67,6 +100,7 @@ const ProductosPage: React.FC = () => {
     <div className="p-8">
       <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Productos</h1>
 
+      {/* Crear Producto */}
       <div className="bg-white shadow-md rounded p-6 mb-6">
         <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
         <input 
@@ -101,6 +135,7 @@ const ProductosPage: React.FC = () => {
         <button onClick={crearProducto} className="bg-green-600 text-white px-4 py-2 rounded">Crear</button>
       </div>
 
+      {/* Listado de productos */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {productos.map((p) => (
           <div key={p.id} className="bg-white shadow-lg rounded p-4">
@@ -108,7 +143,7 @@ const ProductosPage: React.FC = () => {
             <p>{p.descripcion}</p>
             <p className="text-sm text-gray-600">Estado: {p.estado}</p>
             <div className="mt-3 flex gap-2">
-              <button className="bg-yellow-500 text-white px-3 py-1 rounded">Editar</button>
+              <button onClick={() => editarProducto(p)} className="bg-yellow-500 text-white px-3 py-1 rounded">Editar</button>
               <button onClick={() => eliminarProducto(p.id)} className="bg-red-500 text-white px-3 py-1 rounded">Eliminar</button>
             </div>
           </div>

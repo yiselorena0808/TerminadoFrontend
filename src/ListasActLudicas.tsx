@@ -139,137 +139,137 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
   }
 
   return (
-    <div
-      className="p-3 min-h-screen bg-cover bg-center"
-      style={{
+<div className="p-8 min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-yellow-200"
+style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
-    >
-      <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-indigo-900">
-          🎉 Actividades Lúdicas
-        </h3>
-
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={irCrear}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
-        >
-          <FaPlus /> Crear Actividad
-        </button>
-
-        {/* Barra de búsqueda */}
-        <div className="flex justify-end mb-6">
-          <div className="flex w-80 shadow-lg rounded-full overflow-hidden border-2 border-indigo-300 bg-white">
-            <input
-              type="text"
-              className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar actividades..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-            <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              🔍
-            </span>
-          </div>
-        </div>
-
-        {/* Lista de actividades */}
-        {actividadesFiltradas.length === 0 ? (
-          <p className="text-center text-gray-600 italic">
-            {actividades.length === 0
-              ? "No se encontraron actividades."
-              : "No hay actividades que coincidan con la búsqueda."}
-          </p>
-        ) : (
-          actividadesFiltradas.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
-            >
-              <div className="flex-1 md:flex md:items-center gap-4">
-                {/* Imagen o video */}
-                {item.imagen_video && (
-                  <div className="w-32 h-32 flex-shrink-0">
-                    {item.imagen_video.endsWith(".mp4") || item.imagen_video.endsWith(".webm") ? (
-                      <video
-                        src={item.imagen_video}
-                        controls
-                        className="w-32 h-32 object-cover rounded"
-                      />
-                    ) : (
-                      <img
-                        src={item.imagen_video}
-                        alt={item.nombre_actividad}
-                        className="w-32 h-32 object-cover rounded"
-                      />
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <div className="font-bold text-gray-800 text-lg">{item.nombre_actividad}</div>
-                  <div className="text-sm text-gray-600">
-                    Usuario: <span className="font-medium">{item.nombre_usuario}</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Fecha:{" "}
-                    {item.fecha_actividad
-                      ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
-                      : "Sin fecha"}
-                  </div>
-                  <div className="text-gray-500 text-sm mt-1">{item.descripcion}</div>
-
-                  {/* Archivo adjunto */}
-                  {item.archivo_adjunto && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <a
-                        href={item.archivo_adjunto}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        Ver archivo adjunto
-                      </a>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Botones */}
-              <div className="flex gap-3 mt-4 md:mt-0 items-center">
-                <button
-                  onClick={() =>
-                    navigate("/nav/detalleActLudica", { state: item })
-                  }
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition flex items-center gap-1"
-                >
-                  <FaEye /> Ver
-                </button>
-
-                <button
-                  onClick={() => descargarPDF(item)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                  title="Descargar PDF"
-                >
-                  <FaFilePdf />
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+>
+  {/* Encabezado */}
+  <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+    🎉
+    <div>
+      <h2 className="text-3xl font-bold">SST - Actividades Lúdicas</h2>
+      <p className="text-yellow-200">Bienestar, integración y recreación laboral</p>
     </div>
+  </div>
+
+  <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+    {/* Barra de acciones */}
+    <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+      <input
+        type="text"
+        placeholder="Buscar actividad..."
+        value={busqueda}
+        onChange={(e) => setBusqueda(e.target.value)}
+        className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500"
+      />
+      <button
+        onClick={irCrear}
+        className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+      >
+        <FaPlus /> Crear Actividad
+      </button>
+    </div>
+
+    {/* Estado de carga y error */}
+    {error && (
+      <div className="mb-4 p-3 bg-red-500/80 text-white rounded-lg text-center shadow">
+        {error}
+      </div>
+    )}
+    {cargando && (
+      <p className="text-center text-yellow-300">Cargando actividades...</p>
+    )}
+
+    {/* Lista de actividades */}
+    {actividadesFiltradas.length === 0 ? (
+      <p className="text-center text-black mt-6 italic">
+        No hay actividades disponibles
+      </p>
+    ) : (
+      <div className="grid md:grid-cols-2 gap-6">
+        {actividadesFiltradas.map((item) => (
+          <div
+            key={item.id}
+            className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+          >
+            <div className="mb-4">
+              <h4 className="font-bold text-lg text-yellow-100">
+                {item.nombre_actividad}
+              </h4>
+              <p className="text-sm text-black">
+                Usuario: <span className="font-semibold">{item.nombre_usuario}</span>
+              </p>
+              <p className="text-sm text-black">
+                {item.fecha_actividad
+                  ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })
+                  : "Sin fecha"}
+              </p>
+            </div>
+
+            <p className="text-black text-sm mb-3">{item.descripcion}</p>
+
+            {/* Imagen o video */}
+            {item.imagen_video && (
+              <div className="mb-3">
+                {item.imagen_video.endsWith(".mp4") ||
+                item.imagen_video.endsWith(".webm") ? (
+                  <video
+                    src={item.imagen_video}
+                    controls
+                    className="w-full h-40 object-cover rounded-lg shadow"
+                  />
+                ) : (
+                  <img
+                    src={item.imagen_video}
+                    alt={item.nombre_actividad}
+                    className="w-full h-40 object-cover rounded-lg shadow"
+                  />
+                )}
+              </div>
+            )}
+
+            {/* Archivo adjunto */}
+            {item.archivo_adjunto && (
+              <a
+                href={item.archivo_adjunto}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-black underline block mb-3"
+              >
+                📎 Ver archivo adjunto
+              </a>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() =>
+                  navigate("/nav/detalleActLudica", { state: item })
+                }
+                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition flex items-center gap-1"
+              >
+                <FaEye /> Ver
+              </button>
+              <button
+                onClick={() => descargarPDF(item)}
+                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
+              >
+                <FaFilePdf /> PDF
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</div>
+
+
   );
 };
 

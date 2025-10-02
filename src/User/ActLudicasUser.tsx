@@ -70,7 +70,7 @@ const ListasActividadesLudicas: React.FC = () => {
   }, []);
 
   const ir = () => {
-    navigate("/nav/crearActLudica");
+    navigate("/nav/creaActUser");
   };
 
   const eliminarActividad = async (id: number) => {

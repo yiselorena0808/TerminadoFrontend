@@ -41,6 +41,26 @@ const CargosPage: React.FC = () => {
     Swal.fire("Eliminado", "Cargo eliminado correctamente", "success");
   };
 
+  const editarCargo = async (cargo: Cargo) => {
+    const { value: nuevo } = await Swal.fire({
+      title: "Editar Cargo",
+      input: "text",
+      inputValue: cargo.cargo,
+      showCancelButton: true,
+      confirmButtonText: "Actualizar",
+    });
+
+    if (nuevo && nuevo.trim()) {
+      await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.id_cargo}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ cargo: nuevo }),
+      });
+      listarCargos();
+      Swal.fire("Actualizado", "Cargo modificado correctamente", "success");
+    }
+  };
+
   useEffect(() => { listarCargos(); }, []);
 
   return (
@@ -62,12 +82,10 @@ const CargosPage: React.FC = () => {
         {cargos.map((c) => (
           <div key={c.id_cargo} className="bg-white shadow-lg rounded p-4 flex justify-between items-center">
             <span className="font-semibold">{c.cargo}</span>
-            <button 
-              onClick={() => eliminarCargo(c.id_cargo)} 
-              className="bg-red-500 text-white px-3 py-1 rounded"
-            >
-              Eliminar
-            </button>
+            <div className="flex gap-2">
+              <button onClick={() => editarCargo(c)} className="bg-yellow-500 text-white px-3 py-1 rounded">Editar</button>
+              <button onClick={() => eliminarCargo(c.id_cargo)} className="bg-red-500 text-white px-3 py-1 rounded">Eliminar</button>
+            </div>
           </div>
         ))}
       </div>

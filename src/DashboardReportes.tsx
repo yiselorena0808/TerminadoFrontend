@@ -1,24 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { Pie, Bar } from "react-chartjs-2";
+import { Bar, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  ArcElement,
   Tooltip,
   Legend,
   BarElement,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { FaChartPie } from "react-icons/fa";
 
 ChartJS.register(
-  ArcElement,
   Tooltip,
   Legend,
   BarElement,
   CategoryScale,
   LinearScale,
+  PointElement,
+  LineElement,
   ChartDataLabels
 );
 
@@ -30,7 +33,7 @@ interface FuncionalidadData {
 const DashboardReportes: React.FC = () => {
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [dataFuncionalidad, setDataFuncionalidad] = useState<FuncionalidadData[]>([]);
-  const [filtro, setFiltro] = useState<string>(""); // 🔍 texto de búsqueda
+  const [filtro, setFiltro] = useState<string>("");
 
   const apiDashboard = import.meta.env.VITE_API_DASH;
 
@@ -41,7 +44,6 @@ const DashboardReportes: React.FC = () => {
 
   const obtenerDatos = async () => {
     if (!usuario) return;
-
     const token = localStorage.getItem("token");
     if (!token) return alert("Usuario no autenticado");
 
@@ -49,7 +51,6 @@ const DashboardReportes: React.FC = () => {
       const res = await fetch(apiDashboard, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const result = await res.json();
       setDataFuncionalidad(result.datos || []);
     } catch (error) {
@@ -61,35 +62,14 @@ const DashboardReportes: React.FC = () => {
     if (usuario) obtenerDatos();
   }, [usuario]);
 
-  // 🔍 Aplicar filtro por nombre
   const dataFiltrada = dataFuncionalidad.filter((f) =>
     f.nombre.toLowerCase().includes(filtro.toLowerCase())
   );
-
   const totalGeneral = dataFiltrada.reduce((sum, f) => sum + f.total, 0);
 
-  const colores = [
-    "#4ade80",
-    "#60a5fa",
-    "#facc15",
-    "#f87171",
-    "#a78bfa",
-    "#f472b6",
-  ];
+  const colores = ["#4ade80", "#60a5fa", "#facc15", "#f87171", "#a78bfa", "#f472b6"];
 
-  const pieData = {
-    labels: dataFiltrada.map((f) => f.nombre),
-    datasets: [
-      {
-        label: "Uso de funcionalidades",
-        data: dataFiltrada.map((f) => f.total),
-        backgroundColor: colores,
-        borderColor: "#ffffff",
-        borderWidth: 2,
-      },
-    ],
-  };
-
+  // Datos para Bar chart
   const barData = {
     labels: dataFiltrada.map((f) => f.nombre),
     datasets: [
@@ -102,20 +82,22 @@ const DashboardReportes: React.FC = () => {
     ],
   };
 
-  const pieOptions = {
-    plugins: {
-      datalabels: {
-        color: "#fff",
-        font: { weight: "bold", size: 13 },
-        formatter: (value: number) => {
-          if (totalGeneral === 0) return "0%";
-          const porcentaje = ((value / totalGeneral) * 100).toFixed(1);
-          return `${value} (${porcentaje}%)`;
-        },
+  // Datos para Line chart (tiempo estimado en minutos)
+  const lineData = {
+    labels: dataFiltrada.map((f) => f.nombre),
+    datasets: [
+      {
+        label: "⏱ Tiempo de uso (minutos)",
+        data: dataFiltrada.map((f) => f.total * 5), // simulado: cada uso = 5 minutos
+        fill: false,
+        borderColor: "#f59e0b",
+        backgroundColor: "#fbbf24",
+        tension: 0.3,
       },
-    },
+    ],
   };
 
+  // Opciones
   const barOptions = {
     responsive: true,
     plugins: {
@@ -134,72 +116,97 @@ const DashboardReportes: React.FC = () => {
     },
   };
 
-  return (
-    <div className="p-6 min-h-screen bg-gray-100 flex justify-center items-start">
-      <div className="w-full max-w-5xl bg-white p-8 rounded-2xl shadow-lg space-y-10">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          📊 Dashboard Funcionalidades
-        </h2>
+  const lineOptions = {
+    responsive: true,
+    plugins: {
+      legend: { display: true },
+      datalabels: {
+        align: "top" as const,
+        anchor: "end" as const,
+        color: "#374151",
+        formatter: (value: number) => `${value}m`,
+      },
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Minutos",
+        },
+      },
+    },
+  };
 
-        {/* 🔍 Buscador */}
+  return (
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay SST */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+
+      {/* Card */}
+      <div className="relative w-full max-w-6xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-yellow-500 space-y-10">
+        {/* Encabezado */}
+        <div className="flex items-center gap-3 mb-6">
+          <FaChartPie className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">📊 Dashboard Funcionalidades</h2>
+        </div>
+
+        {/* Filtro */}
         <div className="flex items-center justify-between mb-6">
           <input
             type="text"
-            placeholder="Buscar funcionalidad..."
+            placeholder="🔍 Buscar funcionalidad..."
             value={filtro}
             onChange={(e) => setFiltro(e.target.value)}
-            className="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:ring focus:ring-blue-200 focus:outline-none"
+            className="w-full md:w-1/2 border border-gray-300 rounded-xl px-4 py-3 shadow focus:ring focus:ring-yellow-300 focus:outline-none"
           />
         </div>
 
         {dataFiltrada.length === 0 ? (
-          <p className="text-center text-gray-500">No hay resultados para tu búsqueda.</p>
+          <p className="text-center text-gray-600 font-semibold">
+            ⚠️ No hay resultados para tu búsqueda.
+          </p>
         ) : (
           <>
-            {/* Gráfico de pastel y barras */}
+            {/* Gráficos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-gray-50 p-4 rounded-xl shadow">
-                <h3 className="text-lg font-semibold mb-4">Distribución (%)</h3>
-                <Pie data={pieData} options={pieOptions} />
+              <div className="bg-yellow-50 p-4 rounded-xl shadow border border-yellow-200">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700">Cantidad de usos</h3>
+                <Bar data={barData} options={barOptions} />
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-xl shadow">
-                <h3 className="text-lg font-semibold mb-4">Cantidad de usos</h3>
-                <Bar data={barData} options={barOptions} />
+              <div className="bg-yellow-50 p-4 rounded-xl shadow border border-yellow-200">
+                <h3 className="text-lg font-semibold mb-4 text-gray-700">⏱ Tiempo de uso estimado</h3>
+                <Line data={lineData} options={lineOptions} />
               </div>
             </div>
 
-            {/* Tabla de datos */}
-            <div className="overflow-x-auto bg-gray-50 p-6 rounded-xl shadow">
-              <h3 className="text-lg font-semibold mb-4">📋 Resumen</h3>
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-gray-200 text-left">
-                    <th className="p-3">Funcionalidad</th>
-                    <th className="p-3 text-center">Cantidad</th>
-                    <th className="p-3 text-center">Porcentaje</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dataFiltrada.map((f, i) => {
-                    const porcentaje = totalGeneral
-                      ? ((f.total / totalGeneral) * 100).toFixed(1)
-                      : "0";
-                    return (
-                      <tr key={i} className="border-b">
-                        <td className="p-3">{f.nombre}</td>
-                        <td className="p-3 text-center">{f.total}</td>
-                        <td className="p-3 text-center">{porcentaje}%</td>
-                      </tr>
-                    );
-                  })}
-                  <tr className="bg-gray-100 font-bold">
-                    <td className="p-3">TOTAL</td>
-                    <td className="p-3 text-center">{totalGeneral}</td>
-                    <td className="p-3 text-center">100%</td>
-                  </tr>
-                </tbody>
-              </table>
+            {/* Ranking de funcionalidades */}
+            <div className="bg-yellow-50 p-6 rounded-xl shadow border border-yellow-200">
+              <h3 className="text-lg font-semibold mb-4 text-gray-700">🏆 Ranking de funcionalidades</h3>
+              <ul className="space-y-2">
+                {dataFiltrada
+                  .sort((a, b) => b.total - a.total)
+                  .map((f, i) => (
+                    <li
+                      key={i}
+                      className="flex justify-between items-center bg-white rounded-lg px-4 py-2 shadow-sm border border-gray-200"
+                    >
+                      <span className="font-semibold text-gray-700">
+                        #{i + 1} - {f.nombre}
+                      </span>
+                      <span className="text-yellow-600 font-bold">{f.total} usos</span>
+                    </li>
+                  ))}
+              </ul>
             </div>
           </>
         )}
@@ -209,3 +216,4 @@ const DashboardReportes: React.FC = () => {
 };
 
 export default DashboardReportes;
+

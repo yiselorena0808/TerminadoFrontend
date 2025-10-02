@@ -58,7 +58,7 @@ const CrearListReporte: React.FC = () => {
       timerProgressBar: true,
     });
     setTimeout(() => {
-        navigate("/nav/LectorUserRepo");
+        navigate("/nav/lectorUserChe");
       }, 1500);
   };
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getUsuarioFromToken } from "./utils/auth";
+import { FaCalendarPlus } from "react-icons/fa";
 
 interface UsuarioToken {
   id: number;
@@ -20,7 +21,6 @@ const CrearEvento: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivo, setArchivo] = useState<File | null>(null);
 
-  // Extraer usuario del token
   useEffect(() => {
     const user = getUsuarioFromToken();
     setUsuario(user);
@@ -70,14 +70,12 @@ const CrearEvento: React.FC = () => {
       });
 
       const data = await res.json();
-
       if (!res.ok) {
         return showToast("error", data.message || "Error al crear el evento");
       }
 
       showToast("success", "Evento creado ✅");
 
-      // Limpiar formulario
       setTitulo("");
       setDescripcion("");
       setFechaActividad("");
@@ -90,67 +88,87 @@ const CrearEvento: React.FC = () => {
   };
 
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6 bg-white shadow-lg rounded-lg">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">📝 Crear Evento</h2>
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/foto-gratis/concepto-fiesta-nochevieja_23-2147706044.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay amarillo */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
 
-      {usuario && (
-        <div className="mb-4 p-3 bg-gray-100 rounded">
-          <p>
-            <strong>Usuario:</strong> {usuario.nombre}
-          </p>
-          <p>
-            <strong>ID Empresa:</strong> {usuario.id_empresa}
-          </p>
+      {/* Card central */}
+      <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-yellow-500">
+        <div className="flex items-center gap-3 mb-6">
+          <FaCalendarPlus className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">📝 Crear Evento</h2>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="text"
-          placeholder="Título"
-          value={titulo}
-          onChange={(e) => setTitulo(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <textarea
-          placeholder="Descripción"
-          value={descripcion}
-          onChange={(e) => setDescripcion(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2 resize-none h-24"
-        />
-        <input
-          type="date"
-          value={fechaActividad}
-          onChange={(e) => setFechaActividad(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <div>
-          <label className="block mb-1">Imagen</label>
+        {usuario && (
+          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+            <p className="text-gray-700">
+              <strong>👤 Usuario:</strong> {usuario.nombre}
+            </p>
+            <p className="text-gray-700">
+              <strong>🏢 Empresa:</strong> {usuario.id_empresa}
+            </p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImagen(e.target.files?.[0] || null)}
-            className="w-full"
+            type="text"
+            placeholder="Título del evento"
+            value={titulo}
+            onChange={(e) => setTitulo(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none"
           />
-        </div>
-        <div>
-          <label className="block mb-1">Archivo</label>
+          <textarea
+            placeholder="Descripción del evento"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm resize-none h-28 focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+          />
           <input
-            type="file"
-            onChange={(e) => setArchivo(e.target.files?.[0] || null)}
-            className="w-full"
+            type="date"
+            value={fechaActividad}
+            onChange={(e) => setFechaActividad(e.target.value)}
+            required
+            className="w-full border border-gray-300 rounded-xl px-4 py-3 shadow-sm focus:ring-2 focus:ring-yellow-400 focus:outline-none"
           />
-        </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
-        >
-          Crear Evento
-        </button>
-      </form>
+
+          <div>
+            <label className="block mb-1 text-gray-700 font-medium">📷 Imagen</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setImagen(e.target.files?.[0] || null)}
+              className="w-full text-gray-600"
+            />
+          </div>
+
+          <div>
+            <label className="block mb-1 text-gray-700 font-medium">📎 Archivo</label>
+            <input
+              type="file"
+              onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+              className="w-full text-gray-600"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl font-semibold shadow-lg transition flex items-center justify-center gap-2"
+          >
+            <FaCalendarPlus /> Crear Evento
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

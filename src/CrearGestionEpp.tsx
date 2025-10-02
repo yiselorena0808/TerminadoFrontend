@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import Swal from "sweetalert2";
+import { FaHardHat, FaPaperPlane } from "react-icons/fa";
 
 interface Cargo {
   id_cargo: number;
@@ -12,8 +14,8 @@ interface Producto {
 }
 
 const CrearGestionEpp: React.FC = () => {
-  const apiCargos = import.meta.env.VITE_API_CARGOS; // /cargos/listar
-  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO; // /productos/cargo/
+  const apiCargos = import.meta.env.VITE_API_CARGOS;
+  const apiProductosPorCargo = import.meta.env.VITE_API_PRODUCTOS_POR_CARGO;
   const apiCrearGestionEpp = import.meta.env.VITE_API_CREARGESTION;
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
@@ -26,8 +28,8 @@ const CrearGestionEpp: React.FC = () => {
 
   const [formData, setFormData] = useState({
     cedula: "",
-    cargo: "", // string en el modelo
-    productos: [] as string[], // IDs de productos
+    cargo: "",
+    productos: [] as string[],
     cantidad: 1,
     importancia: "",
     estado: "activo",
@@ -40,11 +42,11 @@ const CrearGestionEpp: React.FC = () => {
 
   const token = localStorage.getItem("token");
 
-  // Cargar usuario
+  // cargar usuario
   useEffect(() => {
-    if (!token) return setError("No hay token disponible. Por favor inicia sesión.");
+    if (!token) return setError("No hay token disponible.");
     const u = getUsuarioFromToken();
-    if (!u) return setError("Token inválido. Por favor inicia sesión de nuevo.");
+    if (!u) return setError("Token inválido.");
     setUsuario(u);
     setFormData((prev) => ({
       ...prev,
@@ -55,19 +57,17 @@ const CrearGestionEpp: React.FC = () => {
     }));
   }, [token]);
 
-  // Cargar cargos
+  // cargar cargos
   useEffect(() => {
     if (!token) return;
     setLoadingCargos(true);
     const fetchCargos = async () => {
       try {
         const res = await fetch(apiCargos, { headers: { Authorization: `Bearer ${token}` } });
-        if (!res.ok) throw new Error(`Error al cargar cargos: ${res.status}`);
         const data = await res.json();
         const cargosArray: Cargo[] = Array.isArray(data) ? data : data.cargos ?? [];
         setCargos(cargosArray.filter(c => c?.id_cargo && c.cargo));
       } catch (err: any) {
-        console.error(err);
         setError(err.message);
       } finally {
         setLoadingCargos(false);
@@ -76,7 +76,7 @@ const CrearGestionEpp: React.FC = () => {
     fetchCargos();
   }, [token]);
 
-  // Cargar productos según cargo seleccionado
+  // cargar productos según cargo
   useEffect(() => {
     if (!token || !formData.cargo) return;
     setLoadingProductos(true);
@@ -85,12 +85,10 @@ const CrearGestionEpp: React.FC = () => {
         const res = await fetch(`${apiProductosPorCargo}${formData.cargo}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error(`Error al cargar productos: ${res.status}`);
         const data = await res.json();
         const productosArray: Producto[] = Array.isArray(data) ? data : data.productos ?? [];
         setProductos(productosArray.filter(p => p?.id_producto && p.nombre));
       } catch (err: any) {
-        console.error(err);
         setError(err.message);
       } finally {
         setLoadingProductos(false);
@@ -99,42 +97,47 @@ const CrearGestionEpp: React.FC = () => {
     fetchProductos();
   }, [token, formData.cargo]);
 
-  // Handlers
+  const showToast = (icon: "success" | "error", title: string) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+    });
+  };
+
+  // handlers
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleCargoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      cargo: e.target.value,
-      productos: [], // reset productos al cambiar cargo
-    }));
+    setFormData((prev) => ({ ...prev, cargo: e.target.value, productos: [] }));
   };
 
   const handleProductoChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = Array.from(e.target.selectedOptions).map(o => o.value);
-    setFormData(prev => ({ ...prev, productos: selected }));
+    const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
+    setFormData((prev) => ({ ...prev, productos: selected }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!token) return alert("No hay token. Por favor inicia sesión.");
+    if (!token) return showToast("error", "No hay token");
 
     try {
       const res = await fetch(apiCrearGestionEpp, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(formData),
       });
-      if (!res.ok) throw new Error(`Error al crear gestión: ${res.status}`);
       const data = await res.json();
-      alert("Gestión creada con éxito ✅");
-      console.log("Nueva gestión:", data);
-      setFormData(prev => ({
+      if (!res.ok) return showToast("error", data.error || "Error al crear gestión");
+
+      showToast("success", "Gestión de EPP creada ✅");
+      setFormData((prev) => ({
         ...prev,
         cedula: "",
         cargo: "",
@@ -145,145 +148,130 @@ const CrearGestionEpp: React.FC = () => {
       }));
       setProductos([]);
     } catch (err: any) {
-      console.error(err);
-      alert(err.message);
+      showToast("error", err.message);
     }
   };
 
   if (error) {
-    return <div className="max-w-2xl mx-auto p-6 text-red-600 font-bold">{error}</div>;
+    return <div className="text-red-600 font-bold p-6">{error}</div>;
   }
 
   return (
-    <div className="max-w-2xl mx-auto bg-white shadow-md p-6 rounded-lg">
-      <h2 className="text-xl font-bold mb-4">Crear Gestión EPP</h2>
-      <form onSubmit={handleSubmit} className="space-y-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
 
-        {/* Nombre, Apellido y Empresa */}
-        {["nombre", "apellido", "id_empresa"].map((field) => (
-          <div key={field}>
-            <label className="block text-sm font-medium">
-              {field === "id_empresa" ? "Empresa" : field.charAt(0).toUpperCase() + field.slice(1)}
-            </label>
-            <input
-              type="text"
-              value={usuario?.[field as keyof UsuarioToken] ?? ""}
-              readOnly
-              className="w-full border rounded p-2 bg-gray-100"
-            />
+      {/* Card */}
+      <form
+        onSubmit={handleSubmit}
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
+      >
+        {/* Encabezado */}
+        <div className="flex items-center gap-3 mb-6">
+          <FaHardHat className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">Crear Gestión EPP</h2>
+        </div>
+
+        {/* Usuario info */}
+        {usuario && (
+          <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
+            <p><strong>👤 Usuario:</strong> {usuario.nombre} {usuario.apellido}</p>
+            <p><strong>Empresa:</strong> {usuario.id_empresa}</p>
           </div>
-        ))}
+        )}
 
-        {/* Cédula */}
-        <div>
-          <label className="block text-sm font-medium">Cédula</label>
+        {/* Inputs */}
+        <div className="grid grid-cols-2 gap-4">
           <input
             type="text"
             name="cedula"
             value={formData.cedula}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            placeholder="Cédula"
             required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
           />
-        </div>
 
-        {/* Cargo */}
-        <div>
-          <label className="block text-sm font-medium">Cargo</label>
-          {loadingCargos ? (
-            <div className="text-gray-500">Cargando cargos...</div>
-          ) : (
-            <select
-              name="cargo"
-              value={formData.cargo}
-              onChange={handleCargoChange}
-              className="w-full border rounded p-2"
-              required
-            >
-              <option value="">-- Selecciona un cargo --</option>
-              {cargos.map(cargo => (
-                <option key={cargo.id_cargo} value={cargo.cargo}>
-                  {cargo.cargo}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+          <select
+            name="cargo"
+            value={formData.cargo}
+            onChange={handleCargoChange}
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
+          >
+            <option value="">-- Selecciona un cargo --</option>
+            {cargos.map((cargo) => (
+              <option key={cargo.id_cargo} value={cargo.cargo}>
+                {cargo.cargo}
+              </option>
+            ))}
+          </select>
 
-        {/* Productos */}
-        <div>
-          <label className="block text-sm font-medium">Productos</label>
-          {loadingProductos ? (
-            <div className="text-gray-500">Cargando productos...</div>
-          ) : (
-            <select
-              multiple
-              name="productos"
-              value={formData.productos}
-              onChange={handleProductoChange}
-              className="w-full border rounded p-2"
-              required
-              disabled={!formData.cargo || productos.length === 0}
-            >
-              {productos.map(p => (
-                <option key={p.id_producto} value={p.id_producto.toString()}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
+          <select
+            multiple
+            name="productos"
+            value={formData.productos}
+            onChange={handleProductoChange}
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
+            required
+            disabled={!formData.cargo || productos.length === 0}
+          >
+            {productos.map((p) => (
+              <option key={p.id_producto} value={p.id_producto.toString()}>
+                {p.nombre}
+              </option>
+            ))}
+          </select>
 
-        {/* Cantidad */}
-        <div>
-          <label className="block text-sm font-medium">Cantidad</label>
           <input
             type="number"
             name="cantidad"
             min="1"
             value={formData.cantidad}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            placeholder="Cantidad"
             required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           />
-        </div>
 
-        {/* Importancia */}
-        <div>
-          <label className="block text-sm font-medium">Importancia</label>
           <select
             name="importancia"
             value={formData.importancia}
             onChange={handleChange}
-            className="w-full border rounded p-2"
             required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           >
-            <option value="">-- Selecciona importancia --</option>
+            <option value="">-- Importancia --</option>
             <option value="alta">Alta</option>
             <option value="media">Media</option>
             <option value="baja">Baja</option>
           </select>
-        </div>
 
-        {/* Estado */}
-        <div>
-          <label className="block text-sm font-medium">Estado</label>
           <select
             name="estado"
             value={formData.estado}
             onChange={handleChange}
-            className="w-full border rounded p-2"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
           >
             <option value="activo">Activo</option>
             <option value="inactivo">Inactivo</option>
           </select>
         </div>
 
+        {/* Botón */}
         <button
           type="submit"
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
-          Guardar
+          <FaPaperPlane /> Guardar Gestión
         </button>
       </form>
     </div>

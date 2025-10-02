@@ -23,10 +23,9 @@ import DashboardReportes from './DashboardReportes';
 import CrearGestionEpp from './CrearGestionEpp';
 import CrearEventos from './Eventos';
 import InicioUser from '../src/User/InicioUser';
-import ListaPublicaciones from './ListaEventos';
 import Correo from './Correo';
 import ResetPasswordForm from './Recuperar';
-import Navbare from './Adicionales';
+import DashboardPage from './Adicionales';
 
 import CargosPage from './CrearCargo';
 import ProductosPage from './CrearProducto';
@@ -36,11 +35,12 @@ import LectorListaReportes from './User/LectorListasReporteUser';
 import CrearListReporte from './User/CrearListRepo';
 import MiDetalleListaChequeo from './User/DetalleListChe';
 import MiDetalleReporte from './User/DetalleListRepo';
-import LectorListasActividadesLudicas from './User/LectorListAct';
+import LectorAct from './User/LectorActUser';
 import UserActividadLudica from './User/CreaActUser';
 import MiDetalleActividadLudica from './User/DetalleActUser';
 import ListaEventosEmpresa from './User/ListaEventosEmpresa';
 import MiEvento from './User/CreaEvento';
+import ListaEventos from './ListaEventos';
 
 function App() {
   return (
@@ -65,7 +65,7 @@ function App() {
           <Route path="creargestionEpp" element={<CrearGestionEpp />} />
 
           {/* Blog/Eventos */}
-          <Route path="blog" element={<ListaPublicaciones />} />
+          <Route path="blog" element={<ListaEventos></ListaEventos>} />
           <Route path="crearBlog" element={<CrearEventos />} />
 
           {/* Listas de Chequeo */}
@@ -79,7 +79,7 @@ function App() {
           <Route path="crearReportes" element={<CrearReporte />} />
 
           {/* Actividades Lúdicas */}
-          <Route path="actLudica" element={<ListasActividadesLudicas />} />
+          <Route path="actLudica" element={<ListasActividadesLudicas></ListasActividadesLudicas>} />
           <Route path="detalleActLudica" element={<DetalleActividad />} />
           <Route path="crearActLudica" element={<CrearActividadLudica />} />
 
@@ -88,7 +88,7 @@ function App() {
           <Route path="usuarios" element={<AdmUsuarios />} />
 
           {/* Panel Admin con Navbare */}
-          <Route path="adicionales" element={<Navbare />}>
+          <Route path="adicionales" element={<DashboardPage></DashboardPage>}>
             <Route path="cargos" element={<CargosPage />} />
             <Route path="productos" element={<ProductosPage />} />
             {/* Redirigir por defecto a cargos */}
@@ -103,7 +103,7 @@ function App() {
           <Route path='creaListRepo' element={<CrearListReporte></CrearListReporte>}></Route>
           <Route path='MidetalleChe' element={<MiDetalleListaChequeo></MiDetalleListaChequeo>}></Route>
           <Route path='MidetalleRepo' element={<MiDetalleReporte></MiDetalleReporte>}></Route>
-          <Route path='LectorUserAct' element={<LectorListasActividadesLudicas></LectorListasActividadesLudicas>}></Route>
+          <Route path='LectorUserAct' element={<LectorAct></LectorAct>}></Route>
           <Route path='creaActUser' element={<UserActividadLudica></UserActividadLudica>}></Route>
           <Route path='MidetalleAct' element={<MiDetalleActividadLudica></MiDetalleActividadLudica>}></Route>
           <Route path='EventosUser' element={<ListaEventosEmpresa></ListaEventosEmpresa>}></Route>

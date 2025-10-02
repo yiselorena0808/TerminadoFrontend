@@ -2,14 +2,12 @@ import { useState } from "react";
 
 interface Usuario {
   id: number;
-  idEmpresa: number;
-  idArea: number;
+  id_area: number;
   nombre: string;
   apellido: string;
-  nombreUsuario: string;
-  correoElectronico: string;
+  nombre_usuario: string;
+  correo_electronico: string;
   cargo: string;
-  contrasena: string;
 }
 
 interface Props {
@@ -37,6 +35,14 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
         <h2 className="text-2xl font-bold mb-4 text-blue-800">Editar Usuario</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
+            type="number"
+            name="idArea"
+            value={form.id_area}
+            onChange={handleChange}
+            placeholder="ID Área"
+            className="w-full p-2 border rounded-lg"
+          />
+          <input
             type="text"
             name="nombre"
             value={form.nombre}
@@ -55,7 +61,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
           <input
             type="text"
             name="nombreUsuario"
-            value={form.nombreUsuario}
+            value={form.nombre_usuario}
             onChange={handleChange}
             placeholder="Usuario"
             className="w-full p-2 border rounded-lg"
@@ -63,7 +69,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
           <input
             type="email"
             name="correoElectronico"
-            value={form.correoElectronico}
+            value={form.correo_electronico}
             onChange={handleChange}
             placeholder="Correo electrónico"
             className="w-full p-2 border rounded-lg"
@@ -74,14 +80,6 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
             value={form.cargo}
             onChange={handleChange}
             placeholder="Cargo"
-            className="w-full p-2 border rounded-lg"
-          />
-          <input
-            type="password"
-            name="contrasena"
-            value={form.contrasena}
-            onChange={handleChange}
-            placeholder="Contraseña"
             className="w-full p-2 border rounded-lg"
           />
 
