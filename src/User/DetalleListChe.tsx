@@ -12,6 +12,7 @@ interface ListaChequeo {
   soat: string;
   tecnico: string;
   kilometraje: string;
+  comentarioAdmin?: string;
 }
 
 const MiDetalleListaChequeo: React.FC = () => {
@@ -47,12 +48,6 @@ const MiDetalleListaChequeo: React.FC = () => {
       : undefined
   );
 
-  // Estado para comentario del admin
-  const [respuestaAdmin, setRespuestaAdmin] = useState("");
-  const [mensaje, setMensaje] = useState("");
-
-  const isAdmin = true; // Reemplaza con tu lógica de auth
-
   if (!form) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -67,38 +62,6 @@ const MiDetalleListaChequeo: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-
-  // Función para enviar comentario del admin
-  const handleEnviarRespuesta = async () => {
-    if (!respuestaAdmin.trim()) {
-      setMensaje("El comentario no puede estar vacío");
-      return;
-    }
-
-    try {
-      const apiBase = import.meta.env.VITE_API_BASE;
-      const token = localStorage.getItem("token"); // si usas JWT
-      const res = await fetch(`${apiBase}/listaChequeo/${form.id}/responder`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ comentario: respuestaAdmin }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        setMensaje("Respuesta enviada correctamente");
-        setRespuestaAdmin("");
-      } else {
-        setMensaje(data.mensaje || "Error al enviar respuesta");
-      }
-    } catch (error) {
-      console.error(error);
-      setMensaje("Error de conexión");
-    }
   };
 
   return (
@@ -216,30 +179,13 @@ const MiDetalleListaChequeo: React.FC = () => {
           </div>
         </div>
 
-        {/* Sección de comentario del administrador (fuera del formulario) */}
-        {isAdmin && (
+        {/* Sección para mostrar comentario del administrador */}
+        {form.comentarioAdmin && (
           <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-2">Comentario del Administrador</h3>
-            <textarea
-              className="w-full border rounded-lg p-3"
-              rows={4}
-              value={respuestaAdmin}
-              onChange={(e) => setRespuestaAdmin(e.target.value)}
-              placeholder="Escribe tu comentario..."
-            />
-            <button
-              onClick={handleEnviarRespuesta}
-              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Enviar Respuesta
-            </button>
-          </div>
-        )}
-
-        {/* Mensaje */}
-        {mensaje && (
-          <div className="mt-4 px-8 text-center text-green-700 font-semibold">
-            {mensaje}
+            <div className="w-full border rounded-lg p-3 bg-white text-gray-800">
+              {form.comentarioAdmin}
+            </div>
           </div>
         )}
       </div>

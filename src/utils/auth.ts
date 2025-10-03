@@ -5,6 +5,7 @@ export interface UsuarioToken {
   nombre: string;
   apellido: string;
   id_empresa: number;
+  id_gestion:number;
 }
 
 export function getUsuarioFromToken(): UsuarioToken | null {
@@ -30,6 +31,7 @@ export function getUsuarioFromToken(): UsuarioToken | null {
       nombre: decoded.nombrePropio ?? nombre,
       apellido: decoded.apellido ?? apellido,
       id_empresa: decoded.id_empresa ?? decoded.idEmpresa,
+      id_gestion: decoded.id_gestion ?? decoded.id_gestion,
     };
   } catch (error) {
     console.error("Token inválido:", error);

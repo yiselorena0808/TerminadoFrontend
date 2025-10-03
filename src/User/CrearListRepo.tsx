@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
+import { FaHardHat, FaPaperPlane } from "react-icons/fa";
 
 const CrearListReporte: React.FC = () => {
   const navigate = useNavigate();
@@ -13,7 +14,7 @@ const CrearListReporte: React.FC = () => {
     fecha: "",
     lugar: "",
     descripcion: "",
-    estado: "",
+    estado: "Pendiente",
   });
 
   const [imagen, setImagen] = useState<File | null>(null);
@@ -58,8 +59,8 @@ const CrearListReporte: React.FC = () => {
       timerProgressBar: true,
     });
     setTimeout(() => {
-        navigate("/nav/lectorUserChe");
-      }, 1500);
+      navigate("/nav/LectorUserRepo");
+    }, 1500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,17 +73,13 @@ const CrearListReporte: React.FC = () => {
 
     try {
       const data = new FormData();
-
-      // Agregar datos del formulario
       Object.entries(formData).forEach(([key, value]) =>
         data.append(key, value)
       );
 
-      // Agregar archivos
       if (imagen) data.append("imagen", imagen);
       if (archivos) data.append("archivos", archivos);
 
-      // Agregar datos del usuario logueado
       data.append("id_usuario", usuario.id.toString());
       data.append("nombre_usuario", usuario.nombre);
       data.append("id_empresa", usuario.id_empresa.toString());
@@ -97,13 +94,11 @@ const CrearListReporte: React.FC = () => {
 
       if (!res.ok) {
         const result = await res.json();
-        console.error("Error en respuesta:", result);
         return showToast("error", result.error || "Error al enviar reporte");
       }
 
       showToast("success", "Reporte creado correctamente ✅");
-
-      navigate("/nav/LectorUserRepo");
+      navigate("/nav/crearReportes");
     } catch (error) {
       console.error("Error al enviar reporte:", error);
       showToast("error", "Ocurrió un error al enviar el reporte");
@@ -111,13 +106,29 @@ const CrearListReporte: React.FC = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100 flex justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* overlay */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-3xl"
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
       >
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">📋 Crear Reporte</h2>
+        {/* Encabezado */}
+        <div className="flex items-center gap-3 mb-6">
+          <FaHardHat className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">Crear Reporte SST</h2>
+        </div>
 
+        {/* Inputs */}
         <div className="grid grid-cols-2 gap-4">
           <input
             type="text"
@@ -125,7 +136,7 @@ const CrearListReporte: React.FC = () => {
             placeholder="Cargo"
             value={formData.cargo}
             onChange={handleChange}
-            className="border p-2 rounded"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -133,14 +144,14 @@ const CrearListReporte: React.FC = () => {
             placeholder="Cédula"
             value={formData.cedula}
             onChange={handleChange}
-            className="border p-2 rounded"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="date"
             name="fecha"
             value={formData.fecha}
             onChange={handleChange}
-            className="border p-2 rounded"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="text"
@@ -148,15 +159,14 @@ const CrearListReporte: React.FC = () => {
             placeholder="Lugar"
             value={formData.lugar}
             onChange={handleChange}
-            className="border p-2 rounded"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
           />
 
-          {/* NUEVO SELECT ESTADO */}
           <select
             name="estado"
             value={formData.estado}
             onChange={handleChange}
-            className="border p-2 rounded col-span-2"
+            className="border p-3 rounded-xl col-span-2 focus:ring-2 focus:ring-yellow-500"
           >
             <option value="Pendiente">Pendiente</option>
             <option value="Revisado">Revisado</option>
@@ -169,32 +179,37 @@ const CrearListReporte: React.FC = () => {
           placeholder="Descripción"
           value={formData.descripcion}
           onChange={handleChange}
-          className="border p-2 rounded w-full mt-4"
+          className="border p-3 rounded-xl w-full mt-4 focus:ring-2 focus:ring-yellow-500"
+          rows={4}
         />
 
+        {/* Archivos */}
         <div className="mt-4">
-          <label>Imagen:</label>
+          <label className="font-semibold text-gray-700">Imagen:</label>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => setImagen(e.target.files?.[0] || null)}
+            className="mt-1"
           />
         </div>
 
         <div className="mt-4">
-          <label>Archivos:</label>
+          <label className="font-semibold text-gray-700">Archivos:</label>
           <input
             type="file"
             accept=".pdf,.doc,.docx,.xls,.xlsx"
             onChange={(e) => setArchivos(e.target.files?.[0] || null)}
+            className="mt-1"
           />
         </div>
 
+        {/* Botón */}
         <button
           type="submit"
-          className="mt-6 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded"
+          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
-          Enviar Reporte
+          <FaPaperPlane /> Enviar Reporte
         </button>
       </form>
     </div>
@@ -202,3 +217,4 @@ const CrearListReporte: React.FC = () => {
 };
 
 export default CrearListReporte;
+

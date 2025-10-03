@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface Cargo {
   id_cargo: number;
@@ -8,6 +9,8 @@ interface Cargo {
 
 const CargosPage: React.FC = () => {
   const token = localStorage.getItem("token");
+  const usuario: UsuarioToken | null = getUsuarioFromToken();
+
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [nuevoCargo, setNuevoCargo] = useState("");
 
@@ -15,16 +18,39 @@ const CargosPage: React.FC = () => {
     const res = await fetch(import.meta.env.VITE_API_CARGOS, {
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    if (res.status === 401) {
+      Swal.fire("Sesión expirada", "Vuelve a iniciar sesión", "warning");
+      return;
+    }
+
     setCargos(await res.json());
   };
 
   const crearCargo = async () => {
-    if (!nuevoCargo.trim()) return;
-    await fetch(import.meta.env.VITE_API_CREARCARGO, {
+    if (!nuevoCargo.trim() || !usuario?.id_empresa || !usuario?.id_gestion) {
+      Swal.fire("Error", "Faltan datos del usuario para crear el cargo", "error");
+      return;
+    }
+
+    const res = await fetch(import.meta.env.VITE_API_CREARCARGO, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ cargo: nuevoCargo }),
+      headers: { 
+        "Content-Type": "application/json", 
+        Authorization: `Bearer ${token}` 
+      },
+      body: JSON.stringify({ 
+        cargo: nuevoCargo, 
+        id_empresa: usuario.id_empresa,
+        id_gestion: usuario.id_gestion
+      }),
     });
+
+    if (!res.ok) {
+      Swal.fire("Error", "No se pudo crear el cargo", "error");
+      return;
+    }
+
     setNuevoCargo("");
     listarCargos();
     Swal.fire("Éxito", "Cargo creado correctamente", "success");
@@ -33,10 +59,12 @@ const CargosPage: React.FC = () => {
   const eliminarCargo = async (id: number) => {
     const confirm = await Swal.fire({ title: "¿Eliminar cargo?", showCancelButton: true });
     if (!confirm.isConfirmed) return;
+
     await fetch(`${import.meta.env.VITE_API_ELIMINARCARGO}${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
+
     listarCargos();
     Swal.fire("Eliminado", "Cargo eliminado correctamente", "success");
   };

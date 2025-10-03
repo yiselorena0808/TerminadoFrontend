@@ -81,7 +81,7 @@ const LectorListaReportes: React.FC = () => {
   }, [usuario]);
 
   const abrirDetalle = (item: Reporte) => {
-    navigate("/nav/detalleReportes", { state: item });
+    navigate("/nav/MidetalleRepo", { state: item });
   };
 
   const formatearFecha = (fechaIso: string | null) => {

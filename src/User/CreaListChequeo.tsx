@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { FaClipboardCheck, FaPaperPlane } from "react-icons/fa";
 
 interface UsuarioToken {
   id_usuario: number;
@@ -52,7 +53,7 @@ const CrearListChequeo: React.FC = () => {
     });
     if (icon === "success") {
       setTimeout(() => {
-        navigate("/nav/lectorUserChe"); 
+        navigate("/nav/lectorUserChe");
       }, 1500);
     }
   };
@@ -79,9 +80,9 @@ const CrearListChequeo: React.FC = () => {
           soat,
           tecnico,
           kilometraje,
-          id_usuario: usuario?.id_usuario,          
+          id_usuario: usuario?.id_usuario,
           usuario_nombre: usuario?.usuario_nombre,
-          id_empresa: usuario?.id_empresa, 
+          id_empresa: usuario?.id_empresa,
         }),
       });
 
@@ -107,81 +108,107 @@ const CrearListChequeo: React.FC = () => {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-6">
-      <h2 className="text-2xl font-bold mb-4">📝 Crear Lista de Chequeo</h2>
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
 
-      {usuario && (
-        <div className="mb-4 p-3 bg-gray-100 rounded">
-          <p>
-            <strong>Usuario:</strong> {usuario.usuario_nombre}
-          </p>
-          <p>
-            <strong>ID Usuario:</strong> {usuario.id_usuario}
-          </p>
+      {/* Card */}
+      <form
+        onSubmit={handleSubmit}
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
+      >
+        {/* Encabezado */}
+        <div className="flex items-center gap-3 mb-6">
+          <FaClipboardCheck className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">
+            Crear Lista de Chequeo
+          </h2>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="date"
-          value={fecha}
-          onChange={(e) => setFecha(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="time"
-          value={hora}
-          onChange={(e) => setHora(e.target.value)}
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={modelo}
-          onChange={(e) => setModelo(e.target.value)}
-          placeholder="Modelo"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={marca}
-          onChange={(e) => setMarca(e.target.value)}
-          placeholder="Marca"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={soat}
-          onChange={(e) => setSoat(e.target.value)}
-          placeholder="SOAT"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="text"
-          value={tecnico}
-          onChange={(e) => setTecnico(e.target.value)}
-          placeholder="Técnico"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
-        <input
-          type="number"
-          value={kilometraje}
-          onChange={(e) => setKilometraje(e.target.value)}
-          placeholder="Kilometraje"
-          required
-          className="w-full border rounded px-3 py-2"
-        />
+        {/* Usuario info */}
+        {usuario && (
+          <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
+            <p>
+              <strong>👤 Usuario:</strong> {usuario.usuario_nombre}
+            </p>
+            <p>
+              <strong>ID:</strong> {usuario.id_usuario}
+            </p>
+          </div>
+        )}
 
+        {/* Inputs */}
+        <div className="grid grid-cols-2 gap-4">
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="time"
+            value={hora}
+            onChange={(e) => setHora(e.target.value)}
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={modelo}
+            onChange={(e) => setModelo(e.target.value)}
+            placeholder="Modelo"
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={marca}
+            onChange={(e) => setMarca(e.target.value)}
+            placeholder="Marca"
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={soat}
+            onChange={(e) => setSoat(e.target.value)}
+            placeholder="SOAT"
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={tecnico}
+            onChange={(e) => setTecnico(e.target.value)}
+            placeholder="Técnico"
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="number"
+            value={kilometraje}
+            onChange={(e) => setKilometraje(e.target.value)}
+            placeholder="Kilometraje"
+            required
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
+          />
+        </div>
+
+        {/* Botón */}
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition"
+          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
-          Crear Lista
+          <FaPaperPlane /> Crear Lista
         </button>
       </form>
     </div>

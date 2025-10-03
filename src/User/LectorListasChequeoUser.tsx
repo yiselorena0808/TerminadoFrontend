@@ -56,7 +56,7 @@ const LectorChequeo: React.FC = () => {
   }, []);
 
   const abrirDetalle = (item: ListaChequeo) => {
-    navigate("/nav/detalleListasChequeo", { state: item });
+    navigate("/nav/MidetalleChe", { state: item });
   };
 
   const irCrear = () => {

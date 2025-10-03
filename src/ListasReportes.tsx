@@ -133,8 +133,9 @@ const ListarReportes: React.FC = () => {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
-     style={{
+    <div
+      className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
+      style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
@@ -208,7 +209,13 @@ const ListarReportes: React.FC = () => {
                   <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
                   {item.lugar}
                 </p>
-                <p className="text-gray-600 text-sm mb-4">{item.descripcion}</p>
+
+                {/* ✅ Descripción resumida SOLO en la lista */}
+                <p className="text-gray-600 text-sm mb-4">
+                  {item.descripcion.length > 100
+                    ? item.descripcion.substring(0, 100) + "..."
+                    : item.descripcion}
+                </p>
 
                 <div className="flex justify-end gap-2">
                   <button

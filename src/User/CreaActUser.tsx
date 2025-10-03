@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
+import { FaTheaterMasks, FaPaperPlane } from "react-icons/fa";
 
 const UserActividadLudica: React.FC = () => {
   const navigate = useNavigate();
@@ -55,13 +56,12 @@ const UserActividadLudica: React.FC = () => {
       timerProgressBar: true,
     });
     setTimeout(() => {
-      navigate("/nav/LectorUserAct"); 
+      navigate("/nav/LectorUserAct");
     }, 1500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!usuario) return showToast("error", "Usuario no autenticado");
 
     const token = localStorage.getItem("token");
@@ -69,32 +69,25 @@ const UserActividadLudica: React.FC = () => {
 
     try {
       const data = new FormData();
-
-      // Agregar datos del formulario
       Object.entries(formData).forEach(([key, value]) =>
         data.append(key, value)
       );
 
-      // Archivos
       if (imagenVideo) data.append("imagen_video", imagenVideo);
       if (archivoAdjunto) data.append("archivo_adjunto", archivoAdjunto);
 
-      // Datos del usuario logueado
       data.append("id_usuario", usuario.id.toString());
       data.append("nombre_usuario", usuario.nombre);
       data.append("id_empresa", usuario.id_empresa.toString());
 
       const res = await fetch(apiCrearActividad, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: data,
       });
 
       if (!res.ok) {
         const result = await res.json();
-        console.error("Error en respuesta:", result);
         return showToast("error", result.error || "Error al crear actividad");
       }
 
@@ -106,30 +99,46 @@ const UserActividadLudica: React.FC = () => {
   };
 
   return (
-    <div className="p-6 min-h-screen bg-gray-100 flex justify-center">
+    <div
+      className="min-h-screen flex items-center justify-center p-6 relative"
+      style={{
+        backgroundImage:
+          "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
+      {/* overlay */}
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+
       <form
         onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-2xl shadow-lg w-full max-w-3xl"
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
       >
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">
-          🎭 Crear Actividad Lúdica
-        </h2>
+        {/* Encabezado */}
+        <div className="flex items-center gap-3 mb-6">
+          <FaTheaterMasks className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">
+            Crear Actividad Lúdica
+          </h2>
+        </div>
 
+        {/* Inputs */}
         <div className="grid grid-cols-2 gap-4">
           <input
             type="text"
             name="nombre_actividad"
-            placeholder="Nombre actividad"
+            placeholder="Nombre de la Actividad"
             value={formData.nombre_actividad}
             onChange={handleChange}
-            className="border p-2 rounded col-span-2"
+            className="border p-3 rounded-xl col-span-2 focus:ring-2 focus:ring-yellow-500"
           />
           <input
             type="date"
             name="fecha_actividad"
             value={formData.fecha_actividad}
             onChange={handleChange}
-            className="border p-2 rounded col-span-2"
+            className="border p-3 rounded-xl col-span-2 focus:ring-2 focus:ring-yellow-500"
           />
         </div>
 
@@ -138,32 +147,37 @@ const UserActividadLudica: React.FC = () => {
           placeholder="Descripción"
           value={formData.descripcion}
           onChange={handleChange}
-          className="border p-2 rounded w-full mt-4"
+          className="border p-3 rounded-xl w-full mt-4 focus:ring-2 focus:ring-yellow-500"
+          rows={4}
         />
 
+        {/* Archivos */}
         <div className="mt-4">
-          <label>Imagen / Video:</label>
+          <label className="font-semibold text-gray-700">Imagen / Video:</label>
           <input
             type="file"
             accept="image/*,video/*"
             onChange={(e) => setImagenVideo(e.target.files?.[0] || null)}
+            className="mt-1"
           />
         </div>
 
         <div className="mt-4">
-          <label>Archivo adjunto:</label>
+          <label className="font-semibold text-gray-700">Archivo adjunto:</label>
           <input
             type="file"
             accept=".pdf,.doc,.docx,.xls,.xlsx"
             onChange={(e) => setArchivoAdjunto(e.target.files?.[0] || null)}
+            className="mt-1"
           />
         </div>
 
+        {/* Botón */}
         <button
           type="submit"
-          className="mt-6 w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded"
+          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
-          Crear Actividad
+          <FaPaperPlane /> Crear Actividad
         </button>
       </form>
     </div>
@@ -171,4 +185,3 @@ const UserActividadLudica: React.FC = () => {
 };
 
 export default UserActividadLudica;
-

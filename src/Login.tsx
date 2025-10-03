@@ -44,7 +44,7 @@ const Login: React.FC = () => {
         timer: 2000,
         showConfirmButton: false,
       }).then(() => {
-        navigate("/nav/inicio", { replace: true });
+        navigate("/nav/", { replace: true });
       });
     } catch (error) {
       Swal.fire({
