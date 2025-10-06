@@ -20,7 +20,7 @@ const GestionEPP: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  const apiListarEpp = import.meta.env.VITE_API_LISTAREPP;
+  const apiListarEpp = import.meta.env.VITE_API_LISTARGESTIONES;
 
   const obtenerEpps = async () => {
     const token = localStorage.getItem("token");
@@ -32,12 +32,28 @@ const GestionEPP: React.FC = () => {
       });
 
       const data = await res.json();
-      if (data.datos && Array.isArray(data.datos)) {
-        setEpps(data.datos);
-      } else {
-        setEpps([]);
-        console.warn("No se recibieron datos válidos de la API");
+
+      // Detectar estructura de la respuesta
+      let lista: any[] = [];
+      if (Array.isArray(data)) {
+        lista = data;
+      } else if (data.datos && Array.isArray(data.datos)) {
+        lista = data.datos;
       }
+
+      // Mapear campos a la interfaz EPP
+      const eppsMapped: EPP[] = lista.map((item) => ({
+        id: item.id,
+        nombre: item.nombre || item.nombre_producto || "Sin nombre",
+        descripcion: item.descripcion || item.descripcion_producto || "Sin descripción",
+        cantidad: item.cantidad || 0,
+        fecha: item.fecha_creacion || item.created_at || "",
+        id_usuario: item.id_usuario,
+        usuario_nombre: item.usuario?.nombre || item.usuario_nombre || "Desconocido",
+        id_empresa: item.id_empresa,
+      }));
+
+      setEpps(eppsMapped);
     } catch (error) {
       console.error("Error al obtener EPP:", error);
       setEpps([]);
@@ -50,9 +66,7 @@ const GestionEPP: React.FC = () => {
     obtenerEpps();
   }, []);
 
-  const irCrear = () => {
-    navigate("/nav/creargestionEpp");
-  };
+  const irCrear = () => navigate("/nav/creargestionEpp");
 
   const formatearFecha = (fechaIso: string) => {
     if (!fechaIso) return "Sin fecha";
@@ -65,7 +79,7 @@ const GestionEPP: React.FC = () => {
   };
 
   const eppsFiltrados = epps.filter((item) =>
-    `${item.nombre} ${item.descripcion}`
+    `${item.nombre || ""} ${item.descripcion || ""}`
       .toLowerCase()
       .includes(busqueda.toLowerCase())
   );
@@ -76,9 +90,11 @@ const GestionEPP: React.FC = () => {
       style={{
         backgroundImage:
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
       }}
     >
-      {/* Encabezado estilo SST */}
+      {/* Encabezado SST */}
       <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
@@ -112,8 +128,7 @@ const GestionEPP: React.FC = () => {
         {/* Listado */}
         {eppsFiltrados.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" />
-            No hay equipos registrados
+            <FaExclamationTriangle className="text-yellow-500" /> No hay equipos registrados
           </p>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
@@ -124,8 +139,7 @@ const GestionEPP: React.FC = () => {
               >
                 <div className="mb-4">
                   <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                    <FaBox className="text-yellow-600" />
-                    {item.nombre}
+                    <FaBox className="text-yellow-600" /> {item.nombre}
                   </h4>
                   <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
                 </div>

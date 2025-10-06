@@ -30,8 +30,9 @@ const AdmUsuarios: React.FC = () => {
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
 
+  // Cargar usuarios
   const obtenerUsuarios = async (id_empresa?: number) => {
-    const empresaId = id_empresa || usuarioLogueado?.idEmpresa;
+    const empresaId = id_empresa || usuarioLogueado?.id_empresa;
     if (!empresaId) return alert("No se encontró la empresa del usuario");
 
     const token = localStorage.getItem("token");
@@ -52,9 +53,13 @@ const AdmUsuarios: React.FC = () => {
 
   useEffect(() => {
     const u = getUsuarioFromToken();
-    if (u) { setUsuarioLogueado({ ...u, idEmpresa: u.id_empresa }); obtenerUsuarios(u.id_empresa); }
+    if (u) {
+      setUsuarioLogueado({ ...u, id_empresa: u.id_empresa });
+      obtenerUsuarios(u.id_empresa);
+    }
   }, []);
 
+  // Eliminar usuario
   const eliminarUsuario = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
     const token = localStorage.getItem("token");
@@ -66,18 +71,22 @@ const AdmUsuarios: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsuarios(prev => prev.filter(u => u.id !== id));
-    } catch (error) { console.error("No se pudo eliminar el usuario:", error); }
+    } catch (error) {
+      console.error("No se pudo eliminar el usuario:", error);
+    }
   };
 
+  // Actualizar usuario: reemplaza solo el usuario editado
   const actualizarUsuario = (usuarioActualizado: Usuario) => {
     setUsuarios(prev => prev.map(u => u.id === usuarioActualizado.id ? usuarioActualizado : u));
     setUsuarioAEditar(null);
   };
 
   const usuariosFiltrados = usuarios.filter(
-    u => u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-         u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
-         u.id.toString().includes(filtro)
+    u =>
+      u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+      u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
+      u.id.toString().includes(filtro)
   );
 
   return (
