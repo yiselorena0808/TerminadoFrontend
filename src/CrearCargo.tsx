@@ -3,8 +3,9 @@ import Swal from "sweetalert2";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface Cargo {
-  id_cargo: number;
+  idCargo: number;
   cargo: string;
+  idEmpresa: number;
 }
 
 const CargosPage: React.FC = () => {
@@ -24,25 +25,25 @@ const CargosPage: React.FC = () => {
       return;
     }
 
-    setCargos(await res.json());
+    const data = await res.json();
+    setCargos(data);
   };
 
   const crearCargo = async () => {
-    if (!nuevoCargo.trim() || !usuario?.id_empresa || !usuario?.id_gestion) {
+    if (!nuevoCargo.trim() || !usuario?.id_empresa) {
       Swal.fire("Error", "Faltan datos del usuario para crear el cargo", "error");
       return;
     }
 
     const res = await fetch(import.meta.env.VITE_API_CREARCARGO, {
       method: "POST",
-      headers: { 
-        "Content-Type": "application/json", 
-        Authorization: `Bearer ${token}` 
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ 
-        cargo: nuevoCargo, 
+      body: JSON.stringify({
+        cargo: nuevoCargo,
         id_empresa: usuario.id_empresa,
-        id_gestion: usuario.id_gestion
       }),
     });
 
@@ -56,14 +57,24 @@ const CargosPage: React.FC = () => {
     Swal.fire("Éxito", "Cargo creado correctamente", "success");
   };
 
-  const eliminarCargo = async (id: number) => {
-    const confirm = await Swal.fire({ title: "¿Eliminar cargo?", showCancelButton: true });
+  const eliminarCargo = async (idCargo: number) => {
+    const confirm = await Swal.fire({
+      title: "¿Eliminar cargo?",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
     if (!confirm.isConfirmed) return;
 
-    await fetch(`${import.meta.env.VITE_API_ELIMINARCARGO}${id}`, {
+    const res = await fetch(`${import.meta.env.VITE_API_ELIMINARCARGO}${idCargo}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
+
+    if (!res.ok) {
+      Swal.fire("Error", "No se pudo eliminar el cargo", "error");
+      return;
+    }
 
     listarCargos();
     Swal.fire("Eliminado", "Cargo eliminado correctamente", "success");
@@ -79,40 +90,69 @@ const CargosPage: React.FC = () => {
     });
 
     if (nuevo && nuevo.trim()) {
-      await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.id_cargo}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.idCargo}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ cargo: nuevo }),
       });
+
+      if (!res.ok) {
+        Swal.fire("Error", "No se pudo actualizar el cargo", "error");
+        return;
+      }
+
       listarCargos();
       Swal.fire("Actualizado", "Cargo modificado correctamente", "success");
     }
   };
 
-  useEffect(() => { listarCargos(); }, []);
+  useEffect(() => {
+    listarCargos();
+  }, []);
 
   return (
     <div className="p-8">
       <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Cargos</h1>
-      
+
       <div className="flex gap-2 mb-6">
-        <input 
-          type="text" 
+        <input
+          type="text"
           value={nuevoCargo}
           onChange={(e) => setNuevoCargo(e.target.value)}
           placeholder="Nuevo cargo"
           className="border p-2 rounded w-full"
         />
-        <button onClick={crearCargo} className="bg-green-600 text-white px-4 rounded">Crear</button>
+        <button
+          onClick={crearCargo}
+          className="bg-green-600 text-white px-4 rounded hover:bg-green-700"
+        >
+          Crear
+        </button>
       </div>
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cargos.map((c) => (
-          <div key={c.id_cargo} className="bg-white shadow-lg rounded p-4 flex justify-between items-center">
+          <div
+            key={c.idCargo}
+            className="bg-white shadow-lg rounded p-4 flex justify-between items-center"
+          >
             <span className="font-semibold">{c.cargo}</span>
             <div className="flex gap-2">
-              <button onClick={() => editarCargo(c)} className="bg-yellow-500 text-white px-3 py-1 rounded">Editar</button>
-              <button onClick={() => eliminarCargo(c.id_cargo)} className="bg-red-500 text-white px-3 py-1 rounded">Eliminar</button>
+              <button
+                onClick={() => editarCargo(c)}
+                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+              >
+                Editar
+              </button>
+              <button
+                onClick={() => eliminarCargo(c.idCargo)}
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+              >
+                Eliminar
+              </button>
             </div>
           </div>
         ))}

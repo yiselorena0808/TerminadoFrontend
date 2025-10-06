@@ -2,11 +2,11 @@ import { useState } from "react";
 
 interface Usuario {
   id: number;
-  id_area: number;
+  idArea: number;
   nombre: string;
   apellido: string;
-  nombre_usuario: string;
-  correo_electronico: string;
+  nombreUsuario: string;
+  correoElectronico: string;
   cargo: string;
 }
 
@@ -37,7 +37,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
           <input
             type="number"
             name="idArea"
-            value={form.id_area}
+            value={form.idArea}
             onChange={handleChange}
             placeholder="ID Área"
             className="w-full p-2 border rounded-lg"
@@ -61,7 +61,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
           <input
             type="text"
             name="nombreUsuario"
-            value={form.nombre_usuario}
+            value={form.nombreUsuario}
             onChange={handleChange}
             placeholder="Usuario"
             className="w-full p-2 border rounded-lg"
@@ -69,7 +69,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
           <input
             type="email"
             name="correoElectronico"
-            value={form.correo_electronico}
+            value={form.correoElectronico}
             onChange={handleChange}
             placeholder="Correo electrónico"
             className="w-full p-2 border rounded-lg"
