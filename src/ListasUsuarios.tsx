@@ -3,17 +3,10 @@ import ActualizarUsuarioModal from "./Actualizarusuarios";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 import { FaUsers, FaPlus, FaSearch } from "react-icons/fa";
 
-interface Empresa {
-  idEmpresa: number;
-  nombre: string;
-}
+interface Empresa { idEmpresa: number; nombre: string; }
+interface Area { idArea: number; descripcion: string; }
 
-interface Area {
-  idArea: number;
-  descripcion: string;
-}
-
-interface Usuario {
+export interface Usuario {
   id: number;
   idEmpresa: number;
   idArea: number;
@@ -36,7 +29,6 @@ const AdmUsuarios: React.FC = () => {
 
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
-  const apiActualizar = import.meta.env.VITE_API_ACTUALIZARUSUARIO;
 
   const obtenerUsuarios = async (id_empresa?: number) => {
     const empresaId = id_empresa || usuarioLogueado?.idEmpresa;
@@ -46,13 +38,9 @@ const AdmUsuarios: React.FC = () => {
     if (!token) return alert("Usuario no autenticado");
 
     try {
-      const url = `${apiListar}${empresaId}`;
-      const res = await fetch(url, {
+      const res = await fetch(`${apiListar}${empresaId}`, {
         method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
       const data = await res.json();
       setUsuarios(Array.isArray(data.datos) ? data.datos : []);
@@ -64,11 +52,7 @@ const AdmUsuarios: React.FC = () => {
 
   useEffect(() => {
     const u = getUsuarioFromToken();
-    if (u) {
-      const usuario = { ...u, idEmpresa: u.id_empresa };
-      setUsuarioLogueado(usuario);
-      obtenerUsuarios(usuario.idEmpresa);
-    }
+    if (u) { setUsuarioLogueado({ ...u, idEmpresa: u.id_empresa }); obtenerUsuarios(u.id_empresa); }
   }, []);
 
   const eliminarUsuario = async (id: number) => {
@@ -81,72 +65,46 @@ const AdmUsuarios: React.FC = () => {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-      obtenerUsuarios();
-    } catch (error) {
-      console.error("No se pudo eliminar el usuario:", error);
-    }
+      setUsuarios(prev => prev.filter(u => u.id !== id));
+    } catch (error) { console.error("No se pudo eliminar el usuario:", error); }
   };
 
-  const actualizarUsuario = async (usuario: Usuario) => {
-  const token = localStorage.getItem("token");
-  if (!token) return;
-
-  try {
-    await fetch(`${apiActualizar}${usuario.id}`, {
-      method: "PUT",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(usuario),
-    });
-
+  const actualizarUsuario = (usuarioActualizado: Usuario) => {
+    setUsuarios(prev => prev.map(u => u.id === usuarioActualizado.id ? usuarioActualizado : u));
     setUsuarioAEditar(null);
-    obtenerUsuarios();
-  } catch (error) {
-    console.error("Error al actualizar usuario:", error);
-  }
-};
+  };
 
   const usuariosFiltrados = usuarios.filter(
-    (u) =>
-      u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.id.toString().includes(filtro)
+    u => u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
+         u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
+         u.id.toString().includes(filtro)
   );
 
   return (
-    <div
-      className="min-h-screen p-8 relative"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
+    <div className="min-h-screen p-8 relative" style={{
+      backgroundImage: "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
+      backgroundSize: "cover", backgroundPosition: "center"
+    }}>
       <div className="max-w-7xl mx-auto">
         {/* ENCABEZADO */}
         <div className="flex items-center justify-between mb-6 bg-white p-6 rounded-2xl shadow-lg">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FaUsers className="text-yellow-500" /> Administración de Usuarios
+            <FaUsers className="text-yellow-500"/> Administración de Usuarios
           </h1>
-          <button
-            onClick={() => (window.location.href = "/registro")}
-            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl shadow transition"
-          >
-            <FaPlus className="inline mr-2" /> Crear Usuario
+          <button onClick={() => (window.location.href="/registro")}
+            className="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-xl shadow transition">
+            <FaPlus className="inline mr-2"/> Crear Usuario
           </button>
         </div>
 
-        {/* BARRA DE BUSQUEDA */}
+        {/* BUSQUEDA */}
         <div className="flex items-center bg-white px-4 py-2 rounded-2xl shadow-md mb-6">
-          <FaSearch className="text-gray-400 mr-2" />
+          <FaSearch className="text-gray-400 mr-2"/>
           <input
             type="text"
             placeholder="Buscar por nombre o usuario..."
             value={filtro}
-            onChange={(e) => setFiltro(e.target.value)}
+            onChange={e => setFiltro(e.target.value)}
             className="w-full border-0 focus:ring-0 text-gray-700"
           />
         </div>
@@ -169,10 +127,7 @@ const AdmUsuarios: React.FC = () => {
             </thead>
             <tbody>
               {usuariosFiltrados.map((u, idx) => (
-                <tr
-                  key={u.id}
-                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
+                <tr key={u.id} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                   <td className="px-4 py-2">{u.id}</td>
                   <td className="px-4 py-2">{u.nombre}</td>
                   <td className="px-4 py-2">{u.apellido}</td>
@@ -182,18 +137,14 @@ const AdmUsuarios: React.FC = () => {
                   <td className="px-4 py-2">{u.empresa?.nombre || "-"}</td>
                   <td className="px-4 py-2">{u.area?.descripcion || "-"}</td>
                   <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() => setUsuarioAEditar(u)}
-                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-lg shadow"
-                    >
+                    <button onClick={() => setUsuarioAEditar(u)}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-lg shadow">
                       Editar
                     </button>
                   </td>
                   <td className="px-4 py-2 text-center">
-                    <button
-                      onClick={() => eliminarUsuario(u.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow"
-                    >
+                    <button onClick={() => eliminarUsuario(u.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow">
                       Eliminar
                     </button>
                   </td>
@@ -210,6 +161,7 @@ const AdmUsuarios: React.FC = () => {
           </table>
         </div>
 
+        {/* MODAL */}
         {usuarioAEditar && (
           <ActualizarUsuarioModal
             usuario={usuarioAEditar}

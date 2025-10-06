@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 interface Cargo {
   idCargo: number;
@@ -19,12 +20,7 @@ const CargosPage: React.FC = () => {
     const res = await fetch(import.meta.env.VITE_API_CARGOS, {
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    if (res.status === 401) {
-      Swal.fire("Sesión expirada", "Vuelve a iniciar sesión", "warning");
-      return;
-    }
-
+    if (!res.ok) return;
     const data = await res.json();
     setCargos(data);
   };
@@ -47,10 +43,7 @@ const CargosPage: React.FC = () => {
       }),
     });
 
-    if (!res.ok) {
-      Swal.fire("Error", "No se pudo crear el cargo", "error");
-      return;
-    }
+    if (!res.ok) return Swal.fire("Error", "No se pudo crear el cargo", "error");
 
     setNuevoCargo("");
     listarCargos();
@@ -70,11 +63,7 @@ const CargosPage: React.FC = () => {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
-
-    if (!res.ok) {
-      Swal.fire("Error", "No se pudo eliminar el cargo", "error");
-      return;
-    }
+    if (!res.ok) return Swal.fire("Error", "No se pudo eliminar el cargo", "error");
 
     listarCargos();
     Swal.fire("Eliminado", "Cargo eliminado correctamente", "success");
@@ -89,24 +78,20 @@ const CargosPage: React.FC = () => {
       confirmButtonText: "Actualizar",
     });
 
-    if (nuevo && nuevo.trim()) {
-      const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.idCargo}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ cargo: nuevo }),
-      });
+    if (!nuevo || !nuevo.trim()) return;
 
-      if (!res.ok) {
-        Swal.fire("Error", "No se pudo actualizar el cargo", "error");
-        return;
-      }
+    const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.idCargo}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ cargo: nuevo }),
+    });
+    if (!res.ok) return Swal.fire("Error", "No se pudo actualizar el cargo", "error");
 
-      listarCargos();
-      Swal.fire("Actualizado", "Cargo modificado correctamente", "success");
-    }
+    listarCargos();
+    Swal.fire("Actualizado", "Cargo modificado correctamente", "success");
   };
 
   useEffect(() => {
@@ -114,25 +99,25 @@ const CargosPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Cargos</h1>
-
+    <div>
+      {/* Crear Cargo */}
       <div className="flex gap-2 mb-6">
         <input
           type="text"
           value={nuevoCargo}
           onChange={(e) => setNuevoCargo(e.target.value)}
           placeholder="Nuevo cargo"
-          className="border p-2 rounded w-full"
+          className="border p-2 rounded w-full focus:ring-2 focus:ring-yellow-500"
         />
         <button
           onClick={crearCargo}
-          className="bg-green-600 text-white px-4 rounded hover:bg-green-700"
+          className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
         >
-          Crear
+          <FaPlus /> Crear
         </button>
       </div>
 
+      {/* Lista de cargos */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {cargos.map((c) => (
           <div
@@ -143,15 +128,15 @@ const CargosPage: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => editarCargo(c)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
+                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center gap-1"
               >
-                Editar
+                <FaEdit /> Editar
               </button>
               <button
                 onClick={() => eliminarCargo(c.idCargo)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
+                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1"
               >
-                Eliminar
+                <FaTrash /> Eliminar
               </button>
             </div>
           </div>

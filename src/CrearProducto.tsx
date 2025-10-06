@@ -1,31 +1,23 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
-interface Cargo {
-  idCargo: number;
-  cargo: string;
-}
-
 interface Producto {
-  id: number; // ✅ Asegúrate de que coincide con el campo que devuelve el backend
+  idProducto: number;
   nombre: string;
   descripcion: string;
-  idCargo: number;
   estado: boolean;
 }
 
 const ProductosPage: React.FC = () => {
   const token = localStorage.getItem("token");
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [cargos, setCargos] = useState<Cargo[]>([]);
-  const [nuevo, setNuevo] = useState<Omit<Producto, "id">>({
+  const [nuevo, setNuevo] = useState<Omit<Producto, "idProducto">>({
     nombre: "",
     descripcion: "",
-    idCargo: 0,
     estado: true,
   });
 
-  // 🔹 Listar productos
+  // Listar productos
   const listarProductos = async () => {
     try {
       const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, {
@@ -33,34 +25,24 @@ const ProductosPage: React.FC = () => {
       });
       if (!res.ok) throw new Error("Error al listar productos");
       const data = await res.json();
-      setProductos(data);
+      // Normalizar para usar idProducto
+      setProductos(
+        data.map((p: any) => ({
+          idProducto: p.idProducto,
+          nombre: p.nombre,
+          descripcion: p.descripcion,
+          estado: p.estado,
+        }))
+      );
     } catch (error) {
       console.error(error);
       Swal.fire("Error", "No se pudieron cargar los productos", "error");
     }
   };
 
-  // 🔹 Listar cargos
-  const listarCargos = async () => {
-    try {
-      const res = await fetch(import.meta.env.VITE_API_CARGOS, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      if (!res.ok) throw new Error("Error al listar cargos");
-      const data = await res.json();
-      setCargos(data);
-    } catch (error) {
-      console.error(error);
-      Swal.fire("Error", "No se pudieron cargar los cargos", "error");
-    }
-  };
-
-  // 🔹 Crear producto
+  // Crear producto
   const crearProducto = async () => {
-    if (!nuevo.nombre.trim()) {
-      Swal.fire("Error", "El nombre del producto es obligatorio", "warning");
-      return;
-    }
+    if (!nuevo.nombre.trim()) return Swal.fire("Error", "Nombre obligatorio", "warning");
 
     try {
       const res = await fetch(import.meta.env.VITE_API_CREARPRODUCTO, {
@@ -72,14 +54,12 @@ const ProductosPage: React.FC = () => {
         body: JSON.stringify({
           nombre: nuevo.nombre,
           descripcion: nuevo.descripcion,
-          id_cargo: nuevo.idCargo,
           estado: nuevo.estado,
         }),
       });
 
-      if (!res.ok) throw new Error("Error al crear el producto");
-
-      setNuevo({ nombre: "", descripcion: "", idCargo: 0, estado: true });
+      if (!res.ok) throw new Error("Error al crear producto");
+      setNuevo({ nombre: "", descripcion: "", estado: true });
       listarProductos();
       Swal.fire("Éxito", "Producto creado correctamente", "success");
     } catch (error) {
@@ -88,29 +68,22 @@ const ProductosPage: React.FC = () => {
     }
   };
 
-  // 🔹 Eliminar producto
-  const eliminarProducto = async (id: number) => {
-    if (!id) return;
-
+  // Eliminar producto
+  const eliminarProducto = async (idProducto: number) => {
     const confirm = await Swal.fire({
       title: "¿Eliminar producto?",
-      text: "Esta acción no se puede deshacer",
-      icon: "warning",
       showCancelButton: true,
       confirmButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
     });
-
     if (!confirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_ELIMINARPRODUCTO}${id}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_ELIMINARPRODUCTO}${idProducto}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      if (!res.ok) throw new Error("No se pudo eliminar el producto");
-
+      if (!res.ok) throw new Error("Error al eliminar producto");
       listarProductos();
       Swal.fire("Eliminado", "Producto eliminado correctamente", "success");
     } catch (error) {
@@ -119,23 +92,13 @@ const ProductosPage: React.FC = () => {
     }
   };
 
-  // 🔹 Editar producto
+  // Editar producto
   const editarProducto = async (producto: Producto) => {
     const { value: formValues } = await Swal.fire({
       title: "Editar Producto",
       html: `
         <input id="swal-nombre" class="swal2-input" placeholder="Nombre" value="${producto.nombre}">
         <textarea id="swal-descripcion" class="swal2-textarea" placeholder="Descripción">${producto.descripcion}</textarea>
-        <select id="swal-cargo" class="swal2-select mb-2">
-          ${cargos
-            .map(
-              (c) =>
-                `<option value="${c.idCargo}" ${
-                  c.idCargo === producto.idCargo ? "selected" : ""
-                }>${c.cargo}</option>`
-            )
-            .join("")}
-        </select>
         <select id="swal-estado" class="swal2-select">
           <option value="true" ${producto.estado ? "selected" : ""}>Activo</option>
           <option value="false" ${!producto.estado ? "selected" : ""}>Inactivo</option>
@@ -144,29 +107,24 @@ const ProductosPage: React.FC = () => {
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: "Actualizar",
-      preConfirm: () => {
-        return {
-          nombre: (document.getElementById("swal-nombre") as HTMLInputElement).value,
-          descripcion: (document.getElementById("swal-descripcion") as HTMLTextAreaElement).value,
-          idCargo: Number((document.getElementById("swal-cargo") as HTMLSelectElement).value),
-          estado: (document.getElementById("swal-estado") as HTMLSelectElement).value === "true",
-        };
-      },
+      preConfirm: () => ({
+        nombre: (document.getElementById("swal-nombre") as HTMLInputElement).value,
+        descripcion: (document.getElementById("swal-descripcion") as HTMLTextAreaElement).value,
+        estado: (document.getElementById("swal-estado") as HTMLSelectElement).value === "true",
+      }),
     });
 
     if (formValues) {
       try {
-        const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARPRODUCTO}${producto.id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARPRODUCTO}${producto.idProducto}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ ...producto, ...formValues }),
+          body: JSON.stringify(formValues),
         });
-
-        if (!res.ok) throw new Error("Error al actualizar el producto");
-
+        if (!res.ok) throw new Error("Error al actualizar producto");
         listarProductos();
         Swal.fire("Actualizado", "Producto modificado correctamente", "success");
       } catch (error) {
@@ -178,7 +136,6 @@ const ProductosPage: React.FC = () => {
 
   useEffect(() => {
     listarProductos();
-    listarCargos();
   }, []);
 
   return (
@@ -202,18 +159,6 @@ const ProductosPage: React.FC = () => {
           className="border p-2 rounded w-full mb-2"
         />
         <select
-          value={String(nuevo.idCargo || 0)}
-          onChange={(e) => setNuevo({ ...nuevo, idCargo: Number(e.target.value) })}
-          className="border p-2 rounded w-full mb-2"
-        >
-          <option value="0">-- Seleccionar Cargo --</option>
-          {cargos.map((c) => (
-            <option key={`cargo-${c.idCargo}`} value={String(c.idCargo)}>
-              {c.cargo}
-            </option>
-          ))}
-        </select>
-        <select
           value={String(nuevo.estado)}
           onChange={(e) => setNuevo({ ...nuevo, estado: e.target.value === "true" })}
           className="border p-2 rounded w-full mb-4"
@@ -221,10 +166,7 @@ const ProductosPage: React.FC = () => {
           <option value="true">Activo</option>
           <option value="false">Inactivo</option>
         </select>
-        <button
-          onClick={crearProducto}
-          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-        >
+        <button onClick={crearProducto} className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
           Crear
         </button>
       </div>
@@ -232,24 +174,15 @@ const ProductosPage: React.FC = () => {
       {/* Listado de productos */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {productos.map((p) => (
-          <div key={p.id} className="bg-white shadow-lg rounded p-4">
+          <div key={p.idProducto} className="bg-white shadow-lg rounded p-4">
             <h3 className="font-bold text-lg">{p.nombre}</h3>
             <p>{p.descripcion}</p>
             <p className="text-sm text-gray-600">Estado: {p.estado ? "Activo" : "Inactivo"}</p>
-            <p className="text-sm text-gray-600">
-              Cargo: {cargos.find((c) => c.idCargo === p.idCargo)?.cargo || "N/A"}
-            </p>
             <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => editarProducto(p)}
-                className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600"
-              >
+              <button onClick={() => editarProducto(p)} className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
                 Editar
               </button>
-              <button
-                onClick={() => eliminarProducto(p.id)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-              >
+              <button onClick={() => eliminarProducto(p.idProducto)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
                 Eliminar
               </button>
             </div>

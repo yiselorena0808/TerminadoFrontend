@@ -10,12 +10,12 @@ interface Cargo {
 }
 
 interface Producto {
-  id_producto: number;
+  idProducto: number; // ⚡ Ajuste: coincide con tu backend
   nombre: string;
 }
 
 interface ProductoSeleccionado {
-  id_producto: number;
+  idProducto: number;
   cantidad: number;
 }
 
@@ -33,14 +33,13 @@ const CrearGestionEpp: React.FC = () => {
 
   const [cargos, setCargos] = useState<Cargo[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [productosSeleccionados, setProductosSeleccionados] = useState<
-    ProductoSeleccionado[]
-  >([]);
+  const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoSeleccionado[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
 
   // Cargar cargos al inicio
   useEffect(() => {
-    const token = localStorage.getItem("token");
     if (!token) return;
 
     const listarCargos = async () => {
@@ -48,6 +47,7 @@ const CrearGestionEpp: React.FC = () => {
         const res = await fetch(import.meta.env.VITE_API_CARGOS, {
           headers: { Authorization: `Bearer ${token}` },
         });
+        if (!res.ok) throw new Error("Error al listar cargos");
         const data = await res.json();
         setCargos(data);
       } catch (error) {
@@ -56,20 +56,20 @@ const CrearGestionEpp: React.FC = () => {
     };
 
     listarCargos();
-  }, []);
+  }, [token]);
 
   // Cargar productos cuando cambia el cargo seleccionado
   useEffect(() => {
-    if (!formData.idCargo) return;
-    const token = localStorage.getItem("token");
+    if (!formData.idCargo) {
+      setProductos([]);
+      return;
+    }
 
     const listarProductosPorCargo = async () => {
       try {
         const res = await fetch(
-          `${import.meta.env.VITE_API_PRODUCTOS_POR_CARGO}${formData.idCargo}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
+          `${import.meta.env.VITE_API_PRODUCTOS_POR_CARGO_ID}${formData.idCargo}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         if (!res.ok) throw new Error("Error al obtener productos por cargo");
         const data = await res.json();
@@ -80,41 +80,31 @@ const CrearGestionEpp: React.FC = () => {
     };
 
     listarProductosPorCargo();
-  }, [formData.idCargo]);
+  }, [formData.idCargo, token]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAgregarProducto = (id_producto: number) => {
-    if (!productosSeleccionados.find((p) => p.id_producto === id_producto)) {
-      setProductosSeleccionados((prev) => [
-        ...prev,
-        { id_producto, cantidad: 1 },
-      ]);
+  const handleAgregarProducto = (idProducto: number) => {
+    if (!productosSeleccionados.find(p => p.idProducto === idProducto)) {
+      setProductosSeleccionados(prev => [...prev, { idProducto, cantidad: 1 }]);
     }
   };
 
-  const handleCantidadChange = (id_producto: number, cantidad: number) => {
-    setProductosSeleccionados((prev) =>
-      prev.map((p) =>
-        p.id_producto === id_producto ? { ...p, cantidad } : p
-      )
+  const handleCantidadChange = (idProducto: number, cantidad: number) => {
+    setProductosSeleccionados(prev =>
+      prev.map(p => (p.idProducto === idProducto ? { ...p, cantidad } : p))
     );
   };
 
-  const handleEliminarProducto = (id_producto: number) => {
-    setProductosSeleccionados((prev) =>
-      prev.filter((p) => p.id_producto !== id_producto)
-    );
+  const handleEliminarProducto = (idProducto: number) => {
+    setProductosSeleccionados(prev => prev.filter(p => p.idProducto !== idProducto));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!usuario) {
       Swal.fire("Error", "Usuario no autenticado", "error");
       return;
@@ -122,9 +112,6 @@ const CrearGestionEpp: React.FC = () => {
 
     try {
       setLoading(true);
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token no disponible");
-
       const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
         method: "POST",
         headers: {
@@ -219,24 +206,22 @@ const CrearGestionEpp: React.FC = () => {
           className="border p-3 rounded-xl w-full mb-3"
         >
           <option value="">-- Selecciona un cargo --</option>
-          {cargos.map((cargo) => (
+          {cargos.map(cargo => (
             <option key={`cargo-${cargo.idCargo}`} value={cargo.idCargo}>
               {cargo.cargo}
             </option>
           ))}
         </select>
 
-        {/* Productos del cargo */}
+        {/* Productos disponibles */}
         <div className="mb-4">
-          <h3 className="font-semibold text-gray-700 mb-2">
-            Productos disponibles:
-          </h3>
+          <h3 className="font-semibold text-gray-700 mb-2">Productos disponibles:</h3>
           <div className="grid grid-cols-2 gap-2">
-            {productos.map((p) => (
+            {productos.map(p => (
               <button
-                key={`producto-${p.id_producto}`}
+                key={`producto-${p.idProducto}`} // ⚡ Clave única
                 type="button"
-                onClick={() => handleAgregarProducto(p.id_producto)}
+                onClick={() => handleAgregarProducto(p.idProducto)}
                 className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-400 rounded p-2 text-sm"
               >
                 {p.nombre}
@@ -245,38 +230,32 @@ const CrearGestionEpp: React.FC = () => {
           </div>
         </div>
 
-        {/* Productos seleccionados con cantidad */}
+        {/* Productos seleccionados */}
         {productosSeleccionados.length > 0 && (
           <div className="mb-4">
-            <h3 className="font-semibold text-gray-700 mb-2">
-              Productos seleccionados:
-            </h3>
-            {productosSeleccionados.map((p) => (
-              <div
-                key={`seleccionado-${p.id_producto}`}
-                className="flex items-center gap-3 mb-2 border-b pb-2"
-              >
-                <span className="flex-1">
-                  {productos.find((prod) => prod.id_producto === p.id_producto)?.nombre}
-                </span>
-                <input
-                  type="number"
-                  min={1}
-                  value={p.cantidad}
-                  onChange={(e) =>
-                    handleCantidadChange(p.id_producto, Number(e.target.value))
-                  }
-                  className="border rounded p-1 w-20"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleEliminarProducto(p.id_producto)}
-                  className="bg-red-500 text-white px-2 py-1 rounded"
-                >
-                  X
-                </button>
-              </div>
-            ))}
+            <h3 className="font-semibold text-gray-700 mb-2">Productos seleccionados:</h3>
+            {productosSeleccionados.map(p => {
+              const producto = productos.find(prod => prod.idProducto === p.idProducto);
+              return (
+                <div key={`seleccionado-${p.idProducto}`} className="flex items-center gap-3 mb-2 border-b pb-2">
+                  <span className="flex-1">{producto?.nombre || "Producto"}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    value={p.cantidad}
+                    onChange={e => handleCantidadChange(p.idProducto, Number(e.target.value))}
+                    className="border rounded p-1 w-20"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleEliminarProducto(p.idProducto)}
+                    className="bg-red-500 text-white px-2 py-1 rounded"
+                  >
+                    X
+                  </button>
+                </div>
+              );
+            })}
           </div>
         )}
 
