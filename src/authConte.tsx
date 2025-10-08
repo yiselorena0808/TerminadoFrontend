@@ -16,15 +16,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<any>(null);
   const [token, setToken] = useState<string | null>(null);
 
-  // cuando carga la app, revisar si ya hay token guardado
   useEffect(() => {
     const savedToken = localStorage.getItem("token");
     if (savedToken) {
       setToken(savedToken);
       const usuario = getUsuarioFromToken(savedToken);
       setUser(usuario);
-
-      // 🔥 aseguramos que también quede guardado el usuario
       localStorage.setItem("usuario", JSON.stringify(usuario));
     }
   }, []);
@@ -36,13 +33,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const usuario = getUsuarioFromToken(token);
     setUser(usuario);
 
-    // 🔥 guardamos el usuario en localStorage para Sidebar
     localStorage.setItem("usuario", JSON.stringify(usuario));
   };
 
   const Logout = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("usuario"); // 🔥 limpiamos también el usuario
+    localStorage.removeItem("usuario");
     setToken(null);
     setUser(null);
   };

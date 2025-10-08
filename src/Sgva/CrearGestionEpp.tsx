@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import { FaHardHat, FaPaperPlane } from "react-icons/fa";
 
 interface Cargo { idCargo: number; cargo: string; }

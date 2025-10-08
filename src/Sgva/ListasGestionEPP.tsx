@@ -8,7 +8,7 @@ import {
   FaFilePdf,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import jsPDF from "jspdf";
 
 interface Producto {

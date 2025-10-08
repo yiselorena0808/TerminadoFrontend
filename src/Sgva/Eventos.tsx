@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { getUsuarioFromToken } from "./utils/auth";
+import { getUsuarioFromToken } from "../utils/auth";
 import { FaCalendarPlus } from "react-icons/fa";
 
 interface UsuarioToken {

@@ -8,7 +8,7 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 
 interface ListaChequeo {
   id: number;

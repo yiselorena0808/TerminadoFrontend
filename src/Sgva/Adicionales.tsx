@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import CargosPage from "./CrearCargo";
+import CargosPage2 from "./CrearCargo2";
 import ProductosPage from "./CrearProducto";
 
 const DashboardPage: React.FC = () => {
@@ -49,7 +49,7 @@ const DashboardPage: React.FC = () => {
 
       {/* Contenido dinámico */}
       <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-6xl mx-auto">
-        {tab === "cargos" && <CargosPage />}
+        {tab === "cargos" && <CargosPage2 />}
         {tab === "productos" && <ProductosPage />}
       </div>
     </div>

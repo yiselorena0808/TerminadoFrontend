@@ -20,12 +20,10 @@ export function getUsuarioFromToken(): UsuarioToken | null {
       return null;
     }
 
-    // Caso 1: backend manda "nombre" como "Juan Perez"
     const partes = decoded.nombre.split(" ");
     const nombre = partes[0] ?? "";
     const apellido = partes.slice(1).join(" ") || "";
 
-    // Caso 2: backend ya trae campos separados
     return {
       id: decoded.id,
       nombre: decoded.nombrePropio ?? nombre,

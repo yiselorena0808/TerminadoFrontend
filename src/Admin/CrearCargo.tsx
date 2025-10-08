@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 
 interface Cargo {

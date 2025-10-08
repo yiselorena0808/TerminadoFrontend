@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FaFilePdf, FaHardHat, FaMapMarkerAlt, FaExclamationTriangle } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 
 interface Reporte {
   id_reporte: number;

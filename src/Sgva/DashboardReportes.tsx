@@ -11,7 +11,7 @@ import {
   LineElement,
 } from "chart.js";
 import ChartDataLabels from "chartjs-plugin-datalabels";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import { FaChartPie } from "react-icons/fa";
 
 ChartJS.register(

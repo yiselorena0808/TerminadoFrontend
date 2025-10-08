@@ -1,54 +1,64 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from './Login'; 
-import Registro from './Registro';
-import RegistroArea from './RegistroArea';
-import RegistroEmpresa from './RegistroEmpresa';
-import Navba from './Navbar';
-import ListarGestiones from './ListasGestionEPP';
-import ListasChequeoRecibidas from './ListasChequeo';
-import ListasReportes from './ListasReportes';
-import ListasActividadesLudicas from './ListasActLudicas';
-import AdmUsuarios from './ListasUsuarios';
-import CrearActividadLudica from './CrearActLudica';
-import DetalleReporte from './DetalleReporte';
-import DetalleListaChequeo from './DetalleListaChqueo';
-import DetalleActividad from './DetalleActLudica';
-import DetalleGestionEPP from './DetalleGestionEpp';
-import CrearListaChequeo from './CrearListaChequeo';
-import Perfil from './perfil';
-import NavbarUser from './User/NavUser';
-import CrearReporte from './CrearReporte';
-import DashboardReportes from './DashboardReportes';
-import CrearGestionEpp from './CrearGestionEpp';
-import CrearEventos from './Eventos';
-import InicioUser from '../src/User/InicioUser';
-import Correo from './Correo';
-import ResetPasswordForm from './Recuperar';
-import DashboardPage from './Adicionales';
+// --- Login y Registro ---
+import Login from "./Register/Login";
+import Registro from "./Register/Registro";
+import RegistroArea from "./Register/RegistroArea";
+import RegistroEmpresa from "./Register/RegistroEmpresa";
+import Correo from "./Register/Correo";
+import ResetPasswordForm from "./Register/Recuperar";
 
-import CargosPage from './CrearCargo';
-import ProductosPage from './CrearProducto';
-import LectorChequeo from './User/LectorListasChequeoUser';
-import CrearListChequeo from './User/CreaListChequeo';
-import LectorListaReportes from './User/LectorListasReporteUser';
-import CrearListReporte from './User/CrearListRepo';
-import MiDetalleListaChequeo from './User/DetalleListChe';
-import MiDetalleReporte from './User/DetalleListRepo';
-import LectorAct from './User/LectorActUser';
-import UserActividadLudica from './User/CreaActUser';
-import MiDetalleActividadLudica from './User/DetalleActUser';
-import ListaEventosEmpresa from './User/ListaEventosEmpresa';
-import MiEvento from './User/CreaEvento';
-import ListaEventos from './ListaEventos';
-import UserGestionEPP from './User/GestionEppUser';
-import DetalleGestionEPPUser from './User/DetalleGestion';
+// --- Navbar principal ---
+import Navbar from "./Navbar";
+
+// --- SGVA ---
+import ListarGestiones from "./Sgva/ListasGestionEPP";
+import ListasChequeoRecibidas from "./Sgva/ListasChequeo";
+import ListasReportes from "./Sgva/ListasReportes";
+import ListasActividadesLudicas from "./Sgva/ListasActLudicas";
+import CrearActividadLudica from "./Sgva/CrearActLudica";
+import DetalleReporte from "./Sgva/DetalleReporte";
+import DetalleListaChequeo from "./Sgva/DetalleListaChqueo";
+import DetalleActividad from "./Sgva/DetalleActLudica";
+import DetalleGestionEPP from "./Sgva/DetalleGestionEpp";
+import CrearListaChequeo from "./Sgva/CrearListaChequeo";
+import CrearReporte from "./Sgva/CrearReporte";
+import DashboardReportes from "./Sgva/DashboardReportes";
+import CrearGestionEpp from "./Sgva/CrearGestionEpp";
+import CrearEventos from "./Sgva/Eventos";
+import ListaEventos from "./Sgva/ListaEventos";
+import DashboardPage from "./Sgva/Adicionales";
+import ProductosPage from "./Sgva/CrearProducto";
+
+// --- Admin ---
+import AdmUsuarios from "./Admin/ListasUsuarios";
+import CargosPage from "./Admin/CrearCargo";
+
+// --- User ---
+import InicioUser from "./User/InicioUser";
+import NavbarUser from "./User/NavUser";
+import LectorChequeo from "./User/LectorListasChequeoUser";
+import CrearListChequeo from "./User/CreaListChequeo";
+import LectorListaReportes from "./User/LectorListasReporteUser";
+import CrearListReporte from "./User/CrearListRepo";
+import MiDetalleListaChequeo from "./User/DetalleListChe";
+import MiDetalleReporte from "./User/DetalleListRepo";
+import LectorAct from "./User/LectorActUser";
+import UserActividadLudica from "./User/CreaActUser";
+import MiDetalleActividadLudica from "./User/DetalleActUser";
+import ListaEventosEmpresa from "./User/ListaEventosEmpresa";
+import MiEvento from "./User/CreaEvento";
+import UserGestionEPP from "./User/GestionEppUser";
+import DetalleGestionEPPUser from "./User/DetalleGestion";
+
+// --- Perfil ---
+import Perfil from "./perfil";
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Login y registro */}
+        {/* LOGIN / REGISTRO */}
         <Route path="/" element={<Login />} />
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
@@ -56,64 +66,52 @@ function App() {
         <Route path="/forgot" element={<Correo />} />
         <Route path="/reset" element={<ResetPasswordForm />} />
 
-        {/* Panel principal con Navbar */}
-        <Route path="/nav" element={<Navba />}>
-          <Route path="navUser" element={<NavbarUser />} />
+        {/* PANEL PRINCIPAL con Navbar */}
+        <Route path="/nav" element={<Navbar />}>
+          {/* --- SGVA --- */}
           <Route path="inicio" element={<DashboardReportes />} />
-
-          {/* Gestión EPP */}
           <Route path="gestionEpp" element={<ListarGestiones />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />
           <Route path="creargestionEpp" element={<CrearGestionEpp />} />
-
-          {/* Blog/Eventos */}
-          <Route path="blog" element={<ListaEventos></ListaEventos>} />
+          <Route path="blog" element={<ListaEventos />} />
           <Route path="crearBlog" element={<CrearEventos />} />
-
-          {/* Listas de Chequeo */}
           <Route path="ListasChequeo" element={<ListasChequeoRecibidas />} />
           <Route path="detalleListasChequeo" element={<DetalleListaChequeo />} />
           <Route path="crearListasChequeo" element={<CrearListaChequeo />} />
-
-          {/* Reportes */}
           <Route path="reportesC" element={<ListasReportes />} />
           <Route path="detalleReportes" element={<DetalleReporte />} />
           <Route path="crearReportes" element={<CrearReporte />} />
-
-          {/* Actividades Lúdicas */}
-          <Route path="actLudica" element={<ListasActividadesLudicas></ListasActividadesLudicas>} />
+          <Route path="actLudica" element={<ListasActividadesLudicas />} />
           <Route path="detalleActLudica" element={<DetalleActividad />} />
           <Route path="crearActLudica" element={<CrearActividadLudica />} />
+          <Route path="productos" element={<ProductosPage />} />
+          <Route path="sgvaperfil" element={<Perfil />} />
 
-          {/* Otros */}
-          <Route path="perfil" element={<Perfil />} />
-          <Route path="usuarios" element={<AdmUsuarios />} />
+          {/* --- ADMIN --- */}
+          <Route path="Admusuarios" element={<AdmUsuarios />} />
+          <Route path="Admadicionales" element={<DashboardPage />} />
+          <Route path="Admperfil" element={<Perfil />} />
+          <Route path="cargos" element={<CargosPage />} />
 
-          {/* Panel Admin con Navbare */}
-          <Route path="adicionales" element={<DashboardPage></DashboardPage>}>
-            <Route path="cargos" element={<CargosPage />} />
-            <Route path="productos" element={<ProductosPage />} />
-            {/* Redirigir por defecto a cargos */}
-            <Route path="*" element={<Navigate to="cargos" />} />
-          </Route>
-
-          {/*USER */}
+          {/* --- USER --- */}
           <Route path="inicioUser" element={<InicioUser />} />
-          <Route path='lectorUserChe' element={<LectorChequeo></LectorChequeo>}></Route>
-          <Route path='creaListChe' element={<CrearListChequeo></CrearListChequeo>}></Route>
-          <Route path='LectorUserRepo' element={<LectorListaReportes></LectorListaReportes>}></Route>
-          <Route path='creaListRepo' element={<CrearListReporte></CrearListReporte>}></Route>
-          <Route path='MidetalleChe' element={<MiDetalleListaChequeo></MiDetalleListaChequeo>}></Route>
-          <Route path='MidetalleRepo' element={<MiDetalleReporte></MiDetalleReporte>}></Route>
-          <Route path='LectorUserAct' element={<LectorAct></LectorAct>}></Route>
-          <Route path='creaActUser' element={<UserActividadLudica></UserActividadLudica>}></Route>
-          <Route path='MidetalleAct' element={<MiDetalleActividadLudica></MiDetalleActividadLudica>}></Route>
-          <Route path='EventosUser' element={<ListaEventosEmpresa></ListaEventosEmpresa>}></Route>
-           <Route path='MiEvento' element={<MiEvento></MiEvento>}></Route>
-           <Route path='gestionepp' element={<UserGestionEPP></UserGestionEPP>}></Route>
-            <Route path='Migestionepp' element={<DetalleGestionEPPUser></DetalleGestionEPPUser>}></Route>
-           
-        
+          <Route path="navUser" element={<NavbarUser />} />
+          <Route path="lectorUserChe" element={<LectorChequeo />} />
+          <Route path="creaListChe" element={<CrearListChequeo />} />
+          <Route path="LectorUserRepo" element={<LectorListaReportes />} />
+          <Route path="creaListRepo" element={<CrearListReporte />} />
+          <Route path="MidetalleChe" element={<MiDetalleListaChequeo />} />
+          <Route path="MidetalleRepo" element={<MiDetalleReporte />} />
+          <Route path="LectorUserAct" element={<LectorAct />} />
+          <Route path="creaActUser" element={<UserActividadLudica />} />
+          <Route path="MidetalleAct" element={<MiDetalleActividadLudica />} />
+          <Route path="EventosUser" element={<ListaEventosEmpresa />} />
+          <Route path="MiEvento" element={<MiEvento />} />
+          <Route path="gestionepp" element={<UserGestionEPP />} />
+          <Route path="Migestionepp" element={<DetalleGestionEPPUser />} />
+
+          {/* Redirección por defecto */}
+          <Route path="*" element={<Navigate to="inicio" />} />
         </Route>
       </Routes>
     </Router>
@@ -121,3 +119,4 @@ function App() {
 }
 
 export default App;
+

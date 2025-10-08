@@ -35,17 +35,20 @@ interface Usuario {
   area?: Area;
 }
 
-const ADMIN_ROLES = ["SGVA", "Ingeniero", "Inspector de interventoria","administrador","Administrador"];
+// Roles
+const ADMIN_ROLES = ["administrador", "Administrador"];
+const SGVA_ROLES = ["SGVA", "sgva"];
 
-const Sidebar: React.FC = () => {
+const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
+  // Ocultar sidebar en login/registro
   const ocultarSidebar =
-    location.pathname === "/" || location.pathname === "/Registro";
+    location.pathname === "/" || location.pathname === "/registro";
   if (ocultarSidebar) return null;
 
   useEffect(() => {
@@ -61,19 +64,24 @@ const Sidebar: React.FC = () => {
     window.location.href = "/";
   };
 
-  // Menú para administradores
+  // Menús
   const adminMenu = [
+    
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Lista de Usuarios", path: "/nav/Admusuarios" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+  ];
+
+  const sgvaMenu = [
     { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicio" },
     { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportesC" },
     { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
     { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
     { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Lista de Usuarios", path: "/nav/usuarios" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/adicionales" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 
-  // Menú para usuarios normales
   const userMenu = [
     { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicioUser" },
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
@@ -84,8 +92,10 @@ const Sidebar: React.FC = () => {
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 
+  const isSgva = usuario && SGVA_ROLES.includes(usuario.cargo);
   const isAdmin = usuario && ADMIN_ROLES.includes(usuario.cargo);
-  const menuItems = isAdmin ? adminMenu : userMenu;
+
+  const menuItems = isSgva ? sgvaMenu : isAdmin ? adminMenu : userMenu;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
@@ -105,7 +115,7 @@ const Sidebar: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
           {!isCollapsed && (
             <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-blue-400 to-teal-300 bg-clip-text text-transparent">
-              Panel de Control
+              {isSgva ? "Panel SGVA" : isAdmin ? "Panel Admin" : "Panel Usuario"}
             </h1>
           )}
           <button
@@ -121,13 +131,12 @@ const Sidebar: React.FC = () => {
           <div className="flex flex-col items-center py-6 border-b border-gray-700">
             <div className="relative">
               <img
-                src={
-                  usuario.fotoPerfil ||
-                  "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                }
+                src={usuario.fotoPerfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
                 alt="Perfil"
                 className="w-24 h-24 rounded-full border-4 border-blue-500 shadow-lg hover:scale-105 transition-transform"
-                onClick={() => navigate("/nav/perfil")}
+                onClick={() =>
+                  navigate(isSgva ? "/nav/sgvaperfil" : isAdmin ? "/nav/Admperfil" : "/nav/perfil")
+                }
               />
               <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900"></span>
             </div>
@@ -157,9 +166,7 @@ const Sidebar: React.FC = () => {
                     {item.icon}
                   </span>
                   {!isCollapsed && (
-                    <span className="group-hover:text-blue-300 transition-colors">
-                      {item.label}
-                    </span>
+                    <span className="group-hover:text-blue-300 transition-colors">{item.label}</span>
                   )}
                 </button>
               </li>
@@ -199,4 +206,4 @@ const Sidebar: React.FC = () => {
   );
 };
 
-export default Sidebar;
+export default Navbar;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ActualizarUsuarioModal from "./Actualizarusuarios";
+import ActualizarUsuarioModal from "./Admin/Actualizarusuarios";
 
 interface Empresa {
   id_empresa: number;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import ActualizarUsuarioModal from "./Actualizarusuarios";
-import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import { FaUsers, FaPlus, FaSearch } from "react-icons/fa";
 
 interface Empresa { idEmpresa: number; nombre: string; }
