@@ -41,6 +41,8 @@ import MiDetalleActividadLudica from './User/DetalleActUser';
 import ListaEventosEmpresa from './User/ListaEventosEmpresa';
 import MiEvento from './User/CreaEvento';
 import ListaEventos from './ListaEventos';
+import UserGestionEPP from './User/GestionEppUser';
+import DetalleGestionEPPUser from './User/DetalleGestion';
 
 function App() {
   return (
@@ -108,6 +110,9 @@ function App() {
           <Route path='MidetalleAct' element={<MiDetalleActividadLudica></MiDetalleActividadLudica>}></Route>
           <Route path='EventosUser' element={<ListaEventosEmpresa></ListaEventosEmpresa>}></Route>
            <Route path='MiEvento' element={<MiEvento></MiEvento>}></Route>
+           <Route path='gestionepp' element={<UserGestionEPP></UserGestionEPP>}></Route>
+            <Route path='Migestionepp' element={<DetalleGestionEPPUser></DetalleGestionEPPUser>}></Route>
+           
         
         </Route>
       </Routes>

@@ -29,7 +29,6 @@ const CrearGestionEpp: React.FC = () => {
 
   const token = localStorage.getItem("token");
 
-  // ✅ Cargar cargos
   useEffect(() => {
     if (!token) return;
     const listarCargos = async () => {
@@ -43,7 +42,6 @@ const CrearGestionEpp: React.FC = () => {
     listarCargos();
   }, [token]);
 
-  // ✅ Cargar áreas (opcional)
   useEffect(() => {
     if (!token) return;
     const listarAreas = async () => {
@@ -57,7 +55,6 @@ const CrearGestionEpp: React.FC = () => {
     listarAreas();
   }, [token]);
 
-  // ✅ Cargar productos
   useEffect(() => {
     if (!token) return;
     const listarProductos = async () => {
@@ -122,7 +119,7 @@ const CrearGestionEpp: React.FC = () => {
       if (!res.ok) throw new Error(data.mensaje || "Error al crear gestión");
 
       Swal.fire("Éxito", "Gestión creada correctamente", "success");
-      navigate("/listar-gestion-epp");
+      navigate("/gestionEpp");
     } catch (error: any) {
       Swal.fire("Error", error.message, "error");
     } finally { setLoading(false); }

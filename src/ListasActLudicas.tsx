@@ -97,48 +97,40 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
 
   const descargarPDF = (actividad: ActividadLudica) => {
     const doc = new jsPDF();
-    doc.setFontSize(16);
-    doc.text("Detalle Actividad Lúdica", 20, 20);
-
+    doc.setFontSize(18);
+    doc.text("Informe Completo - Actividad Lúdica", 20, 20);
     doc.setFontSize(12);
-    doc.text(
-      `Nombre de la actividad: ${actividad.nombre_actividad || "Sin nombre"}`,
-      20,
-      35
-    );
-    doc.text(
-      `Usuario: ${actividad.nombre_usuario || "Sin usuario"}`,
-      20,
-      45
-    );
-    doc.text(
-      `Fecha: ${
-        actividad.fecha_actividad
-          ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
-          : "Sin fecha"
-      }`,
-      20,
-      55
-    );
-    doc.text("Descripción:", 20, 65);
-    doc.text(
-      doc.splitTextToSize(actividad.descripcion || "Sin descripción", 170),
-      20,
-      72
-    );
 
-    if (actividad.imagen_video) {
-      doc.text(`Imagen/Video: ${actividad.imagen_video}`, 20, 100);
-    }
-    if (actividad.archivo_adjunto) {
-      doc.text(`Archivo adjunto: ${actividad.archivo_adjunto}`, 20, 110);
-    }
+    const fechaFormateada = actividad.fecha_actividad
+      ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+      : "Sin fecha";
 
-    doc.save(`actividad_${actividad.id}.pdf`);
+    const contenido = [
+      ["ID Actividad", actividad.id.toString()],
+      ["Nombre de la actividad", actividad.nombre_actividad || "Sin nombre"],
+      ["Usuario", actividad.nombre_usuario || "Sin usuario"],
+      ["ID Usuario", actividad.id_usuario.toString()],
+      ["Fecha de la actividad", fechaFormateada],
+      ["Descripción", actividad.descripcion || "Sin descripción"],
+      ["Empresa ID", actividad.id_empresa.toString()],
+      ["Imagen/Video", actividad.imagen_video || "No adjunto"],
+      ["Archivo Adjunto", actividad.archivo_adjunto || "No adjunto"],
+    ];
+
+    (doc as any).autoTable({
+      startY: 30,
+      head: [["Campo", "Valor"]],
+      body: contenido,
+      theme: "grid",
+      styles: { cellPadding: 3, fontSize: 10 },
+      headStyles: { fillColor: [255, 204, 0] },
+    });
+
+    doc.save(`Actividad_${actividad.id}.pdf`);
   };
 
   if (cargando) {
@@ -157,9 +149,8 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
     >
-      {/* Encabezado */}
       <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
-        🎉
+        🎭
         <div>
           <h2 className="text-3xl font-bold">SST - Actividades Lúdicas</h2>
           <p className="text-yellow-200">
@@ -169,7 +160,6 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
       </div>
 
       <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Barra de acciones */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
@@ -186,14 +176,12 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
           </button>
         </div>
 
-        {/* Estado de carga y error */}
         {error && (
           <div className="mb-4 p-3 bg-red-500/80 text-white rounded-lg text-center shadow">
             {error}
           </div>
         )}
 
-        {/* Lista de actividades */}
         {actividadesFiltradas.length === 0 ? (
           <p className="text-center text-black mt-6 italic">
             No hay actividades disponibles
@@ -206,14 +194,13 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
                 className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
               >
                 <div className="mb-4">
-                  <h4 className="font-bold text-lg text-gray-900">
+                  <h4 className="font-bold text-lg text-gray-900 mb-1">
                     {item.nombre_actividad}
                   </h4>
-                  <p className="text-sm text-gray-700">
-                    Usuario:{" "}
-                    <span className="font-semibold">{item.nombre_usuario}</span>
+                  <p className="text-sm text-gray-700 mb-1">
+                    <strong>Usuario:</strong> {item.nombre_usuario}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 mb-2">
                     {item.fecha_actividad
                       ? new Date(item.fecha_actividad).toLocaleDateString(
                           "es-CO",
@@ -225,18 +212,13 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
                         )
                       : "Sin fecha"}
                   </p>
+                  <p className="text-gray-800 text-sm whitespace-pre-line">
+                    {item.descripcion}
+                  </p>
                 </div>
 
-                {/* Descripción resumida */}
-                <p className="text-gray-800 text-sm mb-3">
-                  {item.descripcion.length > 100
-                    ? item.descripcion.substring(0, 100) + "..."
-                    : item.descripcion}
-                </p>
-
-                {/* Imagen o video */}
                 {item.imagen_video && (
-                  <div className="mb-3">
+                  <div className="mt-3">
                     {item.imagen_video.endsWith(".mp4") ||
                     item.imagen_video.endsWith(".webm") ? (
                       <video
@@ -254,19 +236,18 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
                   </div>
                 )}
 
-                {/* Archivo adjunto */}
                 {item.archivo_adjunto && (
                   <a
                     href={item.archivo_adjunto}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-blue-600 underline block mb-3"
+                    className="text-blue-600 underline block mt-3"
                   >
                     📎 Ver archivo adjunto
                   </a>
                 )}
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-2 mt-4">
                   <button
                     onClick={() =>
                       navigate("/nav/detalleActLudica", { state: item })

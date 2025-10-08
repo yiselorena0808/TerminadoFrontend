@@ -52,7 +52,7 @@ interface GestionDetalle {
   area: Area;
 }
 
-const DetalleGestionEPP: React.FC = () => {
+const DetalleGestionEPPUser: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const gestion: GestionDetalle | undefined = location.state as GestionDetalle;
@@ -277,4 +277,4 @@ const DetalleGestionEPP: React.FC = () => {
   );
 };
 
-export default DetalleGestionEPP;
+export default DetalleGestionEPPUser;

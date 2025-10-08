@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlus, FaHardHat, FaCarSide, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaPlus,
+  FaHardHat,
+  FaCarSide,
+  FaExclamationTriangle,
+  FaFilePdf,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import jsPDF from "jspdf";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
 
 interface ListaChequeo {
@@ -41,7 +48,6 @@ const ListasChequeoRecibidas: React.FC = () => {
         setListas(data.datos);
       } else {
         setListas([]);
-        console.warn("No se recibieron datos válidos de la API");
       }
     } catch (error) {
       console.error("Error al obtener listas:", error);
@@ -73,6 +79,23 @@ const ListasChequeoRecibidas: React.FC = () => {
     });
   };
 
+  const descargarPDF = (lista: ListaChequeo) => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("Lista de Chequeo - SST", 20, 20);
+    doc.setFontSize(12);
+
+    doc.text(`Usuario: ${lista.usuario_nombre}`, 20, 40);
+    doc.text(`Fecha: ${formatearFecha(lista.fecha)} ${lista.hora}`, 20, 50);
+    doc.text(`Marca: ${lista.marca}`, 20, 60);
+    doc.text(`Modelo: ${lista.modelo}`, 20, 70);
+    doc.text(`Kilometraje: ${lista.kilometraje}`, 20, 80);
+    doc.text(`Técnico: ${lista.tecnico}`, 20, 90);
+    doc.text(`SOAT: ${lista.soat}`, 20, 100);
+
+    doc.save(`lista_chequeo_${lista.id}.pdf`);
+  };
+
   const listasFiltradas = listas.filter((item) =>
     `${item.usuario_nombre} ${item.modelo} ${item.marca}`
       .toLowerCase()
@@ -87,12 +110,14 @@ const ListasChequeoRecibidas: React.FC = () => {
           "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
       }}
     >
-      {/* Encabezado estilo SST */}
+      {/* Encabezado */}
       <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
           <h2 className="text-3xl font-bold">SST - Listas de Chequeo</h2>
-          <p className="text-yellow-200">Control y revisión de vehículos y equipos</p>
+          <p className="text-yellow-200">
+            Control y revisión de vehículos y equipos
+          </p>
         </div>
       </div>
 
@@ -146,12 +171,18 @@ const ListasChequeoRecibidas: React.FC = () => {
                 <p className="text-gray-600 text-sm mb-2">Técnico: {item.tecnico}</p>
                 <p className="text-gray-500 text-sm">SOAT: {item.soat}</p>
 
-                <div className="flex justify-end mt-4">
+                <div className="flex justify-end gap-2 mt-4">
                   <button
                     onClick={() => abrirDetalle(item)}
                     className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
                   >
                     Abrir
+                  </button>
+                  <button
+                    onClick={() => descargarPDF(item)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
+                  >
+                    <FaFilePdf /> PDF
                   </button>
                 </div>
               </div>
@@ -164,6 +195,3 @@ const ListasChequeoRecibidas: React.FC = () => {
 };
 
 export default ListasChequeoRecibidas;
-
-//crearListasChequeo
-//ListasChequeoRecibidas

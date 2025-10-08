@@ -1,224 +1,313 @@
 import React, { useEffect, useState } from "react";
-import { FaTrash, FaFilePdf } from "react-icons/fa";
+import {
+  FaSearch,
+  FaPlus,
+  FaHardHat,
+  FaExclamationTriangle,
+  FaBox,
+  FaFilePdf,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
 
-interface Gestion {
-  id: number;
+interface Producto {
+  idProducto: number;
   nombre: string;
-  apellido: string;
-  cedula: number;
-  cargo: string;
-  productos: string;
-  cantidad: number;
-  importancia: string;
-  fechaCreacion: string;
-  estado: string;
+  descripcion: string;
 }
 
-const ListarGestionesUser: React.FC = () => {
+interface Empresa {
+  nombre: string;
+  direccion: string;
+  nit: string;
+}
+
+interface Area {
+  nombre: string;
+  descripcion: string;
+  codigo: string;
+}
+
+interface EPP {
+  id: number;
+  idUsuario: number;
+  nombre: string;
+  apellido: string | null;
+  cedula: string;
+  cantidad: number;
+  importancia: string;
+  estado: boolean;
+  empresa: Empresa;
+  area: Area;
+  fecha: string;
+  productos: Producto[];
+}
+
+const UserGestionEPP: React.FC = () => {
   const navigate = useNavigate();
-  const [listas, setListas] = useState<Gestion[]>([]);
+  const [epps, setEpps] = useState<EPP[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  const estados = ["Pendiente", "Revisado", "Finalizado"];
+  const apiListarEpp = import.meta.env.VITE_API_LISTARGESTIONES;
 
-  const apiListarGestiones = import.meta.env.VITE_API_LISTARGESTIONES;
-  const apiActualizarEstadoGestion = import.meta.env.VITE_API_ACTUALIZARGESTION;
-  const apiEliminarGestion = import.meta.env.VITE_API_ELIMINARGESTION;
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
+    obtenerEpps();
+  }, []);
 
-  const obtenerListas = async () => {
+  const obtenerEpps = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     try {
-      const res = await fetch(apiListarGestiones);
+      const res = await fetch(apiListarEpp, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const data = await res.json();
-      setListas(data.datos);
+
+      let lista: any[] = [];
+      if (Array.isArray(data)) lista = data;
+      else if (data.datos && Array.isArray(data.datos)) lista = data.datos;
+
+      const eppsMapped: EPP[] = lista.map((item) => ({
+        id: item.id,
+        idUsuario: item.idUsuario,
+        nombre: item.nombre || "Sin nombre",
+        apellido: item.apellido || "",
+        cedula: item.cedula || "",
+        cantidad: item.cantidad || 0,
+        importancia: item.importancia || "Sin definir",
+        estado: item.estado ?? false,
+        empresa: item.empresa || {
+          nombre: "Sin empresa",
+          direccion: "-",
+          nit: "-",
+        },
+        area: item.area || {
+          nombre: "Sin área",
+          descripcion: "-",
+          codigo: "-",
+        },
+        fecha: item.createdAt || "Sin fecha",
+        productos: item.productos || [],
+      }));
+
+      setEpps(eppsMapped);
     } catch (error) {
-      console.error("Error al obtener gestiones:", error);
+      console.error("Error al obtener EPP:", error);
+      setEpps([]);
     }
   };
 
-  useEffect(() => {
-    obtenerListas();
-  }, []);
-
-  const abrirDetalle = (item: Gestion) => {
-    navigate("/nav/detalleGestionEpp", { state: item });
-  };
-
-  const formatearFecha = (fechaIso: string): string => {
-    if (!fechaIso) return "Sin fecha";
+  const formatearFecha = (fechaIso: string) => {
+    if (!fechaIso || fechaIso === "Sin fecha") return "Sin fecha";
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
-  const cambiarEstado = async (id: number, nuevoEstado: string) => {
-    try {
-      const res = await fetch(apiActualizarEstadoGestion + id, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: nuevoEstado }),
+  const irCrear = () => navigate("/nav/creargestionEpp");
+
+  const generarPDF = (item: EPP) => {
+    const doc = new jsPDF();
+    const margenIzq = 20;
+    let y = 25;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("INFORME DETALLADO DE GESTIÓN DE EPP", margenIzq, y);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+
+    const agregar = (titulo: string, valor: string | number | null) => {
+      doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
+      y += 7;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Datos del Usuario", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("ID Gestión", item.id);
+    agregar("ID Usuario", item.idUsuario);
+    agregar("Nombre", `${item.nombre} ${item.apellido || ""}`);
+    agregar("Cédula", item.cedula);
+    agregar("Importancia", item.importancia);
+    agregar("Cantidad", item.cantidad);
+    agregar("Estado", item.estado ? "Activo" : "Inactivo");
+    agregar("Fecha de creación", formatearFecha(item.fecha));
+
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Empresa", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("Nombre", item.empresa.nombre);
+    agregar("Dirección", item.empresa.direccion);
+    agregar("NIT", item.empresa.nit);
+
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Área", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("Nombre", item.area.nombre);
+    agregar("Código", item.area.codigo);
+    agregar("Descripción", item.area.descripcion);
+
+    if (item.productos && item.productos.length > 0) {
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.text("Productos Asignados", margenIzq, y);
+      doc.setFont("helvetica", "normal");
+      y += 8;
+
+      item.productos.forEach((p, i) => {
+        doc.text(`${i + 1}. ${p.nombre}`, margenIzq, y);
+        y += 6;
+        if (p.descripcion) {
+          doc.setFontSize(10);
+          doc.text(`    ${p.descripcion}`, margenIzq, y);
+          y += 6;
+          doc.setFontSize(12);
+        }
       });
-      if (res.ok) {
-        obtenerListas();
-      }
-    } catch (error) {
-      console.error("Error actualizando estado:", error);
+    } else {
+      y += 8;
+      doc.text("No hay productos asignados.", margenIzq, y);
+      y += 8;
     }
-  };
 
-  const eliminarGestion = async (id: number) => {
-    if (!window.confirm("¿Estás seguro de eliminar esta gestión?")) return;
-    try {
-      await fetch(apiEliminarGestion + id, { method: "DELETE" });
-      setListas((prev) => prev.filter((item) => item.id !== id));
-    } catch (error) {
-      console.error("Error al eliminar gestión:", error);
-    }
-  };
-
-  const filtrarPorEstado = (estado: string) =>
-    listas.filter(
-      (item) =>
-        item.estado === estado &&
-        `${item.nombre} ${item.apellido} ${item.cargo}`
-          .toLowerCase()
-          .includes(busqueda.toLowerCase())
+    y += 8;
+    doc.line(margenIzq, y, 190, y);
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(
+      `Generado por: ${usuario?.nombre || "Sistema"} - ${new Date().toLocaleString("es-CO")}`,
+      margenIzq,
+      y
     );
 
- 
-  const descargarPDF = (gestion: Gestion) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Reporte Gestión EPP", 20, 20);
-
-    doc.setFontSize(12);
-    doc.text(`Nombre: ${gestion.nombre} ${gestion.apellido}`, 20, 40);
-    doc.text(`Cédula: ${gestion.cedula}`, 20, 50);
-    doc.text(`Cargo: ${gestion.cargo}`, 20, 60);
-    doc.text(`Productos: ${gestion.productos}`, 20, 70);
-    doc.text(`Cantidad: ${gestion.cantidad}`, 20, 80);
-    doc.text(`Importancia: ${gestion.importancia}`, 20, 90);
-    doc.text(`Fecha: ${formatearFecha(gestion.fechaCreacion)}`, 20, 100);
-    doc.text(`Estado: ${gestion.estado}`, 20, 110);
-
-    doc.save(`gestion_${gestion.id}.pdf`);
+    doc.save(`informe_gestion_${item.nombre}_${item.id}.pdf`);
   };
 
+  const eppsFiltrados = epps.filter((item) =>
+    `${item.nombre} ${item.empresa.nombre} ${item.area.nombre} ${item.importancia}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase())
+  );
+
   return (
-    <div className="p-6 min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')" }}
+    <div
+      className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
+      style={{
+        backgroundImage:
+          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
     >
-      <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-gray-800">
-          📋 Listas de Gestión
-        </h3>
+      {/* Encabezado */}
+      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+        <FaHardHat className="text-4xl" />
+        <div>
+          <h2 className="text-3xl font-bold">SST - Gestión de EPP</h2>
+          <p className="text-yellow-200">Control y entrega de equipos de protección</p>
+        </div>
+      </div>
 
-        <button
-          onClick={() => navigate("/nav/crearGestionEpp")}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700"
-        >
-          Crear Gestión
-        </button>
-
-        {/* Barra de búsqueda */}
-        <div className="flex justify-end mb-6">
-          <div className="flex w-80 shadow-lg rounded-full overflow-hidden border-2 border-indigo-300 bg-white">
+      {/* Contenedor */}
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+        {/* Buscador */}
+        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+          <div className="flex items-center border rounded-lg px-3 py-2 flex-1">
+            <FaSearch className="text-gray-400 mr-2" />
             <input
               type="text"
-              className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar ..."
+              placeholder="Buscar por nombre, empresa o área..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
+              className="flex-1 outline-none"
             />
-            <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              🔍
-            </span>
           </div>
+          <button
+            onClick={irCrear}
+            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+          >
+            <FaPlus /> Crear Gestión
+          </button>
         </div>
 
-        {/* Listado por estados */}
-        {estados.map((estado) => {
-          const gestionesFiltradas = filtrarPorEstado(estado);
-          return (
-            <div key={estado} className="mb-8">
-              <h4 className="font-semibold text-xl mb-4 text-indigo-700">{estado}</h4>
+        {/* Listado */}
+        {eppsFiltrados.length === 0 ? (
+          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+            <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
+          </p>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {eppsFiltrados.map((item) => (
+              <div
+                key={item.id}
+                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+              >
+                <div className="mb-3">
+                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                    <FaBox className="text-yellow-600" /> {item.nombre}
+                  </h4>
+                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
+                </div>
 
-              {gestionesFiltradas.length === 0 ? (
-                <p className="text-gray-600 italic">No hay gestiones {estado.toLowerCase()}.</p>
-              ) : (
-                gestionesFiltradas.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex justify-between items-center p-4 my-3 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
-                  >
-                    <div>
-                      <div className="font-bold text-gray-800">
-                        {item.nombre} {item.apellido} – {formatearFecha(item.fechaCreacion)}
-                      </div>
-                      <div className="text-gray-600 text-sm">
-                        Cargo: {item.cargo} | Estado: <span className="font-semibold text-indigo-600">{item.estado}</span>
-                      </div>
-                    </div>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Empresa:</strong> {item.empresa.nombre}
+                </p>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Área:</strong> {item.area.nombre}
+                </p>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Importancia:</strong> {item.importancia}
+                </p>
+                <p className="text-gray-700 text-sm mb-2">
+                  <strong>Cantidad:</strong> {item.cantidad}
+                </p>
 
-                    {/* Botones */}
-                    <div className="flex gap-4 items-center">
-                      <button
-                        onClick={() => abrirDetalle(item)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition"
-                      >
-                        Abrir
-                      </button>
-
-                     {/* Descargar PDF */}
-                      <button
-                        onClick={() => descargarPDF(item)}
-                        className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                        title="Descargar PDF"
-                      >
-                        <FaFilePdf />
-                      </button>
-
-                      {/* Dropdown de estado */}
-                      <div className="relative group">
-                        <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-4 py-2 rounded-lg shadow-md transition">
-                          Estado ▼
-                        </button>
-                        <div className="absolute hidden group-hover:block bg-white border border-indigo-300 rounded-lg shadow-lg mt-1 right-0 w-44 animate-[fadeIn] z-50">
-                          {estados.map((e) => (
-                            <button
-                              key={e}
-                              onClick={() => cambiarEstado(item.id, e)}
-                              className={`block px-5 py-2 text-sm w-full text-left text-gray-800 transition hover:bg-indigo-100 ${item.estado === e ? "font-bold text-indigo-600" : ""}`}
-                            >
-                              {e}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => eliminarGestion(item.id)}
-                        className="bg-gray-500 hover:bg-gray-600 text-white p-2 rounded-full shadow-md transition"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
+                {item.productos.length > 0 && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <strong>Productos:</strong>{" "}
+                    {item.productos.map((p) => p.nombre).join(", ")}
                   </div>
-                ))
-              )}
-            </div>
-          );
-        })}
+                )}
+
+                <div className="flex justify-end mt-4 gap-2">
+                  <button
+                    onClick={() => navigate("/nav/Migestionepp", { state: item })}
+                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+                  >
+                    Ver Detalle
+                  </button>
+
+                  <button
+                    onClick={() => generarPDF(item)}
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition flex items-center gap-1"
+                  >
+                    <FaFilePdf /> PDF
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
-export default ListarGestionesUser;
+export default UserGestionEPP;
+

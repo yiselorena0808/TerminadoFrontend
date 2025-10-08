@@ -1,17 +1,47 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlus, FaHardHat, FaExclamationTriangle, FaBox } from "react-icons/fa";
+import {
+  FaSearch,
+  FaPlus,
+  FaHardHat,
+  FaExclamationTriangle,
+  FaBox,
+  FaFilePdf,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "./utils/auth";
+import jsPDF from "jspdf";
+
+interface Producto {
+  idProducto: number;
+  nombre: string;
+  descripcion: string;
+}
+
+interface Empresa {
+  nombre: string;
+  direccion: string;
+  nit: string;
+}
+
+interface Area {
+  nombre: string;
+  descripcion: string;
+  codigo: string;
+}
 
 interface EPP {
   id: number;
+  idUsuario: number;
   nombre: string;
-  descripcion: string;
+  apellido: string | null;
+  cedula: string;
   cantidad: number;
+  importancia: string;
+  estado: boolean;
+  empresa: Empresa;
+  area: Area;
   fecha: string;
-  id_usuario: number;
-  usuario_nombre: string;
-  id_empresa: number;
+  productos: Producto[];
 }
 
 const GestionEPP: React.FC = () => {
@@ -22,6 +52,12 @@ const GestionEPP: React.FC = () => {
 
   const apiListarEpp = import.meta.env.VITE_API_LISTARGESTIONES;
 
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
+    obtenerEpps();
+  }, []);
+
   const obtenerEpps = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -30,27 +66,33 @@ const GestionEPP: React.FC = () => {
       const res = await fetch(apiListarEpp, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
       const data = await res.json();
 
-      // Detectar estructura de la respuesta
       let lista: any[] = [];
-      if (Array.isArray(data)) {
-        lista = data;
-      } else if (data.datos && Array.isArray(data.datos)) {
-        lista = data.datos;
-      }
+      if (Array.isArray(data)) lista = data;
+      else if (data.datos && Array.isArray(data.datos)) lista = data.datos;
 
-      // Mapear campos a la interfaz EPP
       const eppsMapped: EPP[] = lista.map((item) => ({
         id: item.id,
-        nombre: item.nombre || item.nombre_producto || "Sin nombre",
-        descripcion: item.descripcion || item.descripcion_producto || "Sin descripción",
+        idUsuario: item.idUsuario,
+        nombre: item.nombre || "Sin nombre",
+        apellido: item.apellido || "",
+        cedula: item.cedula || "",
         cantidad: item.cantidad || 0,
-        fecha: item.fecha_creacion || item.created_at || "",
-        id_usuario: item.id_usuario,
-        usuario_nombre: item.usuario?.nombre || item.usuario_nombre || "Desconocido",
-        id_empresa: item.id_empresa,
+        importancia: item.importancia || "Sin definir",
+        estado: item.estado ?? false,
+        empresa: item.empresa || {
+          nombre: "Sin empresa",
+          direccion: "-",
+          nit: "-",
+        },
+        area: item.area || {
+          nombre: "Sin área",
+          descripcion: "-",
+          codigo: "-",
+        },
+        fecha: item.createdAt || "Sin fecha",
+        productos: item.productos || [],
       }));
 
       setEpps(eppsMapped);
@@ -60,16 +102,8 @@ const GestionEPP: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    const u = getUsuarioFromToken();
-    if (u) setUsuario(u);
-    obtenerEpps();
-  }, []);
-
-  const irCrear = () => navigate("/nav/creargestionEpp");
-
   const formatearFecha = (fechaIso: string) => {
-    if (!fechaIso) return "Sin fecha";
+    if (!fechaIso || fechaIso === "Sin fecha") return "Sin fecha";
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
@@ -78,8 +112,95 @@ const GestionEPP: React.FC = () => {
     });
   };
 
+  const irCrear = () => navigate("/nav/creargestionEpp");
+
+  const generarPDF = (item: EPP) => {
+    const doc = new jsPDF();
+    const margenIzq = 20;
+    let y = 25;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(18);
+    doc.text("INFORME DETALLADO DE GESTIÓN DE EPP", margenIzq, y);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+
+    const agregar = (titulo: string, valor: string | number | null) => {
+      doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
+      y += 7;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Datos del Usuario", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("ID Gestión", item.id);
+    agregar("ID Usuario", item.idUsuario);
+    agregar("Nombre", `${item.nombre} ${item.apellido || ""}`);
+    agregar("Cédula", item.cedula);
+    agregar("Importancia", item.importancia);
+    agregar("Cantidad", item.cantidad);
+    agregar("Estado", item.estado ? "Activo" : "Inactivo");
+    agregar("Fecha de creación", formatearFecha(item.fecha));
+
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Empresa", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("Nombre", item.empresa.nombre);
+    agregar("Dirección", item.empresa.direccion);
+    agregar("NIT", item.empresa.nit);
+
+    y += 5;
+    doc.setFont("helvetica", "bold");
+    doc.text("Área", margenIzq, y);
+    doc.setFont("helvetica", "normal");
+    y += 8;
+    agregar("Nombre", item.area.nombre);
+    agregar("Código", item.area.codigo);
+    agregar("Descripción", item.area.descripcion);
+
+    if (item.productos && item.productos.length > 0) {
+      y += 8;
+      doc.setFont("helvetica", "bold");
+      doc.text("Productos Asignados", margenIzq, y);
+      doc.setFont("helvetica", "normal");
+      y += 8;
+
+      item.productos.forEach((p, i) => {
+        doc.text(`${i + 1}. ${p.nombre}`, margenIzq, y);
+        y += 6;
+        if (p.descripcion) {
+          doc.setFontSize(10);
+          doc.text(`    ${p.descripcion}`, margenIzq, y);
+          y += 6;
+          doc.setFontSize(12);
+        }
+      });
+    } else {
+      y += 8;
+      doc.text("No hay productos asignados.", margenIzq, y);
+      y += 8;
+    }
+
+    y += 8;
+    doc.line(margenIzq, y, 190, y);
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(
+      `Generado por: ${usuario?.nombre || "Sistema"} - ${new Date().toLocaleString("es-CO")}`,
+      margenIzq,
+      y
+    );
+
+    doc.save(`informe_gestion_${item.nombre}_${item.id}.pdf`);
+  };
+
   const eppsFiltrados = epps.filter((item) =>
-    `${item.nombre || ""} ${item.descripcion || ""}`
+    `${item.nombre} ${item.empresa.nombre} ${item.area.nombre} ${item.importancia}`
       .toLowerCase()
       .includes(busqueda.toLowerCase())
   );
@@ -94,7 +215,7 @@ const GestionEPP: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Encabezado SST */}
+      {/* Encabezado */}
       <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
@@ -103,15 +224,15 @@ const GestionEPP: React.FC = () => {
         </div>
       </div>
 
-      {/* Contenedor principal */}
+      {/* Contenedor */}
       <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Filtros y acción */}
+        {/* Buscador */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <div className="flex items-center border rounded-lg px-3 py-2 flex-1">
             <FaSearch className="text-gray-400 mr-2" />
             <input
               type="text"
-              placeholder="Buscar EPP por nombre o descripción..."
+              placeholder="Buscar por nombre, empresa o área..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               className="flex-1 outline-none"
@@ -121,14 +242,14 @@ const GestionEPP: React.FC = () => {
             onClick={irCrear}
             className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
           >
-            <FaPlus /> Crear EPP
+            <FaPlus /> Crear Gestión
           </button>
         </div>
 
         {/* Listado */}
         {eppsFiltrados.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" /> No hay equipos registrados
+            <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
           </p>
         ) : (
           <div className="grid md:grid-cols-2 gap-6">
@@ -137,23 +258,46 @@ const GestionEPP: React.FC = () => {
                 key={item.id}
                 className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
               >
-                <div className="mb-4">
+                <div className="mb-3">
                   <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
                     <FaBox className="text-yellow-600" /> {item.nombre}
                   </h4>
                   <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
                 </div>
 
-                <p className="text-gray-700 mb-2">{item.descripcion}</p>
-                <p className="text-gray-600 text-sm mb-2">Cantidad: {item.cantidad}</p>
-                <p className="text-gray-500 text-sm">Registrado por: {item.usuario_nombre}</p>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Empresa:</strong> {item.empresa.nombre}
+                </p>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Área:</strong> {item.area.nombre}
+                </p>
+                <p className="text-gray-700 text-sm mb-1">
+                  <strong>Importancia:</strong> {item.importancia}
+                </p>
+                <p className="text-gray-700 text-sm mb-2">
+                  <strong>Cantidad:</strong> {item.cantidad}
+                </p>
 
-                <div className="flex justify-end mt-4">
+                {item.productos.length > 0 && (
+                  <div className="mt-2 text-sm text-gray-600">
+                    <strong>Productos:</strong>{" "}
+                    {item.productos.map((p) => p.nombre).join(", ")}
+                  </div>
+                )}
+
+                <div className="flex justify-end mt-4 gap-2">
                   <button
-                    onClick={() => navigate("/nav/detalleEpp", { state: item })}
+                    onClick={() => navigate("/nav/detalleGestionEpp", { state: item })}
                     className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
                   >
-                    Abrir
+                    Ver Detalle
+                  </button>
+
+                  <button
+                    onClick={() => generarPDF(item)}
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition flex items-center gap-1"
+                  >
+                    <FaFilePdf /> PDF
                   </button>
                 </div>
               </div>
@@ -166,3 +310,4 @@ const GestionEPP: React.FC = () => {
 };
 
 export default GestionEPP;
+

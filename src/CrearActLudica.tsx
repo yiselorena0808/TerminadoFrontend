@@ -22,30 +22,17 @@ const CrearActividadLudica: React.FC = () => {
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "warning",
-        title: "Usuario no autenticado. Inicia sesión.",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-      });
+      showToast("warning", "Usuario no autenticado. Inicia sesión.");
       navigate("/login");
       return;
     }
     setUsuario(u);
   }, []);
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+  const showToast = (
+    icon: "success" | "error" | "warning" | "info",
+    title: string
   ) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const showToast = (icon: "success" | "error" | "warning", title: string) => {
     Swal.fire({
       toast: true,
       position: "top-end",
@@ -55,9 +42,14 @@ const CrearActividadLudica: React.FC = () => {
       timer: 2500,
       timerProgressBar: true,
     });
-    setTimeout(() => {
-      navigate("/nav/actLudica");
-    }, 1500);
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -86,12 +78,16 @@ const CrearActividadLudica: React.FC = () => {
         body: data,
       });
 
-      if (!res.ok) {
-        const result = await res.json();
+      const result = await res.json();
+
+      if (!res.ok)
         return showToast("error", result.error || "Error al crear actividad");
-      }
 
       showToast("success", "Actividad lúdica creada 🎉");
+
+      setTimeout(() => {
+        navigate("/nav/actLudica");
+      }, 1500);
     } catch (error) {
       console.error("Error al crear actividad:", error);
       showToast("error", "Ocurrió un error al crear la actividad");
@@ -108,14 +104,12 @@ const CrearActividadLudica: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* overlay */}
       <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
 
       <form
         onSubmit={handleSubmit}
         className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
       >
-        {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
           <FaTheaterMasks className="text-yellow-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">
@@ -123,7 +117,6 @@ const CrearActividadLudica: React.FC = () => {
           </h2>
         </div>
 
-        {/* Inputs */}
         <div className="grid grid-cols-2 gap-4">
           <input
             type="text"
@@ -151,7 +144,6 @@ const CrearActividadLudica: React.FC = () => {
           rows={4}
         />
 
-        {/* Archivos */}
         <div className="mt-4">
           <label className="font-semibold text-gray-700">Imagen / Video:</label>
           <input
@@ -172,7 +164,6 @@ const CrearActividadLudica: React.FC = () => {
           />
         </div>
 
-        {/* Botón */}
         <button
           type="submit"
           className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
