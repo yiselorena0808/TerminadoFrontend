@@ -85,12 +85,11 @@ function App() {
           <Route path="detalleActLudica" element={<DetalleActividad />} />
           <Route path="crearActLudica" element={<CrearActividadLudica />} />
           <Route path="productos" element={<ProductosPage />} />
-          <Route path="sgvaperfil" element={<Perfil />} />
 
           {/* --- ADMIN --- */}
           <Route path="Admusuarios" element={<AdmUsuarios />} />
           <Route path="Admadicionales" element={<DashboardPage />} />
-          <Route path="Admperfil" element={<Perfil />} />
+          <Route path="perfil" element={<Perfil />} />
           <Route path="cargos" element={<CargosPage />} />
 
           {/* --- USER --- */}

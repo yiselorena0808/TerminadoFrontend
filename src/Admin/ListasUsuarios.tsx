@@ -39,7 +39,8 @@ const AdmUsuarios: React.FC = () => {
     if (!token) return alert("Usuario no autenticado");
 
     try {
-      const res = await fetch(`${apiListar}${empresaId}`, {
+      const base = apiListar.endsWith("/") ? apiListar : `${apiListar}/`;
+      const res = await fetch(`${base}${empresaId}`, {
         method: "GET",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
       });
