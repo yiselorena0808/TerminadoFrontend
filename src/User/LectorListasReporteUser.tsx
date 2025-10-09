@@ -28,53 +28,59 @@ const LectorListaReportes: React.FC = () => {
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
-  const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
+  const apiListarReportes = import.meta.env.VITE_API_MISREPORTES;
 
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (u) setUsuario(u);
   }, []);
 
-  const obtenerListas = async () => {
-    if (!usuario) return;
+ const obtenerListas = async () => {
+  if (!usuario) return;
 
-    const token = localStorage.getItem("token");
-    if (!token) return alert("Usuario no autenticado");
+  const token = localStorage.getItem("token");
+  if (!token) return alert("Usuario no autenticado");
 
-    try {
-      const res = await fetch(apiListarReportes, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
+  try {
+    const params = new URLSearchParams();
+    if (busqueda) params.append("q", busqueda);
+    if (estadoFiltro !== "Todos") params.append("estado", estadoFiltro);
+    
+    const res = await fetch(`${apiListarReportes}?${params.toString()}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (data.datos && Array.isArray(data.datos)) {
-        const filtrados: Reporte[] = data.datos
-          .filter((r: any) => Number(r.idEmpresa ?? r.id_empresa) === Number(usuario.id_empresa))
-          .map((r: any) => ({
-            id_reporte: r.idReporte ?? r.id_reporte,
-            id_usuario: r.idUsuario ?? r.id_usuario,
-            nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
-            cargo: r.cargo,
-            cedula: r.cedula,
-            fecha: r.fecha,
-            lugar: r.lugar,
-            descripcion: r.descripcion,
-            imagen: r.imagen ?? "",
-            archivos: r.archivos ?? "",
-            estado: r.estado,
-            id_empresa: r.idEmpresa ?? r.id_empresa,
-          }));
+    if (!res.ok) throw new Error("Error al obtener reportes");
 
-        setListas(filtrados);
-      } else {
-        setListas([]);
-      }
-    } catch (error) {
-      console.error("Error al obtener reportes:", error);
+    const data = await res.json();
+
+    // Según tu backend, los datos vienen en 'data.data'
+    if (data.data && Array.isArray(data.data)) {
+      const reportes: Reporte[] = data.data.map((r: any) => ({
+        id_reporte: r.idReporte ?? r.id_reporte,
+        id_usuario: r.idUsuario ?? r.id_usuario,
+        nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
+        cargo: r.cargo,
+        cedula: r.cedula,
+        fecha: r.fecha,
+        lugar: r.lugar,
+        descripcion: r.descripcion,
+        imagen: r.imagen ?? "",
+        archivos: r.archivos ?? "",
+        estado: r.estado,
+        id_empresa: r.idEmpresa ?? r.id_empresa,
+      }));
+
+      setListas(reportes);
+    } else {
       setListas([]);
     }
-  };
+  } catch (error) {
+    console.error("Error al obtener reportes:", error);
+    setListas([]);
+  }
+};
 
   useEffect(() => {
     if (usuario) obtenerListas();

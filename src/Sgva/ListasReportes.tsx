@@ -210,7 +210,7 @@ const ListarReportes: React.FC = () => {
                   {item.lugar}
                 </p>
 
-                {/* ✅ Descripción resumida SOLO en la lista */}
+                {/* Descripción resumida SOLO en la lista */}
                 <p className="text-gray-600 text-sm mb-4">
                   {item.descripcion.length > 100
                     ? item.descripcion.substring(0, 100) + "..."

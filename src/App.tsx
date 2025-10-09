@@ -33,6 +33,8 @@ import ProductosPage from "./Sgva/CrearProducto";
 // --- Admin ---
 import AdmUsuarios from "./Admin/ListasUsuarios";
 import CargosPage from "./Admin/CrearCargo";
+import RegistrarUsuario from "./Admin/CrearUsuario";
+import AdmAreas from "./Admin/ListarAreas";
 
 // --- User ---
 import InicioUser from "./User/InicioUser";
@@ -91,6 +93,8 @@ function App() {
           <Route path="Admadicionales" element={<DashboardPage />} />
           <Route path="perfil" element={<Perfil />} />
           <Route path="cargos" element={<CargosPage />} />
+          <Route path="registroUsuario" element={<RegistrarUsuario></RegistrarUsuario>} />
+          <Route path="admAreas" element={<AdmAreas></AdmAreas>} />
 
           {/* --- USER --- */}
           <Route path="inicioUser" element={<InicioUser />} />

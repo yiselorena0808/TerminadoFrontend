@@ -7,16 +7,9 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen p-8 bg-gradient-to-br from-yellow-100 via-orange-100 to-yellow-200"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
     >
       {/* Encabezado */}
-      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <h1 className="text-4xl font-bold">Panel de Administración</h1>
         <p className="text-yellow-200 text-lg">
           Gestión de cargos y productos SST
@@ -29,8 +22,8 @@ const DashboardPage: React.FC = () => {
           onClick={() => setTab("cargos")}
           className={`px-6 py-3 font-semibold rounded-xl transition ${
             tab === "cargos"
-              ? "bg-yellow-600 text-white shadow-lg"
-              : "bg-white text-gray-600 hover:bg-yellow-100"
+              ? "bg-blue-600 text-white shadow-lg"
+              : "bg-white text-gray-600 hover:bg-blue-600"
           }`}
         >
           Cargos
@@ -39,8 +32,8 @@ const DashboardPage: React.FC = () => {
           onClick={() => setTab("productos")}
           className={`px-6 py-3 font-semibold rounded-xl transition ${
             tab === "productos"
-              ? "bg-yellow-600 text-white shadow-lg"
-              : "bg-white text-gray-600 hover:bg-yellow-100"
+              ? "bg-blue-600 text-white shadow-lg"
+              : "bg-white text-gray-600 hover:bg-blue-600"
           }`}
         >
           Productos

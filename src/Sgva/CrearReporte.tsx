@@ -25,10 +25,10 @@ const CrearReporte: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivos, setArchivos] = useState<File | null>(null);
 
-  const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
+  const apiBase = import.meta.env.VITE_API_REGISTROREPORTE; 
   const apiUsuariosBase = import.meta.env.VITE_API_LISTARUSUARIOS;
 
-  // --- Cargar usuario autenticado ---
+  // ✅ Cargar usuario logueado
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -44,9 +44,10 @@ const CrearReporte: React.FC = () => {
       return;
     }
     setUsuario(u);
+    setFormData((prev) => ({ ...prev, cargo: u.cargo || "" }));
   }, [navigate]);
 
-  // --- Cargar usuarios de la empresa ---
+  // ✅ Cargar usuarios de la empresa para el modal
   useEffect(() => {
     if (showModal && usuario) {
       const token = localStorage.getItem("token");
@@ -76,14 +77,14 @@ const CrearReporte: React.FC = () => {
           else setUsuarios([]);
         })
         .catch((error) => {
-          console.error("❌ Error al obtener usuarios:", error);
+          console.error("Error al obtener usuarios:", error);
           Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
           setUsuarios([]);
         });
     }
   }, [showModal, usuario, apiUsuariosBase]);
 
-  // --- Manejar campos ---
+  // ✅ Cambiar campos del formulario
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -92,6 +93,7 @@ const CrearReporte: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // ✅ Toast
   const showToast = (
     icon: "success" | "error" | "warning",
     title: string
@@ -106,7 +108,17 @@ const CrearReporte: React.FC = () => {
     });
   };
 
-  // --- Enviar formulario ---
+  // ✅ Seleccionar usuario del modal
+  const handleSeleccionarUsuario = (u: any) => {
+    setUsuarioSeleccionado(u);
+    setFormData((prev) => ({
+      ...prev,
+      cargo: u.cargo || "",
+    }));
+    setShowModal(false);
+  };
+
+  // ✅ Enviar reporte
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -125,12 +137,12 @@ const CrearReporte: React.FC = () => {
       if (imagen) data.append("imagen", imagen);
       if (archivos) data.append("archivos", archivos);
 
-      // ✅ Datos del usuario seleccionado
       data.append("id_usuario", String(userFinal.id));
       data.append("nombre_usuario", userFinal.nombre);
+      data.append("cargo", userFinal.cargo || formData.cargo);
       data.append("id_empresa", String(userFinal.id_empresa));
 
-      const res = await fetch(apiCrearReporte, {
+      const res = await fetch(`${apiBase}/crearReporte`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: data,
@@ -141,15 +153,14 @@ const CrearReporte: React.FC = () => {
         return showToast("error", result.error || "Error al enviar reporte");
       }
 
-      showToast("success", "Reporte creado correctamente ✅");
-      navigate("/nav/crearReportes");
+      showToast("success", "Reporte creado correctamente");
+      navigate("/nav/reportesC");
     } catch (error) {
       console.error("Error al enviar reporte:", error);
       showToast("error", "Ocurrió un error al enviar el reporte");
     }
   };
 
-  // --- Render ---
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6 relative"
@@ -168,7 +179,9 @@ const CrearReporte: React.FC = () => {
       >
         <div className="flex items-center gap-3 mb-6">
           <FaHardHat className="text-yellow-600 text-3xl" />
-          <h2 className="text-2xl font-bold text-gray-800">Crear Reporte SST</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Crear Reporte SST
+          </h2>
         </div>
 
         {/* Usuario seleccionado */}
@@ -272,10 +285,10 @@ const CrearReporte: React.FC = () => {
         </button>
       </form>
 
-      {/* Modal seleccionar usuario */}
+      {/* Modal tipo tabla */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl">
             <h3 className="text-lg font-bold mb-3 text-gray-700">
               Seleccionar Usuario
             </h3>
@@ -286,23 +299,50 @@ const CrearReporte: React.FC = () => {
               onChange={(e) => setBuscar(e.target.value)}
               className="border p-2 rounded w-full mb-3"
             />
-            <div className="max-h-60 overflow-y-auto border rounded-lg">
-              {usuarios
-                .filter((u) =>
-                  u.nombre.toLowerCase().includes(buscar.toLowerCase())
-                )
-                .map((u) => (
-                  <button
-                    key={u.id}
-                    onClick={() => {
-                      setUsuarioSeleccionado(u);
-                      setShowModal(false);
-                    }}
-                    className="w-full text-left px-4 py-2 hover:bg-yellow-100 border-b"
-                  >
-                    {u.nombre} - {u.cargo}
-                  </button>
-                ))}
+            <div className="max-h-80 overflow-y-auto">
+              <table className="min-w-full border text-sm text-gray-700">
+                <thead className="bg-yellow-100 sticky top-0">
+                  <tr>
+                    <th className="border px-3 py-2 text-left">Nombre</th>
+                    <th className="border px-3 py-2 text-left">Apellido</th>
+                    <th className="border px-3 py-2 text-left">Cargo</th>
+                    <th className="border px-3 py-2 text-left">Correo</th>
+                    <th className="border px-3 py-2 text-left">Área</th>
+                    <th className="border px-3 py-2 text-left">Empresa</th>
+                    <th className="border px-3 py-2 text-center">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {usuarios
+                    .filter((u) =>
+                      u.nombre.toLowerCase().includes(buscar.toLowerCase())
+                    )
+                    .map((u) => (
+                      <tr key={u.id} className="hover:bg-yellow-50">
+                        <td className="border px-3 py-2">{u.nombre}</td>
+                        <td className="border px-3 py-2">{u.apellido}</td>
+                        <td className="border px-3 py-2">{u.cargo}</td>
+                        <td className="border px-3 py-2">
+                          {u.correoElectronico}
+                        </td>
+                        <td className="border px-3 py-2">
+                          {u.area?.nombre || "Sin área"}
+                        </td>
+                        <td className="border px-3 py-2">
+                          {u.empresa?.nombre || "Sin empresa"}
+                        </td>
+                        <td className="border px-3 py-2 text-center">
+                          <button
+                            onClick={() => handleSeleccionarUsuario(u)}
+                            className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1 rounded"
+                          >
+                            Seleccionar
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
             <button
               onClick={() => setShowModal(false)}

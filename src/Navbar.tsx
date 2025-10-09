@@ -67,9 +67,11 @@ const Navbar: React.FC = () => {
   // Menús
   const adminMenu = [
     
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Lista de Usuarios", path: "/nav/Admusuarios" },
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administracíon de Áreas", path: "/nav/admAreas" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+
   ];
 
   const sgvaMenu = [

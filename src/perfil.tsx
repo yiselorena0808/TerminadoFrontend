@@ -54,7 +54,7 @@ const Perfil: React.FC = () => {
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 h-40 relative">
+        <div className="bg-gradient-to-r from-indigo-600 bg-blue-600 h-40 relative">
           <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
             <img
               src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
@@ -103,7 +103,7 @@ const Perfil: React.FC = () => {
         <div className="text-center pb-8">
           <button
             onClick={() => setModalAbierto(true)}
-            className="px-6 py-2 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-md transition"
+            className="px-6 py-2 rounded-full bg-blue-600 hover:bg-indigo-700 text-white font-semibold shadow-md transition"
           >
             ✏️ Editar perfil
           </button>

@@ -5,7 +5,7 @@ export interface UsuarioToken {
   nombre: string;
   apellido: string;
   id_empresa: number;
-  id_gestion:number;
+  id_gestion:number
 }
 
 export function getUsuarioFromToken(): UsuarioToken | null {
