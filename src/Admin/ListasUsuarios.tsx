@@ -155,12 +155,14 @@ const AdmUsuariosCompleto: React.FC = () => {
           className="w-full border-0 focus:ring-0 text-gray-700"
         />
       </div>
-
+    <div>
+      <p className="text-white">Seleccionar Usuarios de excel</p>
       {/* 🔸 SUBIR EXCEL */}
       <UploadExcel
         apiRegister={apiRegister}
         onUsuariosCreados={() => obtenerUsuarios(usuarioLogueado?.id_empresa)}
       />
+    </div>
 
       {/* 🔸 TABLA */}
       <div className="overflow-x-auto rounded-xl border border-gray-300 shadow-lg">
@@ -243,9 +245,10 @@ const AdmUsuariosCompleto: React.FC = () => {
 
 export default AdmUsuariosCompleto;
 
-/* ------------------------------------------------------------------- */
-/* 🔹 SUBIR EXCEL Y CREAR USUARIOS                                     */
-/* ------------------------------------------------------------------- */
+
+
+//USUARIOS CREADOS DESDE EXCEL
+
 const UploadExcel: React.FC<{
   apiRegister: string;
   onUsuariosCreados: () => void;
@@ -299,11 +302,11 @@ const UploadExcel: React.FC<{
       <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFile} className="mb-2" />
       {usuarios.length > 0 && (
         <>
-          <table className="w-full text-sm border-collapse border border-gray-300 mb-2">
+          <table className="w-full text-sm border-collapse border border-gray-300 mb-2 bg-white">
             <thead>
-              <tr className="bg-gray-200">
+              <tr className="bg-black">
                 {Object.keys(usuarios[0]).map((key) => (
-                  <th key={key} className="border px-2 py-1">{key}</th>
+                  <th key={key} className="bg-blue-600 text-white border px-2 py-1">{key}</th>
                 ))}
               </tr>
             </thead>
@@ -326,9 +329,8 @@ const UploadExcel: React.FC<{
   );
 };
 
-/* ------------------------------------------------------------------- */
-/* 🔹 MODAL CREAR USUARIO MANUAL                                        */
-/* ------------------------------------------------------------------- */
+// modal de usuario
+
 const RegistrarUsuarioModal: React.FC<{
   onClose: () => void;
   onUsuarioCreado: () => void;

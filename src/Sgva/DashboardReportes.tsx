@@ -148,14 +148,11 @@ const DashboardReportes: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay SST */}
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
-
       {/* Card */}
-      <div className="relative w-full max-w-6xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-yellow-500 space-y-10">
+      <div className="relative w-full max-w-6xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-blue-600 space-y-10">
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
-          <FaChartPie className="text-yellow-600 text-3xl" />
+          <FaChartPie className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">📊 Dashboard Funcionalidades</h2>
         </div>
 
@@ -178,19 +175,19 @@ const DashboardReportes: React.FC = () => {
           <>
             {/* Gráficos */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-yellow-50 p-4 rounded-xl shadow border border-yellow-200">
+              <div className="bg-white p-4 rounded-xl shadow border border-blue-600">
                 <h3 className="text-lg font-semibold mb-4 text-gray-700">Cantidad de usos</h3>
                 <Bar data={barData} options={barOptions} />
               </div>
 
-              <div className="bg-yellow-50 p-4 rounded-xl shadow border border-yellow-200">
+              <div className="bg-white p-4 rounded-xl shadow border border-blue-600">
                 <h3 className="text-lg font-semibold mb-4 text-gray-700">⏱ Tiempo de uso estimado</h3>
                 <Line data={lineData} options={lineOptions} />
               </div>
             </div>
 
             {/* Ranking de funcionalidades */}
-            <div className="bg-yellow-50 p-6 rounded-xl shadow border border-yellow-200">
+            <div className="bg-white p-6 rounded-xl shadow border border-blue-600">
               <h3 className="text-lg font-semibold mb-4 text-gray-700">🏆 Ranking de funcionalidades</h3>
               <ul className="space-y-2">
                 {dataFiltrada
