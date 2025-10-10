@@ -38,6 +38,7 @@ interface Usuario {
 // Roles
 const ADMIN_ROLES = ["administrador", "Administrador"];
 const SGVA_ROLES = ["SGVA", "sgva"];
+const SUPER_ADMIN_ROLES = ["superadmin", "SuperAdmin"];
 
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
@@ -65,13 +66,16 @@ const Navbar: React.FC = () => {
   };
 
   // Menús
+  const superAdminMenu = [
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administracion de Empresas", path: "/nav/admEmpresas" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+  ];
+
   const adminMenu = [
-    
     { icon: <AiOutlineUser className="text-4xl" />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administracíon de Áreas", path: "/nav/admAreas" },
+    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administración de Áreas", path: "/nav/admAreas" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
-
   ];
 
   const sgvaMenu = [
@@ -94,21 +98,19 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 
+  const isSuperAdmin = usuario && SUPER_ADMIN_ROLES.includes(usuario.cargo);
   const isSgva = usuario && SGVA_ROLES.includes(usuario.cargo);
   const isAdmin = usuario && ADMIN_ROLES.includes(usuario.cargo);
 
-  const menuItems = isSgva ? sgvaMenu : isAdmin ? adminMenu : userMenu;
+  const menuItems = isSuperAdmin ? superAdminMenu : isSgva ? sgvaMenu : isAdmin ? adminMenu : userMenu;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden">
       {/* Sidebar */}
       <div
-        className={`${
-          isCollapsed ? "w-22" : "w-72"
-        } h-full text-white flex flex-col transition-all duration-300 border-r border-gray-700 shadow-xl backdrop-blur-lg`}
+        className={`${isCollapsed ? "w-22" : "w-72"} h-full text-white flex flex-col transition-all duration-300 border-r border-gray-700 shadow-xl backdrop-blur-lg`}
         style={{
-          backgroundImage:
-            "linear-gradient(160deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c')",
+          backgroundImage: "linear-gradient(160deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c')",
           backgroundSize: "cover",
           backgroundPosition: "center",
         }}
@@ -117,13 +119,10 @@ const Navbar: React.FC = () => {
         <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
           {!isCollapsed && (
             <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-blue-400 to-teal-300 bg-clip-text text-transparent">
-              {isSgva ? "Panel SGVA" : isAdmin ? "Panel Admin" : "Panel Usuario"}
+              {isSuperAdmin ? "Super Admin" : isSgva ? "Panel SGVA" : isAdmin ? "Panel Admin" : "Panel Usuario"}
             </h1>
           )}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="p-2 hover:bg-blue-500/30 rounded-lg transition-colors"
-          >
+          <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 hover:bg-blue-500/30 rounded-lg transition-colors">
             <AiOutlineMenu className="text-2xl" />
           </button>
         </div>
@@ -137,39 +136,35 @@ const Navbar: React.FC = () => {
                 alt="Perfil"
                 className="w-24 h-24 rounded-full border-4 border-blue-500 shadow-lg hover:scale-105 transition-transform"
                 onClick={() =>
-                  navigate(isSgva ? "/nav/sgvaperfil" : isAdmin ? "/nav/Admperfil" : "/nav/perfil")
+                  navigate(
+                    isSuperAdmin
+                      ? "/nav/perfil"
+                      : isSgva
+                      ? "/nav/sgvaperfil"
+                      : isAdmin
+                      ? "/nav/Admperfil"
+                      : "/nav/perfil"
+                  )
                 }
               />
               <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900"></span>
             </div>
-            <h2 className="mt-3 font-semibold text-lg">
-              {usuario.nombre} {usuario.apellido}
-            </h2>
+            <h2 className="mt-3 font-semibold text-lg">{usuario.nombre} {usuario.apellido}</h2>
             <p className="text-gray-400 text-sm">{usuario.cargo}</p>
           </div>
         )}
 
         {/* Menú */}
-        <nav
-          className={`flex-1 mt-4 overflow-y-auto ${
-            isCollapsed ? "flex flex-col items-center justify-evenly" : ""
-          }`}
-        >
+        <nav className={`flex-1 mt-4 overflow-y-auto ${isCollapsed ? "flex flex-col items-center justify-evenly" : ""}`}>
           <ul className={`${isCollapsed ? "space-y-0" : "space-y-1 w-full"}`}>
             {menuItems.map((item, index) => (
               <li key={index}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center w-full ${
-                    isCollapsed ? "justify-center" : "gap-2 px-3"
-                  } py-3 text-sm text-black transition-all duration-200 border-l-4 border-transparent hover:border-blue-400 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 rounded-lg`}
+                  className={`flex items-center w-full ${isCollapsed ? "justify-center" : "gap-2 px-3"} py-3 text-sm text-black transition-all duration-200 border-l-4 border-transparent hover:border-blue-400 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 rounded-lg`}
                 >
-                  <span className="text-blue-300 group-hover:text-blue-400 transition-colors">
-                    {item.icon}
-                  </span>
-                  {!isCollapsed && (
-                    <span className="group-hover:text-blue-300 transition-colors">{item.label}</span>
-                  )}
+                  <span className="text-blue-300 group-hover:text-blue-400 transition-colors">{item.icon}</span>
+                  {!isCollapsed && <span className="group-hover:text-blue-300 transition-colors">{item.label}</span>}
                 </button>
               </li>
             ))}
@@ -179,10 +174,7 @@ const Navbar: React.FC = () => {
         {/* Footer */}
         {!isCollapsed && (
           <div className="p-4 border-t border-gray-700 text-center text-xs text-gray-400">
-            <button
-              onClick={logout}
-              className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg w-full font-bold text-white"
-            >
+            <button onClick={logout} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg w-full font-bold text-white">
               🔒 Cerrar sesión
             </button>
             <p className="mt-2">© 2025 SST</p>
@@ -191,15 +183,11 @@ const Navbar: React.FC = () => {
       </div>
 
       {/* Contenido principal */}
-      <div
-        className="flex-1 overflow-auto"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url('https://img.freepik.com/fotos-premium/trabajador-textura-oscura-fondo-concepto-sst-seguridad-salud-trabajo_488220-50664.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
+      <div className="flex-1 overflow-auto" style={{
+        backgroundImage: "linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url('https://img.freepik.com/fotos-premium/trabajador-textura-oscura-fondo-concepto-sst-seguridad-salud-trabajo_488220-50664.jpg')",
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}>
         <div className="p-6">
           <Outlet />
         </div>

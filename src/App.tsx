@@ -55,6 +55,7 @@ import DetalleGestionEPPUser from "./User/DetalleGestion";
 
 // --- Perfil ---
 import Perfil from "./perfil";
+import SuperAdminDashboard from "./Super Admin/empresas";
 
 function App() {
   return (
@@ -93,8 +94,10 @@ function App() {
           <Route path="Admadicionales" element={<DashboardPage />} />
           <Route path="perfil" element={<Perfil />} />
           <Route path="cargos" element={<CargosPage />} />
-          <Route path="registroUsuario" element={<RegistrarUsuario></RegistrarUsuario>} />
-          <Route path="admAreas" element={<AdmAreas></AdmAreas>} />
+          <Route path="registroUsuario" element={<RegistrarUsuario />} />
+          <Route path="admAreas" element={<AdmAreas />} />
+          <Route path="admEmpresas" element={<SuperAdminDashboard></SuperAdminDashboard>} />
+
 
           {/* --- USER --- */}
           <Route path="inicioUser" element={<InicioUser />} />
@@ -122,4 +125,5 @@ function App() {
 }
 
 export default App;
+
 
