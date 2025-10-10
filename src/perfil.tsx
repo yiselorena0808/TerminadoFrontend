@@ -54,7 +54,7 @@ const Perfil: React.FC = () => {
       <div className="w-full max-w-4xl bg-white rounded-3xl shadow-2xl overflow-hidden">
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 bg-blue-600 h-40 relative">
+        <div className="bg-gradient-to-r bg-blue-600 h-40 relative">
           <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
             <img
               src="https://cdn-icons-png.flaticon.com/512/149/149071.png"

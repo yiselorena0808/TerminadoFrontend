@@ -143,13 +143,8 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
 
   return (
     <div
-      className="p-8 min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-yellow-200"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-      }}
     >
-      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         🎭
         <div>
           <h2 className="text-3xl font-bold">SST - Actividades Lúdicas</h2>
@@ -170,7 +165,7 @@ const ListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
           />
           <button
             onClick={irCrear}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
           >
             <FaPlus /> Crear Actividad
           </button>

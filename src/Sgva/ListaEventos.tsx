@@ -173,7 +173,7 @@ const ListaEventos: React.FC = () => {
     <div className="p-6">
       {/* Título y descripción general */}
       <div className="mb-8 text-center">
-        <h1 className="text-4xl font-extrabold mb-3 text-yellow-500">
+        <h1 className="text-4xl font-extrabold mb-3 text-blue-600">
           📋 Publicaciones de la Empresa
         </h1>
         <p className="max-w-2xl mx-auto text-white">
@@ -191,7 +191,7 @@ const ListaEventos: React.FC = () => {
           onChange={(e) => setBusqueda(e.target.value)}
         />
         <button
-          className="bg-yellow-500 text-white px-6 py-2 rounded hover:bg-white-600 transition font-semibold shadow-md"
+          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-600 transition font-semibold shadow-md"
           onClick={() => navigate("/nav/crearBlog")}
         >
           + Crear Publicación

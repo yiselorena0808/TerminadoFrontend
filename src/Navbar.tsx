@@ -93,7 +93,7 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
     { icon: <AiOutlineBarChart className="text-4xl" />, label: "Mis Reportes", path: "/nav/LectorUserRepo" },
     { icon: <AiOutlineBook className="text-4xl" />, label: "Mis Actividades Lúdicas", path: "/nav/LectorUserAct" },
-    { icon: <AiOutlineTool className="text-4xl" />, label: "Mis Gestión EPP", path: "/nav/gestionepp" },
+    { icon: <AiOutlineTool className="text-4xl" />, label: "Mis Gestión EPP", path: "/nav/lectorgestionepp" },
     { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/EventosUser" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];

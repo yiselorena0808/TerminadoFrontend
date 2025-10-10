@@ -45,17 +45,18 @@ import LectorListaReportes from "./User/LectorListasReporteUser";
 import CrearListReporte from "./User/CrearListRepo";
 import MiDetalleListaChequeo from "./User/DetalleListChe";
 import MiDetalleReporte from "./User/DetalleListRepo";
-import LectorAct from "./User/LectorActUser";
+import LectorListasActividadesLudicas from "./User/LectorListAct";
 import UserActividadLudica from "./User/CreaActUser";
 import MiDetalleActividadLudica from "./User/DetalleActUser";
 import ListaEventosEmpresa from "./User/ListaEventosEmpresa";
 import MiEvento from "./User/CreaEvento";
-import UserGestionEPP from "./User/GestionEppUser";
 import DetalleGestionEPPUser from "./User/DetalleGestion";
+import CrearGestionEppUser from "./User/GestionEppUser";
 
 // --- Perfil ---
 import Perfil from "./perfil";
-import SuperAdminDashboard from "./Super Admin/empresas";
+import SuperAdminDashboard from "./Super Admin/Empresas";
+import LectorMisGestiones from "./User/LectorListasGestionUser";
 
 function App() {
   return (
@@ -108,13 +109,15 @@ function App() {
           <Route path="creaListRepo" element={<CrearListReporte />} />
           <Route path="MidetalleChe" element={<MiDetalleListaChequeo />} />
           <Route path="MidetalleRepo" element={<MiDetalleReporte />} />
-          <Route path="LectorUserAct" element={<LectorAct />} />
+          <Route path="LectorUserAct" element={<LectorListasActividadesLudicas></LectorListasActividadesLudicas>} />
           <Route path="creaActUser" element={<UserActividadLudica />} />
           <Route path="MidetalleAct" element={<MiDetalleActividadLudica />} />
-          <Route path="EventosUser" element={<ListaEventosEmpresa />} />
+          <Route path="EventosUser" element={<ListaEventosEmpresa></ListaEventosEmpresa>} />
           <Route path="MiEvento" element={<MiEvento />} />
-          <Route path="gestionepp" element={<UserGestionEPP />} />
+          <Route path="lectorgestionepp" element={<LectorMisGestiones></LectorMisGestiones>} />
           <Route path="Migestionepp" element={<DetalleGestionEPPUser />} />
+          <Route path="CreargestioneppUser" element={<CrearGestionEppUser></CrearGestionEppUser>} />
+
 
           {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="inicio" />} />

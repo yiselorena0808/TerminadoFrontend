@@ -1,313 +1,201 @@
-import React, { useEffect, useState } from "react";
-import {
-  FaSearch,
-  FaPlus,
-  FaHardHat,
-  FaExclamationTriangle,
-  FaBox,
-  FaFilePdf,
-} from "react-icons/fa";
+import React, { useState, useEffect } from "react";
+import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
-import jsPDF from "jspdf";
+import { FaHardHat, FaPaperPlane } from "react-icons/fa";
 
-interface Producto {
-  idProducto: number;
-  nombre: string;
-  descripcion: string;
-}
+interface Cargo { idCargo: number; cargo: string; }
+interface Area { idArea: number; nombre: string; }
+interface Producto { idProducto: number; nombre: string; }
+interface ProductoSeleccionado { idProducto: number; cantidad: number; }
 
-interface Empresa {
-  nombre: string;
-  direccion: string;
-  nit: string;
-}
-
-interface Area {
-  nombre: string;
-  descripcion: string;
-  codigo: string;
-}
-
-interface EPP {
-  id: number;
-  idUsuario: number;
-  nombre: string;
-  apellido: string | null;
-  cedula: string;
-  cantidad: number;
-  importancia: string;
-  estado: boolean;
-  empresa: Empresa;
-  area: Area;
-  fecha: string;
-  productos: Producto[];
-}
-
-const UserGestionEPP: React.FC = () => {
+const CrearGestionEppUser: React.FC = () => {
   const navigate = useNavigate();
-  const [epps, setEpps] = useState<EPP[]>([]);
-  const [busqueda, setBusqueda] = useState("");
-  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+  const usuario: UsuarioToken | null = getUsuarioFromToken();
 
-  const apiListarEpp = import.meta.env.VITE_API_LISTARGESTIONES;
+  const [formData, setFormData] = useState({
+    cedula: "",
+    importancia: "Media",
+    estado: "Activo",
+    idCargo: "",
+    idArea: "",
+  });
+
+  const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [areas, setAreas] = useState<Area[]>([]);
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const [productosSeleccionados, setProductosSeleccionados] = useState<ProductoSeleccionado[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const u = getUsuarioFromToken();
-    if (u) setUsuario(u);
-    obtenerEpps();
-  }, []);
-
-  const obtenerEpps = async () => {
-    const token = localStorage.getItem("token");
     if (!token) return;
+    const listarCargos = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Error al listar cargos");
+        const data = await res.json();
+        setCargos(data);
+      } catch { Swal.fire("Error", "No se pudieron cargar los cargos", "error"); }
+    };
+    listarCargos();
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const listarAreas = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_API_LISTARAREAS, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Error al listar áreas");
+        const data = await res.json();
+        setAreas(data);
+      } catch { Swal.fire("Error", "No se pudieron cargar las áreas", "error"); }
+    };
+    listarAreas();
+  }, [token]);
+
+  useEffect(() => {
+    if (!token) return;
+    const listarProductos = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) throw new Error("Error al listar productos");
+        const data = await res.json();
+        setProductos(data);
+      } catch { Swal.fire("Error", "No se pudieron cargar los productos", "error"); }
+    };
+    listarProductos();
+  }, [token]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAgregarProducto = (idProducto: number) => {
+    if (!productosSeleccionados.find(p => p.idProducto === idProducto))
+      setProductosSeleccionados(prev => [...prev, { idProducto, cantidad: 1 }]);
+  };
+
+  const handleCantidadChange = (idProducto: number, cantidad: number) => {
+    setProductosSeleccionados(prev => prev.map(p => (p.idProducto === idProducto ? { ...p, cantidad } : p)));
+  };
+
+  const handleEliminarProducto = (idProducto: number) => {
+    setProductosSeleccionados(prev => prev.filter(p => p.idProducto !== idProducto));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!usuario) return Swal.fire("Error", "Usuario no autenticado", "error");
+    if (!formData.idCargo || productosSeleccionados.length === 0)
+      return Swal.fire("Error", "Completa todos los campos obligatorios y selecciona productos", "error");
 
     try {
-      const res = await fetch(apiListarEpp, {
-        headers: { Authorization: `Bearer ${token}` },
+      setLoading(true);
+
+      // Construir objeto a enviar
+      const body: any = {
+        cedula: formData.cedula,
+        id_cargo: Number(formData.idCargo),
+        importancia: formData.importancia,
+        estado: formData.estado.toLowerCase() === "activo" ? "activo" : "inactivo",
+        cantidad: productosSeleccionados.reduce((acc, p) => acc + p.cantidad, 0),
+        productos: productosSeleccionados.map(p => p.idProducto),
+        idUsuario: usuario.id,
+      };
+
+      // Solo enviamos id_area si el usuario lo seleccionó
+      if (formData.idArea) body.id_area = Number(formData.idArea);
+
+      const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify(body),
       });
+
       const data = await res.json();
+      if (!res.ok) throw new Error(data.mensaje || "Error al crear gestión");
 
-      let lista: any[] = [];
-      if (Array.isArray(data)) lista = data;
-      else if (data.datos && Array.isArray(data.datos)) lista = data.datos;
-
-      const eppsMapped: EPP[] = lista.map((item) => ({
-        id: item.id,
-        idUsuario: item.idUsuario,
-        nombre: item.nombre || "Sin nombre",
-        apellido: item.apellido || "",
-        cedula: item.cedula || "",
-        cantidad: item.cantidad || 0,
-        importancia: item.importancia || "Sin definir",
-        estado: item.estado ?? false,
-        empresa: item.empresa || {
-          nombre: "Sin empresa",
-          direccion: "-",
-          nit: "-",
-        },
-        area: item.area || {
-          nombre: "Sin área",
-          descripcion: "-",
-          codigo: "-",
-        },
-        fecha: item.createdAt || "Sin fecha",
-        productos: item.productos || [],
-      }));
-
-      setEpps(eppsMapped);
-    } catch (error) {
-      console.error("Error al obtener EPP:", error);
-      setEpps([]);
-    }
+      Swal.fire("Éxito", "Gestión creada correctamente", "success");
+      navigate("/gestionEpp");
+    } catch (error: any) {
+      Swal.fire("Error", error.message, "error");
+    } finally { setLoading(false); }
   };
-
-  const formatearFecha = (fechaIso: string) => {
-    if (!fechaIso || fechaIso === "Sin fecha") return "Sin fecha";
-    const fecha = new Date(fechaIso);
-    return fecha.toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
-  };
-
-  const irCrear = () => navigate("/nav/creargestionEpp");
-
-  const generarPDF = (item: EPP) => {
-    const doc = new jsPDF();
-    const margenIzq = 20;
-    let y = 25;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("INFORME DETALLADO DE GESTIÓN DE EPP", margenIzq, y);
-    y += 10;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(12);
-
-    const agregar = (titulo: string, valor: string | number | null) => {
-      doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
-      y += 7;
-    };
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Datos del Usuario", margenIzq, y);
-    doc.setFont("helvetica", "normal");
-    y += 8;
-    agregar("ID Gestión", item.id);
-    agregar("ID Usuario", item.idUsuario);
-    agregar("Nombre", `${item.nombre} ${item.apellido || ""}`);
-    agregar("Cédula", item.cedula);
-    agregar("Importancia", item.importancia);
-    agregar("Cantidad", item.cantidad);
-    agregar("Estado", item.estado ? "Activo" : "Inactivo");
-    agregar("Fecha de creación", formatearFecha(item.fecha));
-
-    y += 5;
-    doc.setFont("helvetica", "bold");
-    doc.text("Empresa", margenIzq, y);
-    doc.setFont("helvetica", "normal");
-    y += 8;
-    agregar("Nombre", item.empresa.nombre);
-    agregar("Dirección", item.empresa.direccion);
-    agregar("NIT", item.empresa.nit);
-
-    y += 5;
-    doc.setFont("helvetica", "bold");
-    doc.text("Área", margenIzq, y);
-    doc.setFont("helvetica", "normal");
-    y += 8;
-    agregar("Nombre", item.area.nombre);
-    agregar("Código", item.area.codigo);
-    agregar("Descripción", item.area.descripcion);
-
-    if (item.productos && item.productos.length > 0) {
-      y += 8;
-      doc.setFont("helvetica", "bold");
-      doc.text("Productos Asignados", margenIzq, y);
-      doc.setFont("helvetica", "normal");
-      y += 8;
-
-      item.productos.forEach((p, i) => {
-        doc.text(`${i + 1}. ${p.nombre}`, margenIzq, y);
-        y += 6;
-        if (p.descripcion) {
-          doc.setFontSize(10);
-          doc.text(`    ${p.descripcion}`, margenIzq, y);
-          y += 6;
-          doc.setFontSize(12);
-        }
-      });
-    } else {
-      y += 8;
-      doc.text("No hay productos asignados.", margenIzq, y);
-      y += 8;
-    }
-
-    y += 8;
-    doc.line(margenIzq, y, 190, y);
-    y += 10;
-    doc.setFontSize(10);
-    doc.text(
-      `Generado por: ${usuario?.nombre || "Sistema"} - ${new Date().toLocaleString("es-CO")}`,
-      margenIzq,
-      y
-    );
-
-    doc.save(`informe_gestion_${item.nombre}_${item.id}.pdf`);
-  };
-
-  const eppsFiltrados = epps.filter((item) =>
-    `${item.nombre} ${item.empresa.nombre} ${item.area.nombre} ${item.importancia}`
-      .toLowerCase()
-      .includes(busqueda.toLowerCase())
-  );
 
   return (
-    <div
-      className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}
-    >
-      {/* Encabezado */}
-      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
-        <FaHardHat className="text-4xl" />
-        <div>
-          <h2 className="text-3xl font-bold">SST - Gestión de EPP</h2>
-          <p className="text-yellow-200">Control y entrega de equipos de protección</p>
-        </div>
-      </div>
-
-      {/* Contenedor */}
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Buscador */}
-        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
-          <div className="flex items-center border rounded-lg px-3 py-2 flex-1">
-            <FaSearch className="text-gray-400 mr-2" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, empresa o área..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="flex-1 outline-none"
-            />
-          </div>
-          <button
-            onClick={irCrear}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
-          >
-            <FaPlus /> Crear Gestión
-          </button>
+    <div className="min-h-screen flex items-center justify-center p-6 relative"
+         style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <form onSubmit={handleSubmit} className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500">
+        <div className="flex items-center gap-3 mb-6">
+          <FaHardHat className="text-yellow-600 text-3xl" />
+          <h2 className="text-2xl font-bold text-gray-800">Crear Gestión EPP</h2>
         </div>
 
-        {/* Listado */}
-        {eppsFiltrados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
-          </p>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {eppsFiltrados.map((item) => (
-              <div
-                key={item.id}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
-              >
-                <div className="mb-3">
-                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                    <FaBox className="text-yellow-600" /> {item.nombre}
-                  </h4>
-                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
-                </div>
+        <input type="text" name="cedula" value={formData.cedula} onChange={handleChange} placeholder="Cédula" required className="border p-3 rounded-xl w-full mb-3" />
 
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Empresa:</strong> {item.empresa.nombre}
-                </p>
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Área:</strong> {item.area.nombre}
-                </p>
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Importancia:</strong> {item.importancia}
-                </p>
-                <p className="text-gray-700 text-sm mb-2">
-                  <strong>Cantidad:</strong> {item.cantidad}
-                </p>
+        <div className="grid grid-cols-2 gap-4 mb-3">
+          <select name="importancia" value={formData.importancia} onChange={handleChange} required className="border p-3 rounded-xl">
+            <option value="">-- Importancia --</option>
+            <option value="Alta">Alta</option>
+            <option value="Media">Media</option>
+            <option value="Baja">Baja</option>
+          </select>
 
-                {item.productos.length > 0 && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    <strong>Productos:</strong>{" "}
-                    {item.productos.map((p) => p.nombre).join(", ")}
-                  </div>
-                )}
+          <select name="estado" value={formData.estado} onChange={handleChange} required className="border p-3 rounded-xl">
+            <option value="">-- Estado --</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
 
-                <div className="flex justify-end mt-4 gap-2">
-                  <button
-                    onClick={() => navigate("/nav/Migestionepp", { state: item })}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-                  >
-                    Ver Detalle
-                  </button>
+        <select name="idCargo" value={formData.idCargo} onChange={handleChange} required className="border p-3 rounded-xl w-full mb-3">
+          <option value="">-- Selecciona un cargo --</option>
+          {cargos.map(c => <option key={c.idCargo} value={c.idCargo}>{c.cargo}</option>)}
+        </select>
 
-                  <button
-                    onClick={() => generarPDF(item)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition flex items-center gap-1"
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
-                </div>
-              </div>
+        <select name="idArea" value={formData.idArea} onChange={handleChange} className="border p-3 rounded-xl w-full mb-3">
+          <option value="">-- Selecciona un área (opcional) --</option>
+          {areas.map(a => <option key={a.idArea} value={a.idArea}>{a.nombre}</option>)}
+        </select>
+
+        <div className="mb-4">
+          <h3 className="font-semibold text-gray-700 mb-2">Productos disponibles:</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {productos.map(p => (
+              <button key={p.idProducto} type="button" onClick={() => handleAgregarProducto(p.idProducto)}
+                      className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-400 rounded p-2 text-sm">
+                {p.nombre}
+              </button>
             ))}
           </div>
+        </div>
+
+        {productosSeleccionados.length > 0 && (
+          <div className="mb-4">
+            <h3 className="font-semibold text-gray-700 mb-2">Productos seleccionados:</h3>
+            {productosSeleccionados.map(p => {
+              const producto = productos.find(prod => prod.idProducto === p.idProducto);
+              return (
+                <div key={p.idProducto} className="flex items-center gap-3 mb-2 border-b pb-2">
+                  <span className="flex-1">{producto?.nombre || "Producto"}</span>
+                  <input type="number" min={1} value={p.cantidad} onChange={e => handleCantidadChange(p.idProducto, Number(e.target.value))} className="border rounded p-1 w-20" />
+                  <button type="button" onClick={() => handleEliminarProducto(p.idProducto)} className="bg-red-500 text-white px-2 py-1 rounded">X</button>
+                </div>
+              );
+            })}
+          </div>
         )}
-      </div>
+
+        <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg" disabled={loading}>
+          <FaPaperPlane /> {loading ? "Guardando..." : "Guardar Gestión"}
+        </button>
+      </form>
     </div>
   );
 };
 
-export default UserGestionEPP;
-
+export default CrearGestionEppUser;

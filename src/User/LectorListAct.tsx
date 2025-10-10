@@ -1,272 +1,262 @@
 import React, { useEffect, useState } from "react";
-import { FaEye, FaPlus, FaFilePdf } from "react-icons/fa";
+import { FaFilePdf, FaPlus, FaEye, FaCalendarAlt, FaRunning } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 
 interface ActividadLudica {
   id: number;
-  id_usuario: number;
-  nombre_usuario: string;
-  nombre_actividad: string;
-  fecha_actividad: string | null;
+  idUsuario: number;
+  nombreUsuario: string;
+  nombreActividad: string;
+  fechaActividad: string | null;
   descripcion: string;
-  imagen_video: string;
-  archivo_adjunto: string;
-  id_empresa: number;
-}
-
-interface Props {
+  imagenVideo: string;
+  archivoAdjunto: string;
   idEmpresa: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const LectorListasActividadesLudicas: React.FC<Props> = ({ idEmpresa }) => {
+const LectorListasActividadesLudicas: React.FC = () => {
   const navigate = useNavigate();
   const [actividades, setActividades] = useState<ActividadLudica[]>([]);
   const [busqueda, setBusqueda] = useState("");
+  const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
-  const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
+  const apiListarAct = import.meta.env.VITE_API_MISACTIVIDADES;
 
-  const obtenerActividades = async () => {
+  useEffect(() => {
+    const u = getUsuarioFromToken();
+    if (u) setUsuario(u);
+    else setError("No se encontró información del usuario.");
+  }, []);
+
+  const obtenerActividades = async (idUsuario: number) => {
     try {
       setCargando(true);
-      setError("");
-
       const token = localStorage.getItem("token");
-      if (!token) {
-        setError("Usuario no autenticado");
-        setCargando(false);
-        return;
-      }
+      if (!token) throw new Error("Usuario no autenticado");
 
       const response = await fetch(apiListarAct, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (response.status === 401) {
-        setError("Sesión expirada. Por favor, inicia sesión nuevamente.");
-        localStorage.removeItem("token");
-        localStorage.removeItem("usuario");
-        setCargando(false);
-        return;
-      }
-
-      if (!response.ok) {
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
-      }
+      if (!response.ok) throw new Error("Error al obtener actividades");
 
       const data = await response.json();
 
-      if (data.datos && Array.isArray(data.datos)) {
-        setActividades(data.datos);
-      } else if (Array.isArray(data)) {
-        setActividades(data);
-      } else {
-        setActividades([]);
-        setError("No se recibieron datos válidos de la API");
-      }
-    } catch (error: any) {
-      console.error("Error al obtener actividades lúdicas:", error);
-      setError(error.message || "Error al cargar actividades");
-      setActividades([]);
+      const soloMias = Array.isArray(data.data)
+        ? data.data.filter((act: ActividadLudica) => act.idUsuario === idUsuario)
+        : [];
+
+      setActividades(soloMias);
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Error al cargar actividades");
     } finally {
       setCargando(false);
     }
   };
 
   useEffect(() => {
-    obtenerActividades();
-  }, []);
+    if (usuario?.id) obtenerActividades(usuario.id);
+  }, [usuario]);
 
-  const irCrear = () => {
-    navigate("/nav/creaActUser");
-  };
+  const irCrear = () => navigate("/nav/creaActUser");
 
   const actividadesFiltradas = actividades.filter(
-    (item) =>
-      item.id_empresa === idEmpresa &&
-      `${item.nombre_usuario} ${item.nombre_actividad}`
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
+    (act) =>
+      act.nombreActividad.toLowerCase().includes(busqueda.toLowerCase()) ||
+      act.descripcion.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const descargarPDF = (actividad: ActividadLudica) => {
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text("Detalle Actividad Lúdica", 20, 20);
+  const descargarPDF = async (act: ActividadLudica) => {
+    const doc = new jsPDF();
+    const azul = [25, 86, 212];
+    const blanco = [255, 255, 255];
 
-  doc.setFontSize(12);
-  doc.text(`Nombre de la actividad: ${actividad.nombre_actividad || "Sin nombre"}`, 20, 35);
-  doc.text(`Usuario: ${actividad.nombre_usuario || "Sin usuario"}`, 20, 45);
-  doc.text(
-    `Fecha: ${
-      actividad.fecha_actividad
-        ? new Date(actividad.fecha_actividad).toLocaleDateString("es-CO", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-        : "Sin fecha"
-    }`,
-    20,
-    55
-  );
-  doc.text("Descripción:", 20, 65);
-  doc.text(doc.splitTextToSize(actividad.descripcion || "Sin descripción", 170), 20, 72);
+    // Encabezado azul
+    doc.setFillColor(...azul);
+    doc.rect(0, 0, 220, 35, "F");
 
-  if (actividad.imagen_video) {
-    doc.text(`Imagen/Video: ${actividad.imagen_video}`, 20, 100);
-  }
-  if (actividad.archivo_adjunto) {
-    doc.text(`Archivo adjunto: ${actividad.archivo_adjunto}`, 20, 110);
-  }
+    doc.setTextColor(...blanco);
+    doc.setFontSize(18);
+    doc.text("Reporte de Actividad Lúdica", 20, 22);
 
-  doc.save(`actividad_${actividad.id}.pdf`);
-};
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(12);
 
+    // Contenido principal
+    let y = 50;
+    const espacio = 10;
 
-  if (cargando) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Cargando actividades...</div>
-      </div>
+    doc.text(`Nombre de la Actividad: ${act.nombreActividad}`, 20, y);
+    y += espacio;
+    doc.text(
+      `Fecha de la Actividad: ${
+        act.fechaActividad
+          ? new Date(act.fechaActividad).toLocaleDateString("es-CO")
+          : "Sin fecha"
+      }`,
+      20,
+      y
     );
+    y += espacio;
+    doc.text(`Descripción:`, 20, y);
+    y += 8;
+    doc.text(act.descripcion || "Sin descripción", 20, y, { maxWidth: 170 });
+    y += 25;
+
+    doc.text(`Nombre del Usuario: ${act.nombreUsuario}`, 20, y);
+    y += espacio;
+
+    doc.text(`ID Actividad: ${act.id}`, 20, y);
+    y += espacio;
+
+    doc.text(`ID Usuario: ${act.idUsuario}`, 20, y);
+    y += espacio;
+
+    doc.text(`ID Empresa: ${act.idEmpresa}`, 20, y);
+    y += espacio;
+
+    doc.text(`Creado en: ${new Date(act.createdAt).toLocaleString()}`, 20, y);
+    y += espacio;
+
+    doc.text(`Actualizado en: ${new Date(act.updatedAt).toLocaleString()}`, 20, y);
+    y += espacio * 1.5;
+
+    // Archivos y multimedia
+    if (act.archivoAdjunto) {
+      doc.text("Archivo Adjunto:", 20, y);
+      y += 8;
+      doc.textWithLink("Ver Archivo", 25, y, { url: act.archivoAdjunto });
+      y += espacio;
+    }
+
+    if (act.imagenVideo) {
+      try {
+        const img = await fetch(act.imagenVideo);
+        const blob = await img.blob();
+        const base64 = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+
+        doc.addImage(base64, "PNG", 20, y, 80, 60);
+        y += 70;
+      } catch (e) {
+        doc.text("No se pudo cargar la imagen.", 20, y);
+      }
+    }
+
+    // Pie
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text("Sistema de Gestión SST - Actividades Lúdicas", 20, 280);
+
+    doc.save(`actividad_${act.id}.pdf`);
+  };
+
+
+  if (error) {
+    return <div className="text-center mt-10 text-red-600">{error}</div>;
   }
 
   return (
-    <div
-      className="p-3 min-h-screen bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-      }}
-    >
-      <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
-        <h3 className="font-extrabold text-center mb-6 text-3xl text-indigo-900">
-          🎉 Actividades Lúdicas
-        </h3>
+    <div className="p-8 min-h-screen">
+      {/* Encabezado */}
+      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+        <FaRunning className="text-4xl" />
+        <div>
+          <h2 className="text-3xl font-bold">Mis Actividades Lúdicas</h2>
+          <p className="text-blue-200">
+            Promoviendo bienestar, creatividad y trabajo en equipo
+          </p>
+        </div>
+      </div>
 
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-center">
-            {error}
-          </div>
-        )}
-
-        <button
-          onClick={irCrear}
-          className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"
-        >
-          <FaPlus /> Crear Actividad
-        </button>
-
-        {/* Barra de búsqueda */}
-        <div className="flex justify-end mb-6">
-          <div className="flex w-80 shadow-lg rounded-full overflow-hidden border-2 border-indigo-300 bg-white">
-            <input
-              type="text"
-              className="flex-1 px-5 py-2 outline-none text-gray-700 placeholder-gray-400"
-              placeholder="Buscar actividades..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-            <span className="bg-indigo-100 flex items-center justify-center px-4 border-l border-indigo-300 text-indigo-500">
-              🔍
-            </span>
-          </div>
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white border border-blue-100">
+        {/* Filtros */}
+        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+          <input
+            type="text"
+            placeholder="Buscar actividad..."
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={irCrear}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2"
+          >
+            <FaPlus /> Nueva Actividad
+          </button>
         </div>
 
-        {/* Lista de actividades */}
+        {/* Tarjetas */}
         {actividadesFiltradas.length === 0 ? (
-          <p className="text-center text-gray-600 italic">
-            {actividades.length === 0
-              ? "No se encontraron actividades."
-              : "No hay actividades que coincidan con la búsqueda."}
+          <p className="text-center text-gray-500 mt-6">
+            No tienes actividades registradas.
           </p>
         ) : (
-          actividadesFiltradas.map((item) => (
-            <div
-              key={item.id}
-              className="flex flex-col md:flex-row justify-between items-start md:items-center p-5 my-4 bg-white hover:bg-indigo-50 rounded-2xl shadow-md border border-gray-200 transition-transform transform hover:-translate-y-1"
-            >
-              <div className="flex-1 md:flex md:items-center gap-4">
-                {/* Imagen o video */}
-                {item.imagen_video && (
-                  <div className="w-32 h-32 flex-shrink-0">
-                    {item.imagen_video.endsWith(".mp4") || item.imagen_video.endsWith(".webm") ? (
-                      <video
-                        src={item.imagen_video}
-                        controls
-                        className="w-32 h-32 object-cover rounded"
-                      />
-                    ) : (
-                      <img
-                        src={item.imagen_video}
-                        alt={item.nombre_actividad}
-                        className="w-32 h-32 object-cover rounded"
-                      />
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <div className="font-bold text-gray-800 text-lg">{item.nombre_actividad}</div>
-                  <div className="text-sm text-gray-600">
-                    Usuario: <span className="font-medium">{item.nombre_usuario}</span>
-                  </div>
-                  <div className="text-sm text-gray-600">
-                    Fecha:{" "}
-                    {item.fecha_actividad
-                      ? new Date(item.fecha_actividad).toLocaleDateString("es-CO", {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        })
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {actividadesFiltradas.map((act) => (
+              <div
+                key={act.id}
+                className="p-6 rounded-2xl border border-blue-200 shadow hover:shadow-lg transition bg-white"
+              >
+                <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2">
+                  <FaCalendarAlt className="text-blue-500" />
+                  {act.nombreActividad}
+                </h3>
+                <p className="text-sm text-gray-600 mb-1">
+                  Fecha:{" "}
+                  <span className="font-medium text-gray-800">
+                    {act.fechaActividad
+                      ? new Date(act.fechaActividad).toLocaleDateString("es-CO")
                       : "Sin fecha"}
-                  </div>
-                  <div className="text-gray-500 text-sm mt-1">{item.descripcion}</div>
+                  </span>
+                </p>
+                <p className="text-gray-700 mb-3 text-sm">{act.descripcion}</p>
 
-                  {/* Archivo adjunto */}
-                  {item.archivo_adjunto && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <a
-                        href={item.archivo_adjunto}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 underline"
-                      >
-                        Ver archivo adjunto
-                      </a>
-                    </div>
+                <div className="flex justify-between items-center mt-3">
+                  {act.archivoAdjunto ? (
+                    <a
+                      href={act.archivoAdjunto}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline text-sm"
+                    >
+                      Ver archivo
+                    </a>
+                  ) : (
+                    <span className="text-gray-400 text-sm">Sin archivo</span>
                   )}
+
+                  <div className="flex gap-2">
+                    {act.imagenVideo && (
+                      <button
+                        onClick={() => window.open(act.imagenVideo, "_blank")}
+                        className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 hover:bg-blue-700"
+                      >
+                        <FaEye /> Ver
+                      </button>
+                    )}
+                    <button
+                      onClick={() => descargarPDF(act)}
+                      className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 hover:bg-red-600"
+                    >
+                      <FaFilePdf /> PDF
+                    </button>
+                  </div>
                 </div>
               </div>
-
-              {/* Botones */}
-              <div className="flex gap-3 mt-4 md:mt-0 items-center">
-                <button
-                  onClick={() =>
-                    navigate("/nav/MidetalleAct", { state: item })
-                  }
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm px-5 py-2 rounded-xl shadow-lg transition flex items-center gap-1"
-                >
-                  <FaEye /> Ver
-                </button>
-
-                <button
-                  onClick={() => descargarPDF(item)}
-                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-md transition"
-                  title="Descargar PDF"
-                >
-                  <FaFilePdf />
-                </button>
-              </div>
-            </div>
-          ))
+            ))}
+          </div>
         )}
       </div>
     </div>

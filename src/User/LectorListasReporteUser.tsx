@@ -139,18 +139,14 @@ const LectorListaReportes: React.FC = () => {
   };
 
   return (
-    <div className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
-     style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-      }}
+    <div
     >
       {/* Encabezado estilo SST */}
-      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
           <h2 className="text-3xl font-bold">SST - Reportes de Seguridad</h2>
-          <p className="text-yellow-200">Prevención, control y seguimiento de incidentes</p>
+          <p className="text-white">Prevención, control y seguimiento de incidentes</p>
         </div>
       </div>
 
@@ -162,7 +158,7 @@ const LectorListaReportes: React.FC = () => {
             placeholder="Buscar reporte por usuario, cargo o fecha..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500"
+            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-blue-600"
           />
           <select
             value={estadoFiltro}
@@ -177,7 +173,7 @@ const LectorListaReportes: React.FC = () => {
           </select>
           <button
             onClick={() => navigate("/nav/creaListRepo")}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-yellow-700 transition"
           >
             + Crear Reporte
           </button>

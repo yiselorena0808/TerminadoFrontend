@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import {
-  FaBuilding,
   FaPlus,
   FaEdit,
   FaTrash,
   FaToggleOn,
   FaToggleOff,
-  FaSearch,
   FaIndustry,
 } from "react-icons/fa";
 

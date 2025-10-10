@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { FaSearch, FaPlus, FaHardHat, FaCarSide, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaSearch,
+  FaPlus,
+  FaHardHat,
+  FaCarSide,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 
@@ -23,8 +29,9 @@ const LectorChequeo: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  const apiListarCheq = import.meta.env.VITE_API_LISTARCHEQUEO;
+  const apiListarCheq = import.meta.env.VITE_API_LISTARMISCHEQUEOS;
 
+  // 🔧 Función corregida: usa data.data (backend real)
   const obtenerListas = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -37,8 +44,9 @@ const LectorChequeo: React.FC = () => {
       });
 
       const data = await res.json();
-      if (data.datos && Array.isArray(data.datos)) {
-        setListas(data.datos);
+
+      if (data.data && Array.isArray(data.data)) {
+        setListas(data.data);
       } else {
         setListas([]);
         console.warn("No se recibieron datos válidos de la API");
@@ -81,35 +89,36 @@ const LectorChequeo: React.FC = () => {
 
   return (
     <div
-      className="p-8 min-h-screen bg-gradient-to-b from-gray-50 to-yellow-50"
-      style={{
-        backgroundImage:
-          "url('https://www.serpresur.com/wp-content/uploads/2023/08/serpresur-El-ABC-de-los-Equipos-de-Proteccion-Personal-EPP-1.jpg')",
-      }}
+
     >
       {/* Encabezado estilo SST */}
-      <div className="bg-yellow-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4 backdrop-blur-sm bg-opacity-90">
         <FaHardHat className="text-4xl" />
         <div>
           <h2 className="text-3xl font-bold">SST - Listas de Chequeo</h2>
-          <p className="text-yellow-200">Control y revisión de vehículos y equipos</p>
+          <p className="text-white">
+            Control y revisión de vehículos y equipos
+          </p>
         </div>
       </div>
 
       {/* Contenedor principal */}
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white bg-opacity-95 backdrop-blur-sm">
         {/* Filtros y acción */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
-          <input
-            type="text"
-            placeholder="Buscar por usuario, marca o modelo..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500"
-          />
+          <div className="flex items-center flex-1 relative">
+            <FaSearch className="absolute left-3 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Buscar por usuario, marca o modelo..."
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              className="pl-10 pr-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500 outline-none"
+            />
+          </div>
           <button
             onClick={irCrear}
-            className="px-4 py-2 bg-yellow-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-600 transition flex items-center gap-2 justify-center"
           >
             <FaPlus /> Crear Lista
           </button>
@@ -126,7 +135,7 @@ const LectorChequeo: React.FC = () => {
             {listasFiltradas.map((item) => (
               <div
                 key={item.id}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+                className="p-6 rounded-xl border border-gray-200 shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
               >
                 <div className="mb-4">
                   <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
@@ -142,8 +151,12 @@ const LectorChequeo: React.FC = () => {
                   Marca: <span className="font-semibold">{item.marca}</span> | Modelo:{" "}
                   <span className="font-semibold">{item.modelo}</span>
                 </p>
-                <p className="text-gray-600 text-sm mb-2">Kilometraje: {item.kilometraje}</p>
-                <p className="text-gray-600 text-sm mb-2">Técnico: {item.tecnico}</p>
+                <p className="text-gray-600 text-sm mb-2">
+                  Kilometraje: {item.kilometraje}
+                </p>
+                <p className="text-gray-600 text-sm mb-2">
+                  Técnico: {item.tecnico}
+                </p>
                 <p className="text-gray-500 text-sm">SOAT: {item.soat}</p>
 
                 <div className="flex justify-end mt-4">
