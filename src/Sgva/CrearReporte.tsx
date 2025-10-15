@@ -28,7 +28,6 @@ const CrearReporte: React.FC = () => {
   const apiBase = import.meta.env.VITE_API_REGISTROREPORTE; 
   const apiUsuariosBase = import.meta.env.VITE_API_LISTARUSUARIOS;
 
-  // ✅ Cargar usuario logueado
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -47,7 +46,6 @@ const CrearReporte: React.FC = () => {
     setFormData((prev) => ({ ...prev, cargo: u.cargo || "" }));
   }, [navigate]);
 
-  // ✅ Cargar usuarios de la empresa para el modal
   useEffect(() => {
     if (showModal && usuario) {
       const token = localStorage.getItem("token");
@@ -84,7 +82,6 @@ const CrearReporte: React.FC = () => {
     }
   }, [showModal, usuario, apiUsuariosBase]);
 
-  // ✅ Cambiar campos del formulario
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -93,7 +90,6 @@ const CrearReporte: React.FC = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // ✅ Toast
   const showToast = (
     icon: "success" | "error" | "warning",
     title: string
@@ -108,7 +104,6 @@ const CrearReporte: React.FC = () => {
     });
   };
 
-  // ✅ Seleccionar usuario del modal
   const handleSeleccionarUsuario = (u: any) => {
     setUsuarioSeleccionado(u);
     setFormData((prev) => ({
@@ -118,7 +113,6 @@ const CrearReporte: React.FC = () => {
     setShowModal(false);
   };
 
-  // ✅ Enviar reporte
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -171,14 +165,14 @@ const CrearReporte: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       <form
         onSubmit={handleSubmit}
         className="relative bg-white/95 p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
       >
         <div className="flex items-center gap-3 mb-6">
-          <FaHardHat className="text-yellow-600 text-3xl" />
+          <FaHardHat className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">
             Crear Reporte SST
           </h2>
@@ -189,7 +183,7 @@ const CrearReporte: React.FC = () => {
           <div>
             <p className="text-gray-700 font-semibold">
               Reporte por:{" "}
-              <span className="text-yellow-700">
+              <span className="text-blue-600">
                 {usuarioSeleccionado
                   ? usuarioSeleccionado.nombre
                   : usuario?.nombre}
@@ -199,7 +193,7 @@ const CrearReporte: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowModal(true)}
-            className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-2 rounded-lg flex items-center gap-2"
+            className="bg-blue-600 hover:bg-blue-600 text-white px-3 py-2 rounded-lg flex items-center gap-2"
           >
             <FaUser /> Seleccionar Usuario
           </button>
@@ -279,7 +273,7 @@ const CrearReporte: React.FC = () => {
 
         <button
           type="submit"
-          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2"
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-400 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2"
         >
           <FaPaperPlane /> Enviar Reporte
         </button>

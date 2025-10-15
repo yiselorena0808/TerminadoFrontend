@@ -118,7 +118,7 @@ const CrearListaChequeo: React.FC = () => {
       }}
     >
       {/* Overlay */}
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       {/* Card */}
       <form
@@ -127,7 +127,7 @@ const CrearListaChequeo: React.FC = () => {
       >
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
-          <FaClipboardCheck className="text-yellow-600 text-3xl" />
+          <FaClipboardCheck className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">
             Crear Lista de Chequeo
           </h2>
@@ -135,7 +135,7 @@ const CrearListaChequeo: React.FC = () => {
 
         {/* Usuario info */}
         {usuario && (
-          <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
+          <div className="mb-6 p-3 bg-blue-200 rounded-lg border border-blue-600 text-sm">
             <p>
               <strong>👤 Usuario:</strong> {usuario.usuario_nombre}
             </p>
@@ -206,7 +206,7 @@ const CrearListaChequeo: React.FC = () => {
         {/* Botón */}
         <button
           type="submit"
-          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-400 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
           <FaPaperPlane /> Crear Lista
         </button>

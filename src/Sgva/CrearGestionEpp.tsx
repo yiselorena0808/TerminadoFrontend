@@ -95,7 +95,6 @@ const CrearGestionEpp: React.FC = () => {
     try {
       setLoading(true);
 
-      // Construir objeto a enviar
       const body: any = {
         cedula: formData.cedula,
         id_cargo: Number(formData.idCargo),
@@ -106,7 +105,6 @@ const CrearGestionEpp: React.FC = () => {
         idUsuario: usuario.id,
       };
 
-      // Solo enviamos id_area si el usuario lo seleccionó
       if (formData.idArea) body.id_area = Number(formData.idArea);
 
       const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
@@ -128,10 +126,10 @@ const CrearGestionEpp: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative"
          style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
       <form onSubmit={handleSubmit} className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500">
         <div className="flex items-center gap-3 mb-6">
-          <FaHardHat className="text-yellow-600 text-3xl" />
+          <FaHardHat className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">Crear Gestión EPP</h2>
         </div>
 
@@ -167,7 +165,7 @@ const CrearGestionEpp: React.FC = () => {
           <div className="grid grid-cols-2 gap-2">
             {productos.map(p => (
               <button key={p.idProducto} type="button" onClick={() => handleAgregarProducto(p.idProducto)}
-                      className="bg-yellow-100 hover:bg-yellow-200 border border-yellow-400 rounded p-2 text-sm">
+                      className="bg-blue-200 hover:bg-blue-400 border border-blue-600 rounded p-2 text-sm">
                 {p.nombre}
               </button>
             ))}
@@ -190,7 +188,7 @@ const CrearGestionEpp: React.FC = () => {
           </div>
         )}
 
-        <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg" disabled={loading}>
+        <button type="submit" className="w-full bg-blue-600 hover:bg-blue-400 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg" disabled={loading}>
           <FaPaperPlane /> {loading ? "Guardando..." : "Guardar Gestión"}
         </button>
       </form>

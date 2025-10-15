@@ -129,7 +129,7 @@ const ListasChequeoRecibidas: React.FC = () => {
           />
           <button
             onClick={irCrear}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-400 transition flex items-center gap-2"
           >
             <FaPlus /> Crear Lista
           </button>

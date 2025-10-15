@@ -98,17 +98,17 @@ const CrearEvento: React.FC = () => {
       }}
     >
       {/* Overlay amarillo */}
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       {/* Card central */}
       <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-yellow-500">
         <div className="flex items-center gap-3 mb-6">
-          <FaCalendarPlus className="text-yellow-600 text-3xl" />
+          <FaCalendarPlus className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">📝 Crear Evento</h2>
         </div>
 
         {usuario && (
-          <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+          <div className="mb-4 p-3 bg-blue-200 border border-blue-600 rounded-xl">
             <p className="text-gray-700">
               <strong>👤 Usuario:</strong> {usuario.nombre}
             </p>
@@ -163,7 +163,7 @@ const CrearEvento: React.FC = () => {
 
           <button
             type="submit"
-            className="w-full bg-yellow-500 hover:bg-yellow-600 text-white py-3 rounded-xl font-semibold shadow-lg transition flex items-center justify-center gap-2"
+            className="w-full bg-blue-600 hover:bg-blue-400 text-white py-3 rounded-xl font-semibold shadow-lg transition flex items-center justify-center gap-2"
           >
             <FaCalendarPlus /> Crear Evento
           </button>
