@@ -124,7 +124,7 @@ const DetalleActividadLudica: React.FC = () => {
         {/* Card principal */}
         <div className="bg-white/95 rounded-2xl shadow-2xl overflow-hidden border">
           {/* Header */}
-          <div className="bg-gradient-to-r from-pink-600 to-purple-600 p-8 text-white flex justify-between items-center">
+          <div className="bg-blue-600 p-8 text-white flex justify-between items-center">
             <div>
               <h2 className="text-3xl font-bold">🎨 {actividad.nombreActividad}</h2>
               <p className="text-pink-100">{actividad.nombreUsuario}</p>

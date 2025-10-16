@@ -1,5 +1,4 @@
-// authConte.tsx
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useContext } from "react";
 import { getUsuarioFromToken } from "./utils/auth";
 
 interface AuthContextType {
@@ -49,3 +48,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+export const useAuth = () => useContext(AuthContext);

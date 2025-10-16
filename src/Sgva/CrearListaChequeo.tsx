@@ -22,6 +22,8 @@ const CrearListaChequeo: React.FC = () => {
   const [soat, setSoat] = useState("");
   const [tecnico, setTecnico] = useState("");
   const [kilometraje, setKilometraje] = useState("");
+  const [placa, setPlaca] = useState("");
+  const [observaciones, setObservaciones] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -35,7 +37,7 @@ const CrearListaChequeo: React.FC = () => {
         id_empresa: decoded.id_empresa ?? decoded.idEmpresa,
       });
     } catch (error) {
-      console.error(" Token inválido", error);
+      console.error("Token inválido", error);
       showToast("error", "Token inválido, inicia sesión otra vez");
       navigate("/login");
     }
@@ -53,7 +55,7 @@ const CrearListaChequeo: React.FC = () => {
     });
     if (icon === "success") {
       setTimeout(() => {
-        navigate("/nav/ListasChequeo");
+        navigate("/nav/lectorUserChe");
       }, 1500);
     }
   };
@@ -80,6 +82,8 @@ const CrearListaChequeo: React.FC = () => {
           soat,
           tecnico,
           kilometraje,
+          placa,
+          observaciones,
           id_usuario: usuario?.id_usuario,
           usuario_nombre: usuario?.usuario_nombre,
           id_empresa: usuario?.id_empresa,
@@ -94,6 +98,7 @@ const CrearListaChequeo: React.FC = () => {
 
       showToast("success", "Lista de chequeo creada ✅");
 
+      // Limpiar formulario
       setFecha("");
       setHora("");
       setModelo("");
@@ -101,6 +106,8 @@ const CrearListaChequeo: React.FC = () => {
       setSoat("");
       setTecnico("");
       setKilometraje("");
+      setPlaca("");
+      setObservaciones("");
     } catch (error) {
       console.error("Error creando lista:", error);
       showToast("error", "No se pudo crear la lista");
@@ -123,7 +130,7 @@ const CrearListaChequeo: React.FC = () => {
       {/* Card */}
       <form
         onSubmit={handleSubmit}
-        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600"
       >
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
@@ -199,7 +206,21 @@ const CrearListaChequeo: React.FC = () => {
             onChange={(e) => setKilometraje(e.target.value)}
             placeholder="Kilometraje"
             required
-            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={placa}
+            onChange={(e) => setPlaca(e.target.value)}
+            placeholder="Placa (opcional)"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <textarea
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+            placeholder="Observaciones (opcional)"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2 resize-none"
+            rows={3}
           />
         </div>
 
@@ -216,3 +237,5 @@ const CrearListaChequeo: React.FC = () => {
 };
 
 export default CrearListaChequeo;
+
+

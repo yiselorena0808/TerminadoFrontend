@@ -164,20 +164,13 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
     doc.save(`actividad_${act.id}.pdf`);
   };
 
-  if (cargando) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Cargando actividades...</div>
-      </div>
-    );
-  }
 
   return (
     <div>
-      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
         <FaUserTie className="text-4xl" />
         <div>
-          <h2 className="text-3xl font-bold">SST - Actividades Lúdicas</h2>
+          <h2 className="text-2xl font-bold">SST - Actividades Lúdicas</h2>
           <p className="text-blue-200">
             Visualiza todas las actividades de tu empresa
           </p>

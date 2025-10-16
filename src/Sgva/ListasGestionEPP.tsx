@@ -209,10 +209,10 @@ const GestionEPP: React.FC = () => {
     <div
     >
       {/* Encabezado */}
-      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
         <FaHardHat className="text-4xl" />
         <div>
-          <h2 className="text-3xl font-bold">SST - Gestión de EPP</h2>
+          <h2 className="text-2xl font-bold">SST - Gestión de EPP</h2>
           <p className="text-yellow-200">Control y entrega de equipos de protección</p>
         </div>
       </div>
@@ -233,65 +233,65 @@ const GestionEPP: React.FC = () => {
           </div>
           <button
             onClick={irCrear}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-400 transition flex items-center gap-2"
           >
             <FaPlus /> Crear Gestión
           </button>
         </div>
 
         {/* Listado */}
-        {eppsFiltrados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
-          </p>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {eppsFiltrados.map((item) => (
-              <div
-                key={item.id}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
-              >
-                <div className="mb-3">
-                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                    <FaBox className="text-yellow-600" /> {item.nombre}
-                  </h4>
-                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
+            {eppsFiltrados.length === 0 ? (
+        <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+          <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
+        </p>
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {eppsFiltrados.map((item) => (
+            <div
+              key={item.id}
+              className="p-3 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
+            >
+              <div className="mb-2">
+                <h4 className="font-semibold text-base text-gray-800 flex items-center gap-2">
+                  <FaBox className="text-yellow-600 text-lg" /> {item.nombre}
+                </h4>
+                <p className="text-xs text-gray-600">{formatearFecha(item.fecha)}</p>
+              </div>
+
+              <p className="text-gray-700 text-sm mb-1">
+                <strong>Empresa:</strong> {item.empresa.nombre}
+              </p>
+              <p className="text-gray-700 text-sm mb-1">
+                <strong>Área:</strong> {item.area.nombre}
+              </p>
+              <p className="text-gray-700 text-sm mb-1">
+                <strong>Importancia:</strong> {item.importancia}
+              </p>
+              <p className="text-gray-700 text-sm mb-2">
+                <strong>Cantidad:</strong> {item.cantidad}
+              </p>
+
+              {item.productos.length > 0 && (
+                <div className="mt-1 text-xs text-gray-600">
+                  <strong>Productos:</strong>{" "}
+                  {item.productos.map((p) => p.nombre).join(", ")}
                 </div>
+              )}
 
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Empresa:</strong> {item.empresa.nombre}
-                </p>
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Área:</strong> {item.area.nombre}
-                </p>
-                <p className="text-gray-700 text-sm mb-1">
-                  <strong>Importancia:</strong> {item.importancia}
-                </p>
-                <p className="text-gray-700 text-sm mb-2">
-                  <strong>Cantidad:</strong> {item.cantidad}
-                </p>
+              <div className="flex justify-end mt-3 gap-2">
+                <button
+                  onClick={() => navigate("/nav/detalleGestionEpp", { state: item })}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition"
+                >
+                  Ver Detalle
+                </button>
 
-                {item.productos.length > 0 && (
-                  <div className="mt-2 text-sm text-gray-600">
-                    <strong>Productos:</strong>{" "}
-                    {item.productos.map((p) => p.nombre).join(", ")}
-                  </div>
-                )}
-
-                <div className="flex justify-end mt-4 gap-2">
-                  <button
-                    onClick={() => navigate("/nav/detalleGestionEpp", { state: item })}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-                  >
-                    Ver Detalle
-                  </button>
-
-                  <button
-                    onClick={() => generarPDF(item)}
-                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition flex items-center gap-1"
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
+                <button
+                  onClick={() => generarPDF(item)}
+                  className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition flex items-center gap-1"
+                >
+                  <FaFilePdf /> PDF
+                </button>
                 </div>
               </div>
             ))}

@@ -85,15 +85,22 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  const listarAreas = async () => {
-    try {
-      const res = await fetch(apiAreas);
-      const data = await res.json();
-      if (Array.isArray(data.datos)) setAreas(data.datos);
-    } catch (err) {
-      console.error(err);
+ const listarAreas = async () => {
+  try {
+    const res = await fetch(apiAreas);
+    const data = await res.json();
+    console.log("ÁREAS desde API:", data);
+
+    if (Array.isArray(data)) {
+      setAreas(data);
+    } 
+    else if (Array.isArray(data.datos)) {
+      setAreas(data.datos);
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
 
   const abrirModal = (
     tipo: "empresa" | "area",

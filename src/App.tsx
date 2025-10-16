@@ -29,6 +29,7 @@ import CrearEventos from "./Sgva/Eventos";
 import ListaEventos from "./Sgva/ListaEventos";
 import DashboardPage from "./Sgva/Adicionales";
 import ProductosPage from "./Sgva/CrearProducto";
+import CajaComentarios from "./components/CajaComentarios";
 
 // --- Admin ---
 import AdmUsuarios from "./Admin/ListasUsuarios";
@@ -89,6 +90,7 @@ function App() {
           <Route path="detalleActLudica" element={<DetalleActividad />} />
           <Route path="crearActLudica" element={<CrearActividadLudica />} />
           <Route path="productos" element={<ProductosPage />} />
+          <Route path="caja" element={<CajaComentarios></CajaComentarios>} />
 
           {/* --- ADMIN --- */}
           <Route path="Admusuarios" element={<AdmUsuarios />} />

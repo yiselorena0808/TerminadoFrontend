@@ -106,10 +106,10 @@ const ListasChequeoRecibidas: React.FC = () => {
     <div
     >
       {/* Encabezado */}
-      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
+      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
         <FaHardHat className="text-4xl" />
         <div>
-          <h2 className="text-3xl font-bold">SST - Listas de Chequeo</h2>
+          <h2 className="text-2xl font-bold">SST - Listas de Chequeo</h2>
           <p className="text-yellow-200">
             Control y revisión de vehículos y equipos
           </p>
@@ -117,7 +117,7 @@ const ListasChequeoRecibidas: React.FC = () => {
       </div>
 
       {/* Contenedor principal */}
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
+      <div className="rounded-3xl shadow-2xl p-5 mx-auto max-w-6xl bg-white">
         {/* Filtros y acción */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
@@ -136,49 +136,51 @@ const ListasChequeoRecibidas: React.FC = () => {
         </div>
 
         {/* Listado */}
-        {listasFiltradas.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" />
-            No hay listas registradas
+          {listasFiltradas.length === 0 ? (
+  <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+    <FaExclamationTriangle className="text-yellow-500" />
+    No hay listas registradas
+  </p>
+) : (
+  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {listasFiltradas.map((item) => (
+      <div
+        key={item.id}
+        className="p-3 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
+      >
+        <div className="mb-2">
+          <h4 className="font-semibold text-base text-gray-800 flex items-center gap-2">
+            <FaCarSide className="text-yellow-600 text-lg" />
+            {item.usuario_nombre}
+          </h4>
+          <p className="text-xs text-gray-600">
+            {formatearFecha(item.fecha)} - {item.hora}
           </p>
-        ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {listasFiltradas.map((item) => (
-              <div
-                key={item.id}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
-              >
-                <div className="mb-4">
-                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
-                    <FaCarSide className="text-yellow-600" />
-                    {item.usuario_nombre}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    {formatearFecha(item.fecha)} - {item.hora}
-                  </p>
-                </div>
+        </div>
 
-                <p className="text-gray-700 mb-2">
-                  Marca: <span className="font-semibold">{item.marca}</span> | Modelo:{" "}
-                  <span className="font-semibold">{item.modelo}</span>
-                </p>
-                <p className="text-gray-600 text-sm mb-2">Kilometraje: {item.kilometraje}</p>
-                <p className="text-gray-600 text-sm mb-2">Técnico: {item.tecnico}</p>
-                <p className="text-gray-500 text-sm">SOAT: {item.soat}</p>
+        <p className="text-gray-700 text-sm mb-1">
+          Marca: <span className="font-medium">{item.marca}</span> | Modelo:{" "}
+          <span className="font-medium">{item.modelo}</span>
+        </p>
+        <p className="text-gray-600 text-xs mb-1">
+          Kilometraje: {item.kilometraje}
+        </p>
+        <p className="text-gray-600 text-xs mb-1">Técnico: {item.tecnico}</p>
+        <p className="text-gray-500 text-xs">SOAT: {item.soat}</p>
 
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    onClick={() => abrirDetalle(item)}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
-                  >
-                    Abrir
-                  </button>
-                  <button
-                    onClick={() => descargarPDF(item)}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
+        <div className="flex justify-end gap-2 mt-3">
+          <button
+            onClick={() => abrirDetalle(item)}
+            className="bg-blue-600 text-white px-3 py-1 rounded text-xs hover:bg-blue-700 transition"
+          >
+            Abrir
+          </button>
+          <button
+            onClick={() => descargarPDF(item)}
+            className="bg-red-500 text-white px-3 py-1 rounded text-xs hover:bg-red-600 transition flex items-center gap-1"
+          >
+            <FaFilePdf /> PDF
+          </button>
                 </div>
               </div>
             ))}

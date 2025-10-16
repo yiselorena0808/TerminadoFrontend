@@ -12,6 +12,8 @@ interface ListaChequeo {
   soat: string;
   tecnico: string;
   kilometraje: string;
+  placa:string;
+  observaciones:string;
 }
 
 const DetalleListaChequeo: React.FC = () => {
@@ -123,7 +125,7 @@ const DetalleListaChequeo: React.FC = () => {
         {/* Card principal */}
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-blue-600 p-6 text-white">
+          <div className="bg-blue-600 p-6 text-white">
             <h2 className="text-3xl font-bold">Detalle Lista de Chequeo</h2>
             <p className="text-blue-100">Usuario: {form.usuarioNombre}</p>
           </div>
@@ -208,6 +210,24 @@ const DetalleListaChequeo: React.FC = () => {
                 type="text"
                 name="soat"
                 value={form.soat}
+                onChange={handleChange}
+                disabled={!editando}
+                className="w-full border rounded p-2"
+              />
+              <label className="font-semibold">Placa del vehiculo</label>
+              <input
+                type="text"
+                name="soat"
+                value={form.placa}
+                onChange={handleChange}
+                disabled={!editando}
+                className="w-full border rounded p-2"
+              />
+              <label className="font-semibold">Observaciones del vehiculo</label>
+              <input
+                type="text"
+                name="soat"
+                value={form.observaciones}
                 onChange={handleChange}
                 disabled={!editando}
                 className="w-full border rounded p-2"

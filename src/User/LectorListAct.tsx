@@ -161,9 +161,16 @@ const LectorListasActividadesLudicas: React.FC = () => {
     doc.save(`actividad_${act.id}.pdf`);
   };
 
-
   if (error) {
     return <div className="text-center mt-10 text-red-600">{error}</div>;
+  }
+
+  if (cargando) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">Cargando actividades...</div>
+      </div>
+    );
   }
 
   return (
@@ -207,52 +214,37 @@ const LectorListasActividadesLudicas: React.FC = () => {
             {actividadesFiltradas.map((act) => (
               <div
                 key={act.id}
-                className="p-6 rounded-2xl border border-blue-200 shadow hover:shadow-lg transition bg-white"
+                className="p-6 rounded-2xl border border-blue-200 shadow hover:shadow-lg transition bg-white flex flex-col justify-between"
               >
-                <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2">
-                  <FaCalendarAlt className="text-blue-500" />
-                  {act.nombreActividad}
-                </h3>
-                <p className="text-sm text-gray-600 mb-1">
-                  Fecha:{" "}
-                  <span className="font-medium text-gray-800">
+                <div>
+                  <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2">
+                    <FaCalendarAlt className="text-blue-500" />
+                    {act.nombreActividad}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-1">
+                    <strong>Usuario:</strong> {act.nombreUsuario}
+                  </p>
+                  <p className="text-sm text-gray-600 mb-1">
+                    <strong>Fecha:</strong>{" "}
                     {act.fechaActividad
                       ? new Date(act.fechaActividad).toLocaleDateString("es-CO")
                       : "Sin fecha"}
-                  </span>
-                </p>
-                <p className="text-gray-700 mb-3 text-sm">{act.descripcion}</p>
+                  </p>
+                </div>
 
-                <div className="flex justify-between items-center mt-3">
-                  {act.archivoAdjunto ? (
-                    <a
-                      href={act.archivoAdjunto}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:underline text-sm"
-                    >
-                      Ver archivo
-                    </a>
-                  ) : (
-                    <span className="text-gray-400 text-sm">Sin archivo</span>
-                  )}
-
-                  <div className="flex gap-2">
-                    {act.imagenVideo && (
-                      <button
-                        onClick={() => window.open(act.imagenVideo, "_blank")}
-                        className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 hover:bg-blue-700"
-                      >
-                        <FaEye /> Ver
-                      </button>
-                    )}
-                    <button
-                      onClick={() => descargarPDF(act)}
-                      className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm flex items-center gap-1 hover:bg-red-600"
-                    >
-                      <FaFilePdf /> PDF
-                    </button>
-                  </div>
+                <div className="flex justify-end gap-2 mt-4">
+                  <button
+                    onClick={() => navigate("/nav/MidetalleAct", { state: act })}
+                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition flex items-center gap-1"
+                  >
+                    <FaEye /> Abrir
+                  </button>
+                  <button
+                    onClick={() => descargarPDF(act)}
+                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
+                  >
+                    <FaFilePdf /> PDF
+                  </button>
                 </div>
               </div>
             ))}

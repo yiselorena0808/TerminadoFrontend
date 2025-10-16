@@ -116,7 +116,7 @@ const DetalleGestionEPPUser: React.FC = () => {
         {/* Card Principal */}
         <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-fadeIn">
           {/* Header */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-8 text-white">
+          <div className="bg-blue-600 p-8 text-white">
             <h2 className="text-4xl font-bold">🛡️ Detalle de Gestión EPP</h2>
             <p className="text-blue-100 text-lg">
               Usuario: {gestion.nombre} {gestion.apellido ?? ""}

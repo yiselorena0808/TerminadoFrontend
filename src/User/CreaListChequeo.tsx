@@ -22,6 +22,8 @@ const CrearListChequeo: React.FC = () => {
   const [soat, setSoat] = useState("");
   const [tecnico, setTecnico] = useState("");
   const [kilometraje, setKilometraje] = useState("");
+  const [placa, setPlaca] = useState("");
+  const [observaciones, setObservaciones] = useState("");
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -35,7 +37,7 @@ const CrearListChequeo: React.FC = () => {
         id_empresa: decoded.id_empresa ?? decoded.idEmpresa,
       });
     } catch (error) {
-      console.error(" Token inválido", error);
+      console.error("Token inválido", error);
       showToast("error", "Token inválido, inicia sesión otra vez");
       navigate("/login");
     }
@@ -80,6 +82,8 @@ const CrearListChequeo: React.FC = () => {
           soat,
           tecnico,
           kilometraje,
+          placa,
+          observaciones,
           id_usuario: usuario?.id_usuario,
           usuario_nombre: usuario?.usuario_nombre,
           id_empresa: usuario?.id_empresa,
@@ -94,6 +98,7 @@ const CrearListChequeo: React.FC = () => {
 
       showToast("success", "Lista de chequeo creada ✅");
 
+      // Limpiar formulario
       setFecha("");
       setHora("");
       setModelo("");
@@ -101,6 +106,8 @@ const CrearListChequeo: React.FC = () => {
       setSoat("");
       setTecnico("");
       setKilometraje("");
+      setPlaca("");
+      setObservaciones("");
     } catch (error) {
       console.error("Error creando lista:", error);
       showToast("error", "No se pudo crear la lista");
@@ -118,16 +125,16 @@ const CrearListChequeo: React.FC = () => {
       }}
     >
       {/* Overlay */}
-      <div className="absolute inset-0 bg-yellow-900/40 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       {/* Card */}
       <form
         onSubmit={handleSubmit}
-        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
+        className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600"
       >
         {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
-          <FaClipboardCheck className="text-yellow-600 text-3xl" />
+          <FaClipboardCheck className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">
             Crear Lista de Chequeo
           </h2>
@@ -135,7 +142,7 @@ const CrearListChequeo: React.FC = () => {
 
         {/* Usuario info */}
         {usuario && (
-          <div className="mb-6 p-3 bg-yellow-50 rounded-lg border border-yellow-200 text-sm">
+          <div className="mb-6 p-3 bg-blue-200 rounded-lg border border-blue-600 text-sm">
             <p>
               <strong>👤 Usuario:</strong> {usuario.usuario_nombre}
             </p>
@@ -199,14 +206,28 @@ const CrearListChequeo: React.FC = () => {
             onChange={(e) => setKilometraje(e.target.value)}
             placeholder="Kilometraje"
             required
-            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <input
+            type="text"
+            value={placa}
+            onChange={(e) => setPlaca(e.target.value)}
+            placeholder="Placa (opcional)"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
+          />
+          <textarea
+            value={observaciones}
+            onChange={(e) => setObservaciones(e.target.value)}
+            placeholder="Observaciones (opcional)"
+            className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500 col-span-2 resize-none"
+            rows={3}
           />
         </div>
 
         {/* Botón */}
         <button
           type="submit"
-          className="mt-6 w-full bg-yellow-600 hover:bg-yellow-700 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
+          className="mt-6 w-full bg-blue-600 hover:bg-blue-400 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"
         >
           <FaPaperPlane /> Crear Lista
         </button>
@@ -216,3 +237,4 @@ const CrearListChequeo: React.FC = () => {
 };
 
 export default CrearListChequeo;
+

@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFilePdf, FaHardHat, FaMapMarkerAlt, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaHardHat,
+  FaMapMarkerAlt,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
@@ -50,7 +55,11 @@ const ListarReportes: React.FC = () => {
 
       if (data.datos && Array.isArray(data.datos)) {
         const filtrados: Reporte[] = data.datos
-          .filter((r: any) => Number(r.idEmpresa ?? r.id_empresa) === Number(usuario.id_empresa))
+          .filter(
+            (r: any) =>
+              Number(r.idEmpresa ?? r.id_empresa) ===
+              Number(usuario.id_empresa)
+          )
           .map((r: any) => ({
             id_reporte: r.idReporte ?? r.id_reporte,
             id_usuario: r.idUsuario ?? r.id_usuario,
@@ -89,7 +98,7 @@ const ListarReportes: React.FC = () => {
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
-      month: "long",
+      month: "short",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -133,31 +142,28 @@ const ListarReportes: React.FC = () => {
   };
 
   return (
-    <div
-    >
-      {/* Encabezado estilo SST */}
-      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
-        <FaHardHat className="text-4xl" />
+    <div>
+      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
+        <FaHardHat className="text-3xl" />
         <div>
-          <h2 className="text-3xl font-bold">SST - Reportes de Seguridad</h2>
-          <p className="text-yellow-200">Prevención, control y seguimiento de incidentes</p>
+          <h2 className="text-2xl font-bold">SST - Reportes</h2>
+          <p className="text-blue-200">Control y seguimiento de incidentes</p>
         </div>
       </div>
 
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Filtros y acción */}
-        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
+      <div className="rounded-2xl shadow-lg p-6 mx-auto max-w-6xl bg-white">
+        <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
           <input
             type="text"
-            placeholder="Buscar reporte por usuario, cargo o fecha..."
+            placeholder="Buscar reporte..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="px-4 py-2 border rounded-lg flex-1 focus:ring-2 focus:ring-yellow-500"
+            className="px-3 py-2 border rounded-md flex-1 text-sm focus:ring-2 focus:ring-blue-500"
           />
           <select
             value={estadoFiltro}
             onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="px-4 py-2 border rounded-lg focus:ring-2 focus:ring-yellow-500"
+            className="px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-400"
           >
             {estados.map((estado) => (
               <option key={estado} value={estado}>
@@ -167,61 +173,61 @@ const ListarReportes: React.FC = () => {
           </select>
           <button
             onClick={() => navigate("/nav/crearReportes")}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-yellow-700 transition"
+            className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm shadow hover:bg-blue-500 transition"
           >
-            + Crear Reporte
+            + Crear
           </button>
         </div>
 
-        {/* Reportes */}
         {reportesFiltrados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
+          <p className="text-center text-gray-500 mt-4 flex items-center justify-center gap-2 text-sm">
             <FaExclamationTriangle className="text-yellow-500" />
             No hay reportes registrados
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid md:grid-cols-3 gap-4">
             {reportesFiltrados.map((item) => (
               <div
                 key={item.id_reporte}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+                className="p-6 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
               >
-                <div className="mb-4">
-                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                <div className="mb-2">
+                  <h4 className="font-semibold text-gray-800 text-base flex items-center gap-2">
                     {item.nombre_usuario}
                     <span
-                      className={`ml-2 px-2 py-1 text-xs rounded-full border ${getBadgeColor(
+                      className={`px-2 py-0.5 text-xs rounded-full border ${getBadgeColor(
                         item.estado
                       )}`}
                     >
                       {item.estado}
                     </span>
                   </h4>
-                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
+                  <p className="text-xs text-gray-600">
+                    {formatearFecha(item.fecha)}
+                  </p>
                 </div>
 
-                <p className="text-gray-700 mb-2">
-                  <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
+                <p className="text-gray-700 text-sm mb-1 flex items-center">
+                  <FaMapMarkerAlt className="text-yellow-600 mr-2" />
                   {item.lugar}
                 </p>
 
-                {/* Descripción resumida SOLO en la lista */}
-                <p className="text-gray-600 text-sm mb-4">
-                  {item.descripcion.length > 100
-                    ? item.descripcion.substring(0, 100) + "..."
+                <p className="text-gray-600 text-xs mb-2">
+                  {item.descripcion.length > 80
+                    ? item.descripcion.substring(0, 80) + "..."
                     : item.descripcion}
                 </p>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end gap-1 mt-1">
                   <button
                     onClick={() => abrirDetalle(item)}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+                    className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 transition"
                   >
-                    Abrir
+                    Ver
                   </button>
                   <button
                     onClick={() => descargarPDF(item)}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
+                    className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600 flex items-center gap-1 transition"
                   >
                     <FaFilePdf /> PDF
                   </button>

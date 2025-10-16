@@ -104,14 +104,16 @@ const CrearReporte: React.FC = () => {
     });
   };
 
-  const handleSeleccionarUsuario = (u: any) => {
-    setUsuarioSeleccionado(u);
-    setFormData((prev) => ({
-      ...prev,
-      cargo: u.cargo || "",
-    }));
-    setShowModal(false);
-  };
+const handleSeleccionarUsuario = (u: any) => {
+  console.log("✅ Usuario seleccionado:", u); // 👈 revisa qué trae
+  setUsuarioSeleccionado(u);
+  setFormData((prev) => ({
+    ...prev,
+    cargo: u.cargo || "",
+  }));
+  setShowModal(false);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

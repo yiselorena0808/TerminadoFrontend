@@ -35,7 +35,6 @@ interface Usuario {
   area?: Area;
 }
 
-// Roles
 const ADMIN_ROLES = ["administrador", "Administrador"];
 const SGVA_ROLES = ["SGVA", "sgva"];
 const SUPER_ADMIN_ROLES = ["superadmin", "SuperAdmin"];
@@ -47,7 +46,6 @@ const Navbar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
-  // Ocultar sidebar en login/registro
   const ocultarSidebar =
     location.pathname === "/" || location.pathname === "/registro";
   if (ocultarSidebar) return null;
@@ -65,7 +63,6 @@ const Navbar: React.FC = () => {
     window.location.href = "/";
   };
 
-  // Menús
   const superAdminMenu = [
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Administracion de Empresas", path: "/nav/admEmpresas" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
