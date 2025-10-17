@@ -111,9 +111,42 @@ const RegistroArea: React.FC = () => {
       });
     }
   };
+   const links = [
+        { path: "/registroEmpresa", label: "Registrar una empresa" },
+    { path: "/registroArea", label: "Registrar una área" },
+    { path: "/registro", label: "Registrar un usuario" },
+  ];
 
 
   return (
+       <div
+          className="min-h-screen flex flex-col"
+          style={{
+            backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          {/* Barra de navegación */}
+          <nav className="bg-[#142943] shadow-md">
+            <div className="max-w-6xl mx-auto px-4">
+              <div className="flex justify-center space-x-8 h-14 items-center">
+                {links.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={`px-4 py-2 font-medium text-sm rounded-md transition-colors duration-200 ${
+                      location.pathname === link.path
+                        ? "bg-[#1E3A5F] text-white"
+                        : "text-gray-200 hover:bg-[#1E3A5F] hover:text-white"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </nav>
       <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen">
         <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
           {/* Lado izquierdo */}
@@ -238,6 +271,7 @@ const RegistroArea: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
       </div>
   );
 };

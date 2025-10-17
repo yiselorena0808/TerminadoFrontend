@@ -245,18 +245,6 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  const cambiarEstado = async (tipo: "empresa" | "area", id: number, estado: boolean) => {
-    const endpoint =
-      tipo === "empresa" ? `${apiEstadoEmp}/${id}` : `${apiEstadoArea}/${id}`;
-    try {
-      const res = await fetch(endpoint, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: !estado }),
-      });
-      if (res.ok) tipo === "empresa" ? listarEmpresas() : listarAreas();
-    } catch {}
-  };
 
   return (
     <div className="p-8 max-w-7xl mx-auto">
@@ -294,16 +282,6 @@ const SuperAdminDashboard: React.FC = () => {
                   className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl"
                 >
                   <FaTrash />
-                </button>
-                <button
-                  onClick={() =>
-                    cambiarEstado("empresa", empresa.idEmpresa, empresa.estado)
-                  }
-                  className={`px-3 py-2 rounded-xl text-white ${
-                    empresa.estado ? "bg-green-600" : "bg-gray-500"
-                  }`}
-                >
-                  {empresa.estado ? <FaToggleOn /> : <FaToggleOff />}
                 </button>
                 <button
                   onClick={() => abrirModal("area", "crear")}
@@ -357,14 +335,6 @@ const SuperAdminDashboard: React.FC = () => {
                           className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl"
                         >
                           <FaTrash />
-                        </button>
-                        <button
-                          onClick={() => cambiarEstado("area", a.idArea, a.estado)}
-                          className={`px-3 py-1 rounded-xl text-white ${
-                            a.estado ? "bg-green-600" : "bg-gray-500"
-                          }`}
-                        >
-                          {a.estado ? <FaToggleOn /> : <FaToggleOff />}
                         </button>
                       </td>
                     </tr>

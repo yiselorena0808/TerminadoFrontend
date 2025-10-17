@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
-import { FaBuilding, FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaSearch } from "react-icons/fa";
+import { FaBuilding, FaPlus, FaEdit, FaTrash, FaSearch } from "react-icons/fa";
 
 interface Area {
   idArea: number;
@@ -41,7 +41,6 @@ const AdmAreas: React.FC = () => {
   const apiCrear = import.meta.env.VITE_API_REGISTROAREA;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARAREA;
   const apiEditar = import.meta.env.VITE_API_ACTUALIZARAREA;
-  const apiEstado = import.meta.env.VITE_API_CAMBIARESTADOAREA;
 
   useEffect(() => {
     const u = getUsuarioFromToken();
@@ -152,22 +151,6 @@ const AdmAreas: React.FC = () => {
     }
   };
 
-  const cambiarEstado = async (area: Area) => {
-    try {
-      const res = await fetch(`${apiEstado}/${area.idArea}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ estado: !area.estado }),
-      });
-      if (res.ok) {
-        setAreas((prev) =>
-          prev.map((a) => (a.idArea === area.idArea ? { ...a, estado: !a.estado } : a))
-        );
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
 
   const areasFiltradas = areas.filter((a) =>
     a.nombre.toLowerCase().includes(filtro.toLowerCase())
@@ -238,9 +221,6 @@ const AdmAreas: React.FC = () => {
                     </button>
                     <button onClick={() => eliminarArea(a.idArea)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl transition shadow">
                       <FaTrash />
-                    </button>
-                    <button onClick={() => cambiarEstado(a)} className={`px-3 py-2 rounded-xl text-white ${a.estado ? "bg-green-600 hover:bg-green-700" : "bg-gray-500 hover:bg-gray-600"} transition shadow`}>
-                      {a.estado ? <FaToggleOn /> : <FaToggleOff />}
                     </button>
                   </td>
                 </tr>

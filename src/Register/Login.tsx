@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
+import { FaHardHat } from "react-icons/fa";
 
 const Login: React.FC = () => {
   const [correo_electronico, setCorreo] = useState("");
@@ -27,12 +28,10 @@ const Login: React.FC = () => {
         return;
       }
 
-      // Guardar token y usuario en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
 
-      // Ojo: backend devuelve id_empresa (snake_case)
       if (data.user?.id_empresa) {
         localStorage.setItem("idEmpresa", data.user.id_empresa.toString());
       }
@@ -40,8 +39,8 @@ const Login: React.FC = () => {
       Swal.fire({
         icon: "success",
         title: "Inicio de sesión exitoso",
-        text: "Bienvenido al sistema",
-        timer: 2000,
+        text: "Bienvenido al Sistema SST",
+        timer: 1800,
         showConfirmButton: false,
       }).then(() => {
         navigate("/nav/", { replace: true });
@@ -57,59 +56,90 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div
-      className="flex items-center justify-center w-screen h-screen bg-cover bg-center"
-      style={{
-        backgroundImage:
-          "linear-gradient(to right, rgba(0,0,0,0.6), rgba(0,0,0,0.3)), url('https://cdn2.hubspot.net/hubfs/3530961/Blogs-Pensemos-23_07_18.jpg')",
-      }}
-    >
-      <div className="flex w-11/12 md:w-4/5 lg:w-2/3 bg-transparent text-white rounded-lg overflow-hidden">
-        {/* Lado izquierdo */}
-        <div className="hidden md:flex flex-col justify-center w-1/2 p-10">
-          <h1 className="text-4xl font-bold mb-4">Bienvenido de nuevo</h1>
-          <p className="text-sm mb-6 opacity-80 leading-relaxed">
-            Ingresa con tus credenciales para acceder al sistema.
+    <div className="flex items-center justify-center w-screen h-screen bg-gray-100 relative overflow-hidden">
+      {/* Fondo decorativo profesional */}
+      <div
+        className="absolute inset-0 bg-cover bg-center brightness-75"
+        style={{
+          backgroundImage:
+            "url('https://images.unsplash.com/photo-1581093588401-22b4787fdda3?auto=format&fit=crop&w=1920&q=80')",
+        }}
+      ></div>
+
+      {/* Capa azul suave transparente */}
+      <div className="absolute inset-0 bg-white"></div>
+
+      {/* Contenedor principal */}
+      <div className="relative z-10 flex flex-col md:flex-row w-11/12 md:w-4/5 lg:w-3/4 rounded-3xl shadow-2xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20">
+        {/* Panel izquierdo - Bienvenida */}
+        <div className="hidden md:flex flex-col justify-center w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 p-10 text-white">
+          <div className="flex items-center mb-5">
+            <FaHardHat className="text-yellow-400 text-5xl mr-3" />
+            <h1 className="text-3xl font-bold tracking-wide">Sistema SST</h1>
+          </div>
+
+          <h2 className="text-2xl font-semibold mb-4 leading-snug">
+            Bienvenido al Sistema Integral de Seguridad y Salud en el Trabajo
+          </h2>
+
+          <p className="text-sm text-gray-200 leading-relaxed mb-6">
+            Este aplicativo permite gestionar, registrar y analizar todos los
+            procesos relacionados con la seguridad y salud laboral de los
+            colaboradores. Facilita la identificación de riesgos, reportes de
+            incidentes, capacitaciones y planes de mejora para garantizar un
+            entorno laboral seguro y saludable.
+          </p>
+
+          <p className="text-sm text-blue-100 border-t border-blue-300/30 pt-4">
+            👷‍♀️ <span className="font-semibold">Nuestra meta:</span> proteger el bienestar de cada trabajador mediante la prevención y la cultura de seguridad.
           </p>
         </div>
 
-        {/* Formulario */}
-        <div className="w-full md:w-1/2 bg-white bg-opacity-10 backdrop-blur-md p-8 md:p-12 flex flex-col justify-center">
-          <h2 className="text-2xl font-bold mb-6 text-center">Iniciar sesión</h2>
-          <form onSubmit={Enviar} className="flex flex-col">
-            <label className="mb-1 text-sm">Correo electrónico</label>
-            <input
-              type="email"
-              placeholder="Escribe tu correo"
-              value={correo_electronico}
-              onChange={(e) => setCorreo(e.target.value)}
-              required
-              className="mb-4 p-3 rounded bg-white text-black focus:outline-none"
-            />
+        {/* Panel derecho - Login */}
+        <div className="w-full md:w-1/2 bg-white p-10 md:p-14 flex flex-col justify-center">
+          <h2 className="text-3xl font-bold mb-6 text-center text-blue-800">
+            Iniciar sesión
+          </h2>
 
-            <label className="mb-1 text-sm">Contraseña</label>
-            <input
-              type="password"
-              placeholder="Escribe tu contraseña"
-              value={contrasena}
-              onChange={(e) => setContrasena(e.target.value)}
-              required
-              className="mb-4 p-3 rounded bg-white text-black focus:outline-none"
-            />
-
-            <div className="flex items-center justify-between mb-4 text-sm">
-              <a
-                className="underline hover:text-gray-300 cursor-pointer"
-                onClick={() => navigate("/forgot")}
-              >
-                ¿Olvidaste tu contraseña?
-              </a>
+          <form onSubmit={Enviar} className="flex flex-col space-y-5">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Correo electrónico
+              </label>
+              <input
+                type="email"
+                placeholder="usuario@empresa.com"
+                value={correo_electronico}
+                onChange={(e) => setCorreo(e.target.value)}
+                required
+                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-700 focus:outline-none"
+              />
             </div>
 
-            <div className="mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={contrasena}
+                onChange={(e) => setContrasena(e.target.value)}
+                required
+                className="w-full p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-700 focus:outline-none"
+              />
+            </div>
+
+            <div className="flex justify-between text-sm text-blue-700 font-medium">
+              <span
+                onClick={() => navigate("/forgot")}
+                className="cursor-pointer hover:text-blue-900 underline"
+              >
+                ¿Olvidaste tu contraseña?
+              </span>
               <span
                 onClick={() => navigate("/registro")}
-                className="underline hover:text-gray-300 cursor-pointer"
+                className="cursor-pointer hover:text-blue-900 underline"
               >
                 Registrarse
               </span>
@@ -117,20 +147,20 @@ const Login: React.FC = () => {
 
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded font-bold mb-4"
+              className="bg-blue-700 hover:bg-blue-800 transition-all text-white py-3 rounded-lg font-semibold shadow-md"
             >
-              Iniciar sesión ahora
+              Iniciar sesión
             </button>
 
-            <p className="text-xs text-gray-300">
-              Al hacer clic en "Iniciar sesión ahora" aceptas nuestros{" "}
-              <a href="#" className="underline">
+            <p className="text-xs text-gray-500 text-center mt-4">
+              Al continuar, aceptas nuestros{" "}
+              <a href="#" className="underline text-blue-700">
                 Términos de servicio
               </a>{" "}
-              |{" "}
-              <a href="#" className="underline">
+              y{" "}
+              <a href="#" className="underline text-blue-700">
                 Política de privacidad
-              </a>
+              </a>.
             </p>
           </form>
         </div>

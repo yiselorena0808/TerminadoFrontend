@@ -8,6 +8,7 @@ import {
   AiOutlineHome,
   AiOutlineTool,
   AiOutlineSetting,
+  AiOutlineProfile,
 } from "react-icons/ai";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 
@@ -71,7 +72,6 @@ const Navbar: React.FC = () => {
   const adminMenu = [
     { icon: <AiOutlineUser className="text-4xl" />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Administración de Áreas", path: "/nav/admAreas" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
     { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 
@@ -81,8 +81,9 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
     { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
     { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+    { icon: <AiOutlineProfile className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
+     { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
+    { icon: <AiOutlineUser className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
   ];
 
   const userMenu = [
