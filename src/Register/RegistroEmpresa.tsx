@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
+import Swal from "sweetalert2";
 
 const RegistroEmpresa: React.FC = () => {
   const navigate = useNavigate();
@@ -7,7 +8,7 @@ const RegistroEmpresa: React.FC = () => {
 
   const [nombre, setNombre] = useState("");
   const [direccion, setDireccion] = useState("");
-  const [nit,setNit] = useState("");
+  const [nit, setNit] = useState("");
   const [estado, setEstado] = useState(true);
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
@@ -17,31 +18,55 @@ const RegistroEmpresa: React.FC = () => {
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const res = await fetch(apiRegisterEmpresa, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nombre,
-        direccion,
-        nit,
-        estado,
-        esquema,
-        alias
-      }),
-    });
+    try {
+      const res = await fetch(apiRegisterEmpresa, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          direccion,
+          nit,
+          estado,
+          esquema,
+          alias,
+        }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
+      console.log("Respuesta backend:", data);
 
-    if (data.mensaje === "empresa creada") {
-      alert("Registro exitoso");
-      navigate("/registro");
-    } else {
-      alert("Registrado correctamente");
+      if (data.msj === "empresa creada") {
+        Swal.fire({
+          icon: "success",
+          title: "¡Registro exitoso!",
+          text: "La empresa fue registrada correctamente.",
+          confirmButtonColor: "#1E3A5F",
+          background: "#f8fafc",
+        });
+        setTimeout(() => navigate("/registro"), 1500);
+      } else {
+        Swal.fire({
+          icon: "warning",
+          title: "Atención",
+          text: data.msj || "Verifica los datos ingresados",
+          confirmButtonColor: "#f59e0b",
+          background: "#fef3c7",
+        });
+      }
+    } catch (error) {
+      console.error("Error al registrar empresa:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error de conexión",
+        text: "No se pudo conectar con el servidor. Inténtalo nuevamente.",
+        confirmButtonColor: "#b91c1c",
+        background: "#fee2e2",
+      });
     }
   };
 
   const links = [
-        { path: "/registroEmpresa", label: "Registrar una empresa" },
+    { path: "/registroEmpresa", label: "Registrar una empresa" },
     { path: "/registroArea", label: "Registrar una área" },
     { path: "/registro", label: "Registrar un usuario" },
   ];
@@ -55,7 +80,7 @@ const RegistroEmpresa: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Barra de navegación */}
+      {/* NAV */}
       <nav className="bg-[#142943] shadow-md">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex justify-center space-x-8 h-14 items-center">
@@ -76,15 +101,17 @@ const RegistroEmpresa: React.FC = () => {
         </div>
       </nav>
 
-      {/* Contenedor principal */}
+      {/* CONTENIDO */}
       <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen">
         <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-          {/* Lado izquierdo */}
+          {/* IZQUIERDA */}
           <div className="md:w-1/2 bg-gradient-to-br from-[#1E3A5F] via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
             <div className="text-center space-y-4 z-10">
-              <h2 className="text-3xl font-bold text-white">¡Registra tu empresa!</h2>
+              <h2 className="text-3xl font-bold text-white">
+                ¡Registra tu empresa!
+              </h2>
               <p className="text-gray-200 text-sm">
-                Ingresa los datos requeridos para registrar una tu empresa en el sistema.
+                Ingresa los datos requeridos para registrar tu empresa en el sistema.
               </p>
             </div>
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
@@ -96,7 +123,7 @@ const RegistroEmpresa: React.FC = () => {
             </div>
           </div>
 
-          {/* Lado derecho */}
+          {/* DERECHA */}
           <div className="md:w-1/2 p-8 flex items-center">
             <div className="w-full">
               <h3 className="text-2xl font-bold mb-6 text-white text-center">
@@ -109,7 +136,8 @@ const RegistroEmpresa: React.FC = () => {
                   placeholder="Nombre"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 text-gray-900"
+                  required
                 />
 
                 <input
@@ -117,7 +145,8 @@ const RegistroEmpresa: React.FC = () => {
                   placeholder="Dirección"
                   value={direccion}
                   onChange={(e) => setDireccion(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 text-gray-900"
+                  required
                 />
 
                 <input
@@ -125,7 +154,8 @@ const RegistroEmpresa: React.FC = () => {
                   placeholder="NIT"
                   value={nit}
                   onChange={(e) => setNit(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 text-gray-900"
+                  required
                 />
 
                 <input
@@ -133,7 +163,7 @@ const RegistroEmpresa: React.FC = () => {
                   placeholder="Esquema"
                   value={esquema}
                   onChange={(e) => setEsquema(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 text-gray-900"
                 />
 
                 <input
@@ -141,7 +171,7 @@ const RegistroEmpresa: React.FC = () => {
                   placeholder="Alias"
                   value={alias}
                   onChange={(e) => setAlias(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 text-gray-900"
                 />
 
                 <div className="flex items-center space-x-2 text-sm">

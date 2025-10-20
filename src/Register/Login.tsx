@@ -72,7 +72,7 @@ const Login: React.FC = () => {
       {/* Contenedor principal */}
       <div className="relative z-10 flex flex-col md:flex-row w-11/12 md:w-4/5 lg:w-3/4 rounded-3xl shadow-2xl overflow-hidden bg-white/10 backdrop-blur-xl border border-white/20">
         {/* Panel izquierdo - Bienvenida */}
-        <div className="hidden md:flex flex-col justify-center w-1/2 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 p-10 text-white">
+        <div className="hidden md:flex flex-col justify-center w-1/2 bg-[#1E3A5F] p-10 text-white">
           <div className="flex items-center mb-5">
             <FaHardHat className="text-yellow-400 text-5xl mr-3" />
             <h1 className="text-3xl font-bold tracking-wide">Sistema SST</h1>
@@ -97,7 +97,7 @@ const Login: React.FC = () => {
 
         {/* Panel derecho - Login */}
         <div className="w-full md:w-1/2 bg-white p-10 md:p-14 flex flex-col justify-center">
-          <h2 className="text-3xl font-bold mb-6 text-center text-blue-800">
+          <h2 className="text-3xl font-bold mb-6 text-center text-[#1E3A5F]">
             Iniciar sesión
           </h2>
 
@@ -147,7 +147,7 @@ const Login: React.FC = () => {
 
             <button
               type="submit"
-              className="bg-blue-700 hover:bg-blue-800 transition-all text-white py-3 rounded-lg font-semibold shadow-md"
+              className="bg-[#1E3A5F] hover:bg-blue-800 transition-all text-white py-3 rounded-lg font-semibold shadow-md"
             >
               Iniciar sesión
             </button>

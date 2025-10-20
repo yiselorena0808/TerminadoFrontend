@@ -7,6 +7,7 @@ const Registro: React.FC = () => {
 
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [formData, setFormData] = useState({
     id_empresa: "",
     id_area: "",
@@ -22,6 +23,8 @@ const Registro: React.FC = () => {
   const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
   const apiAreas = import.meta.env.VITE_API_LISTARAREAS;
+
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchEmpresas = async () => {

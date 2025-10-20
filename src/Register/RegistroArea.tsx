@@ -80,13 +80,12 @@ const RegistroArea: React.FC = () => {
         Swal.fire({
           icon: "success",
           title: "¡Éxito!",
-          text: "Área registrada con éxito ✅",
+          text: "Área registrada con éxito",
           confirmButtonColor: "#1E3A5F",
         }).then(() => {
           navigate("/registroArea");
         });
 
-        // limpiar formulario
         setNombre("");
         setCodigo("");
         setDescripcion("");
@@ -95,7 +94,7 @@ const RegistroArea: React.FC = () => {
         setEsquema("");
         setAlias("");
       } else {
-        console.error("❌ Error al registrar área:", data);
+        console.error("Error al registrar área:", data);
         Swal.fire({
           icon: "error",
           title: "Error",
