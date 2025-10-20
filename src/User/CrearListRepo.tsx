@@ -20,7 +20,8 @@ const CrearListReporte: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivos, setArchivos] = useState<File | null>(null);
 
-  const apiCrearReporte = import.meta.env.VITE_API_REGISTROREPORTE;
+  // ✅ URL base del backend
+  const apiBase = import.meta.env.VITE_API_REGISTROREPORTE;
 
   useEffect(() => {
     const u = getUsuarioFromToken();
@@ -84,7 +85,8 @@ const CrearListReporte: React.FC = () => {
       data.append("nombre_usuario", usuario.nombre);
       data.append("id_empresa", usuario.id_empresa.toString());
 
-      const res = await fetch(apiCrearReporte, {
+      // ✅ Aquí se corrige: se agrega /crearReporte
+      const res = await fetch(`${apiBase}/crearReporte`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -217,4 +219,3 @@ const CrearListReporte: React.FC = () => {
 };
 
 export default CrearListReporte;
-
