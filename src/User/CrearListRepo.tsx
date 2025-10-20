@@ -20,7 +20,6 @@ const CrearListReporte: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivos, setArchivos] = useState<File | null>(null);
 
-  // ✅ URL base del backend
   const apiBase = import.meta.env.VITE_API_REGISTROREPORTE;
 
   useEffect(() => {
@@ -85,7 +84,6 @@ const CrearListReporte: React.FC = () => {
       data.append("nombre_usuario", usuario.nombre);
       data.append("id_empresa", usuario.id_empresa.toString());
 
-      // ✅ Aquí se corrige: se agrega /crearReporte
       const res = await fetch(`${apiBase}/crearReporte`, {
         method: "POST",
         headers: {
@@ -99,7 +97,7 @@ const CrearListReporte: React.FC = () => {
         return showToast("error", result.error || "Error al enviar reporte");
       }
 
-      showToast("success", "Reporte creado correctamente ✅");
+      showToast("success", "Reporte creado correctamente");
       navigate("/nav/crearReportes");
     } catch (error) {
       console.error("Error al enviar reporte:", error);

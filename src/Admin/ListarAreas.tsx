@@ -191,9 +191,9 @@ const AdmAreas: React.FC = () => {
       </div>
 
       {/* Tabla */}
-      <div className="overflow-x-autoshadow-2xl bg-blue-50">
-        <table className="min-w-full text-gray-800">
-          <thead className="bg-blue-600 text-whitel">
+      <div className="bg-white rounded-2xl shadow-md p-5">
+        <table className="min-w-full text-gray-800 rounded-2xl shadow-md">
+          <thead className="bg-blue-600 text-whitel rounded-2xl shadow-md">
             <tr>
               {["ID", "Nombre", "Código", "Descripción", "Alias", "Esquema", "Estado", "Acción"].map((header) => (
                 <th key={header} className="px-6 py-3 text-left font-medium">

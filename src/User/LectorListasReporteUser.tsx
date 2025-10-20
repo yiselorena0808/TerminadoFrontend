@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaFilePdf, FaHardHat, FaMapMarkerAlt, FaExclamationTriangle } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaHardHat,
+  FaMapMarkerAlt,
+  FaExclamationTriangle,
+} from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
@@ -35,52 +40,50 @@ const LectorListaReportes: React.FC = () => {
     if (u) setUsuario(u);
   }, []);
 
- const obtenerListas = async () => {
-  if (!usuario) return;
+  const obtenerListas = async () => {
+    if (!usuario) return;
 
-  const token = localStorage.getItem("token");
-  if (!token) return alert("Usuario no autenticado");
+    const token = localStorage.getItem("token");
+    if (!token) return alert("Usuario no autenticado");
 
-  try {
-    const params = new URLSearchParams();
-    if (busqueda) params.append("q", busqueda);
-    if (estadoFiltro !== "Todos") params.append("estado", estadoFiltro);
-    
-    const res = await fetch(`${apiListarReportes}?${params.toString()}`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    try {
+      const params = new URLSearchParams();
+      if (busqueda) params.append("q", busqueda);
+      if (estadoFiltro !== "Todos") params.append("estado", estadoFiltro);
 
-    if (!res.ok) throw new Error("Error al obtener reportes");
+      const res = await fetch(`${apiListarReportes}?${params.toString()}`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-    const data = await res.json();
+      if (!res.ok) throw new Error("Error al obtener reportes");
 
-    // Según tu backend, los datos vienen en 'data.data'
-    if (data.data && Array.isArray(data.data)) {
-      const reportes: Reporte[] = data.data.map((r: any) => ({
-        id_reporte: r.idReporte ?? r.id_reporte,
-        id_usuario: r.idUsuario ?? r.id_usuario,
-        nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
-        cargo: r.cargo,
-        cedula: r.cedula,
-        fecha: r.fecha,
-        lugar: r.lugar,
-        descripcion: r.descripcion,
-        imagen: r.imagen ?? "",
-        archivos: r.archivos ?? "",
-        estado: r.estado,
-        id_empresa: r.idEmpresa ?? r.id_empresa,
-      }));
+      const data = await res.json();
+      if (data.data && Array.isArray(data.data)) {
+        const reportes: Reporte[] = data.data.map((r: any) => ({
+          id_reporte: r.idReporte ?? r.id_reporte,
+          id_usuario: r.idUsuario ?? r.id_usuario,
+          nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
+          cargo: r.cargo,
+          cedula: r.cedula,
+          fecha: r.fecha,
+          lugar: r.lugar,
+          descripcion: r.descripcion,
+          imagen: r.imagen ?? "",
+          archivos: r.archivos ?? "",
+          estado: r.estado,
+          id_empresa: r.idEmpresa ?? r.id_empresa,
+        }));
 
-      setListas(reportes);
-    } else {
+        setListas(reportes);
+      } else {
+        setListas([]);
+      }
+    } catch (error) {
+      console.error("Error al obtener reportes:", error);
       setListas([]);
     }
-  } catch (error) {
-    console.error("Error al obtener reportes:", error);
-    setListas([]);
-  }
-};
+  };
 
   useEffect(() => {
     if (usuario) obtenerListas();
@@ -104,17 +107,46 @@ const LectorListaReportes: React.FC = () => {
 
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
+
+    // Fondo
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, 210, 297, "F");
+
+    // Encabezado azul
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, 210, 30, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
-    doc.text("Reporte de Incidente - SST", 20, 20);
+    doc.text("INFORME DE REPORTE SST", 20, 20);
+
+    // Contenido
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
-    doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
-    doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
-    doc.text(`Cargo: ${reporte.cargo}`, 20, 60);
-    doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 70);
-    doc.text(`Lugar: ${reporte.lugar}`, 20, 80);
-    doc.text(`Descripción: ${reporte.descripcion}`, 20, 90);
-    doc.text(`Estado: ${reporte.estado}`, 20, 100);
-    doc.save(`reporte_${reporte.id_reporte}.pdf`);
+    let y = 45;
+    const margenIzq = 20;
+
+    const agregar = (titulo: string, valor: string | number | null | undefined) => {
+      doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
+      y += 8;
+    };
+
+    agregar("Usuario", `${reporte.nombre_usuario}`);
+    agregar("Cédula", `${reporte.cedula}`);
+    agregar("Cargo", `${reporte.cargo}`);
+    agregar("Fecha", `${formatearFecha(reporte.fecha)}`);
+    agregar("Lugar", `${reporte.lugar}`);
+    agregar("Descripción", `${reporte.descripcion}`);
+    agregar("Estado", `${reporte.estado}`);
+
+    // Pie de página
+    doc.setFontSize(10);
+    doc.setTextColor(100);
+    doc.text("Sistema de Gestión SST - Generado automáticamente", 20, 280);
+
+    // Guardar
+    doc.save(`Reporte_${reporte.nombre_usuario}_${reporte.id_reporte}.pdf`);
   };
 
   const reportesFiltrados = listas.filter(
@@ -139,9 +171,8 @@ const LectorListaReportes: React.FC = () => {
   };
 
   return (
-    <div
-    >
-      {/* Encabezado estilo SST */}
+    <div>
+      {/* Encabezado SST */}
       <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
@@ -151,7 +182,7 @@ const LectorListaReportes: React.FC = () => {
       </div>
 
       <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Filtros y acción */}
+        {/* Filtros */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
@@ -179,7 +210,7 @@ const LectorListaReportes: React.FC = () => {
           </button>
         </div>
 
-        {/* Reportes */}
+        {/* Listado de reportes */}
         {reportesFiltrados.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
             <FaExclamationTriangle className="text-yellow-500" />
@@ -203,14 +234,18 @@ const LectorListaReportes: React.FC = () => {
                       {item.estado}
                     </span>
                   </h4>
-                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
+                  <p className="text-sm text-gray-600">
+                    {formatearFecha(item.fecha)}
+                  </p>
                 </div>
 
                 <p className="text-gray-700 mb-2">
                   <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
                   {item.lugar}
                 </p>
-                <p className="text-gray-600 text-sm mb-4">{item.descripcion}</p>
+                <p className="text-gray-600 text-sm mb-4">
+                  {item.descripcion}
+                </p>
 
                 <div className="flex justify-end gap-2">
                   <button

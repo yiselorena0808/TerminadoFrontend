@@ -74,7 +74,7 @@ const MiEvento: React.FC = () => {
         return showToast("error", data.message || "Error al crear el evento");
       }
 
-      showToast("success", "Evento creado ✅");
+      showToast("success", "Evento creado");
 
       // Limpiar formulario
       setTitulo("");

@@ -44,7 +44,6 @@ const AdmUsuariosCompleto: React.FC = () => {
   const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
   const apiBulk = import.meta.env.VITE_API_BULK;
 
-  // 🔹 Obtener usuarios
   const obtenerUsuarios = async (id_empresa?: number) => {
     const empresaId = id_empresa || usuarioLogueado?.id_empresa;
     if (!empresaId) return Swal.fire("Error", "No se encontró la empresa del usuario", "error");
@@ -73,7 +72,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     }
   }, []);
 
-  // 🔹 Eliminar usuario
   const eliminarUsuario = async (id: number) => {
     if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
     const token = localStorage.getItem("token");
@@ -91,7 +89,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     }
   };
 
-  // 🔹 Actualizar usuario en la lista
   const actualizarUsuario = (usuarioActualizado: Usuario) => {
     setUsuarios((prev) =>
       prev.map((u) => (u.id === usuarioActualizado.id ? usuarioActualizado : u))
@@ -99,7 +96,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     setUsuarioAEditar(null);
   };
 
-  // 🔹 Filtrado
   const usuariosFiltrados = usuarios.filter(
     (u) =>
       u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||

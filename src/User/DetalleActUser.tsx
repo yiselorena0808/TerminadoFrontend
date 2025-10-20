@@ -11,7 +11,6 @@ import {
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 
-// Tipo de actividad
 interface ActividadLudica {
   id: number;
   idUsuario: number;
@@ -32,8 +31,7 @@ const MiDetalleActividadLudica: React.FC = () => {
   const [respuestaAdmin, setRespuestaAdmin] = useState("");
   const [mensaje, setMensaje] = useState("");
 
-  // Simulación de usuario admin
-  const isAdmin = true; // reemplaza con tu lógica de autenticación
+  const isAdmin = true;
 
   if (!actividad) {
     return <p className="p-6 text-center text-white">No hay datos.</p>;
@@ -50,7 +48,6 @@ const MiDetalleActividadLudica: React.FC = () => {
         });
   };
 
-  // Función para enviar comentario del admin
   const handleEnviarRespuesta = async () => {
     if (!respuestaAdmin.trim()) {
       setMensaje("El comentario no puede estar vacío");
@@ -82,7 +79,6 @@ const MiDetalleActividadLudica: React.FC = () => {
     }
   };
 
-  // Función para descargar PDF
   const descargarPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(16);

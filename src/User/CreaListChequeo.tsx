@@ -96,7 +96,7 @@ const CrearListChequeo: React.FC = () => {
         return showToast("error", data.error || "Error al crear la lista");
       }
 
-      showToast("success", "Lista de chequeo creada ✅");
+      showToast("success", "Lista de chequeo creada");
 
       // Limpiar formulario
       setFecha("");
