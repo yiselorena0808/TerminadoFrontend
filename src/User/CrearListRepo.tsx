@@ -4,10 +4,15 @@ import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
 import { FaHardHat, FaPaperPlane } from "react-icons/fa";
 
+interface Cargo {
+  idCargo: number;
+  cargo: string;
+  idEmpresa: number;
+}
+
 const CrearListReporte: React.FC = () => {
   const navigate = useNavigate();
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
-
   const [formData, setFormData] = useState({
     cargo: "",
     cedula: "",
@@ -16,12 +21,32 @@ const CrearListReporte: React.FC = () => {
     descripcion: "",
     estado: "Pendiente",
   });
-
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivos, setArchivos] = useState<File | null>(null);
 
+  const token = localStorage.getItem("token");
   const apiBase = import.meta.env.VITE_API_REGISTROREPORTE;
 
+  // 🧩 Cargar cargos disponibles
+  useEffect(() => {
+    if (!token) return;
+    const listarCargos = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_API_CARGOS, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error("Error al listar cargos");
+        const data = await res.json();
+        setCargos(data);
+      } catch {
+        Swal.fire("Error", "No se pudieron cargar los cargos", "error");
+      }
+    };
+    listarCargos();
+  }, [token]);
+
+  // 🧠 Cargar usuario del token y autocompletar cargo
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -38,7 +63,16 @@ const CrearListReporte: React.FC = () => {
       return;
     }
     setUsuario(u);
+    setFormData((prev) => ({
+      ...prev,
+      cargo: u.cargo || "", // Autoasigna el cargo del usuario
+    }));
   }, []);
+
+  // 🔎 Filtrar cargos por empresa del usuario
+  const cargosFiltrados = usuario
+    ? cargos.filter((c) => c.idEmpresa === usuario.id_empresa)
+    : [];
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -63,19 +97,20 @@ const CrearListReporte: React.FC = () => {
     }, 1500);
   };
 
+  // 🧾 Enviar reporte
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!usuario) return showToast("error", "Usuario no autenticado");
 
-    const token = localStorage.getItem("token");
     if (!token) return showToast("error", "No hay token en localStorage");
 
     try {
       const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) =>
-        data.append(key, value)
-      );
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) data.append(key, String(value).trim());
+      });
 
       if (imagen) data.append("imagen", imagen);
       if (archivos) data.append("archivos", archivos);
@@ -115,29 +150,33 @@ const CrearListReporte: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* overlay */}
       <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       <form
         onSubmit={handleSubmit}
         className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600"
       >
-        {/* Encabezado */}
         <div className="flex items-center gap-3 mb-6">
           <FaHardHat className="text-blue-600 text-3xl" />
           <h2 className="text-2xl font-bold text-gray-800">Crear Reporte SST</h2>
         </div>
 
-        {/* Inputs */}
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
+          {/* 🔽 Select de cargos filtrados */}
+          <select
             name="cargo"
-            placeholder="Cargo"
             value={formData.cargo}
             onChange={handleChange}
             className="border p-3 rounded-xl focus:ring-2 focus:ring-yellow-500"
-          />
+          >
+            <option value="">Seleccione su cargo</option>
+            {cargosFiltrados.map((c) => (
+              <option key={c.idCargo} value={c.cargo}>
+                {c.cargo}
+              </option>
+            ))}
+          </select>
+
           <input
             type="text"
             name="cedula"
@@ -183,7 +222,6 @@ const CrearListReporte: React.FC = () => {
           rows={4}
         />
 
-        {/* Archivos */}
         <div className="mt-4">
           <label className="font-semibold text-gray-700">Imagen:</label>
           <input
@@ -204,7 +242,6 @@ const CrearListReporte: React.FC = () => {
           />
         </div>
 
-        {/* Botón */}
         <button
           type="submit"
           className="mt-6 w-full bg-blue-600 hover:bg-blue-400 text-white py-3 px-4 rounded-xl flex items-center justify-center gap-2 shadow-lg"

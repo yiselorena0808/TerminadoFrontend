@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { FaUsers, FaPlus, FaSearch, FaFileExcel } from "react-icons/fa";
+import { FaUsers, FaPlus, FaSearch, FaFileExcel, FaEdit, FaTrash } from "react-icons/fa";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
 import UploadExcel from "../Admin/Excel";
@@ -185,17 +185,15 @@ const AdmUsuariosCompleto: React.FC = () => {
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded-lg shadow"
-                    >
-                      Editar
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-xl transition shadow">
+                      <FaEdit />
                     </button>
                   </td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => eliminarUsuario(u.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-lg shadow"
-                    >
-                      Eliminar
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl transition shadow">
+                      <FaTrash />
                     </button>
                   </td>
                 </tr>

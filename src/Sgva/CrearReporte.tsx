@@ -4,12 +4,14 @@ import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
 import { FaHardHat, FaPaperPlane, FaUser } from "react-icons/fa";
 
+interface Cargo { idCargo: number; cargo: string; }
 const CrearReporte: React.FC = () => {
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<any>(null);
   const [usuarios, setUsuarios] = useState<any[]>([]);
+    const [cargos, setCargos] = useState<Cargo[]>([]);
   const [buscar, setBuscar] = useState("");
   const [showModal, setShowModal] = useState(false);
 
@@ -27,6 +29,20 @@ const CrearReporte: React.FC = () => {
 
   const apiBase = import.meta.env.VITE_API_REGISTROREPORTE; 
   const apiUsuariosBase = import.meta.env.VITE_API_LISTARUSUARIOS;
+  
+  const token = localStorage.getItem("token");
+  useEffect(() => {
+      if (!token) return;
+      const listarCargos = async () => {
+        try {
+          const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: { Authorization: `Bearer ${token}` } });
+          if (!res.ok) throw new Error("Error al listar cargos");
+          const data = await res.json();
+          setCargos(data);
+        } catch { Swal.fire("Error", "No se pudieron cargar los cargos", "error"); }
+      };
+      listarCargos();
+    }, [token]);
 
   useEffect(() => {
     const u = getUsuarioFromToken();
@@ -105,7 +121,7 @@ const CrearReporte: React.FC = () => {
   };
 
 const handleSeleccionarUsuario = (u: any) => {
-  console.log("✅ Usuario seleccionado:", u); // 👈 revisa qué trae
+  console.log("Usuario seleccionado:", u);
   setUsuarioSeleccionado(u);
   setFormData((prev) => ({
     ...prev,
@@ -115,47 +131,56 @@ const handleSeleccionarUsuario = (u: any) => {
 };
 
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
 
-    const userFinal = usuarioSeleccionado || usuario;
-    if (!userFinal) return showToast("error", "Usuario no autenticado");
+  const userFinal = usuarioSeleccionado || usuario;
+  if (!userFinal) return showToast("error", "Usuario no autenticado");
 
-    const token = localStorage.getItem("token");
-    if (!token) return showToast("error", "No hay token");
+  const token = localStorage.getItem("token");
+  if (!token) return showToast("error", "No hay token");
 
-    try {
-      const data = new FormData();
-      Object.entries(formData).forEach(([key, value]) =>
-        data.append(key, value)
-      );
+  try {
+    const data = new FormData();
 
-      if (imagen) data.append("imagen", imagen);
-      if (archivos) data.append("archivos", archivos);
-
-      data.append("id_usuario", String(userFinal.id));
-      data.append("nombre_usuario", userFinal.nombre);
-      data.append("cargo", userFinal.cargo || formData.cargo);
-      data.append("id_empresa", String(userFinal.id_empresa));
-
-      const res = await fetch(`${apiBase}/crearReporte`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-        body: data,
-      });
-
-      if (!res.ok) {
-        const result = await res.json();
-        return showToast("error", result.error || "Error al enviar reporte");
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        data.append(key, String(value).trim());
       }
+    });
 
-      showToast("success", "Reporte creado correctamente");
-      navigate("/nav/reportesC");
-    } catch (error) {
-      console.error("Error al enviar reporte:", error);
-      showToast("error", "Ocurrió un error al enviar el reporte");
+    if (imagen) data.append("imagen", imagen);
+    if (archivos) data.append("archivos", archivos);
+
+    const cargoFinal =
+      typeof formData.cargo === "string" && formData.cargo.trim() !== ""
+        ? formData.cargo.trim()
+        : (userFinal.cargo || "").trim();
+
+    data.set("cargo", cargoFinal);
+
+    data.append("id_usuario", String(userFinal.id));
+    data.append("nombre_usuario", userFinal.nombre);
+    data.append("id_empresa", String(userFinal.id_empresa));
+
+    const res = await fetch(`${apiBase}/crearReporte`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: data,
+    });
+
+    if (!res.ok) {
+      const result = await res.json();
+      return showToast("error", result.error || "Error al enviar reporte");
     }
-  };
+
+    showToast("success", "Reporte creado correctamente");
+    navigate("/nav/reportesC");
+  } catch (error) {
+    console.error("Error al enviar reporte:", error);
+    showToast("error", "Ocurrió un error al enviar el reporte");
+  }
+};
 
   return (
     <div
@@ -203,14 +228,22 @@ const handleSeleccionarUsuario = (u: any) => {
 
         {/* Inputs */}
         <div className="grid grid-cols-2 gap-4">
-          <input
-            type="text"
+          <select
             name="cargo"
-            placeholder="Cargo"
             value={formData.cargo}
             onChange={handleChange}
-            className="border p-3 rounded-xl"
-          />
+            required
+            className="border p-3 rounded-xl w-full mb-3"
+          >
+            <option value="">-- Selecciona un cargo --</option>
+            {cargos.map((c) => (
+              <option key={c.idCargo} value={c.cargo}>
+                {c.cargo}
+              </option>
+            ))}
+          </select>
+
+
           <input
             type="text"
             name="cedula"
