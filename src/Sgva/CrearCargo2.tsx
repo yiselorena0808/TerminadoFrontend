@@ -107,11 +107,11 @@ const CargosPage2: React.FC = () => {
           value={nuevoCargo}
           onChange={(e) => setNuevoCargo(e.target.value)}
           placeholder="Nuevo cargo"
-          className="border p-2 rounded w-full focus:ring-2 focus:ring-yellow-500"
+          className="border p-2 rounded w-full focus:ring-2 focus:ring-blue-600"
         />
         <button
           onClick={crearCargo}
-          className="bg-yellow-600 text-white px-4 py-2 rounded-lg shadow hover:bg-yellow-700 transition flex items-center gap-2"
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2"
         >
           <FaPlus /> Crear
         </button>
@@ -128,15 +128,15 @@ const CargosPage2: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => editarCargo(c)}
-                className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 flex items-center gap-1"
+                className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-xl"
               >
-                <FaEdit /> Editar
+              <FaEdit />
               </button>
               <button
                 onClick={() => eliminarCargo(c.idCargo)}
-                className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1"
-              >
-                <FaTrash /> Eliminar
+                className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl"
+               >
+              <FaTrash />
               </button>
             </div>
           </div>

@@ -119,15 +119,14 @@ const CrearGestionEppUser: React.FC = () => {
       if (!res.ok) throw new Error(data.mensaje || "Error al crear gestión");
 
       Swal.fire("Éxito", "Gestión creada correctamente", "success");
-      navigate("/gestionEpp");
+      navigate("/nav/lectorgestionepp");
     } catch (error: any) {
       Swal.fire("Error", error.message, "error");
     } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative"
-         style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    <div>
       <div className="absolute inset-0 backdrop-blur-sm"></div>
       <form onSubmit={handleSubmit} className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600">
         <div className="flex items-center gap-3 mb-6">
@@ -197,5 +196,7 @@ const CrearGestionEppUser: React.FC = () => {
     </div>
   );
 };
+
+
 
 export default CrearGestionEppUser;

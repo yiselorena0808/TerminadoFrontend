@@ -29,18 +29,19 @@ const LectorChequeo: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
+  // Paginación
+  const [paginaActual, setPaginaActual] = useState(1);
+  const ITEMS_POR_PAGINA = 6; // 2 filas de 3 tarjetas cada una
+
   const apiListarCheq = import.meta.env.VITE_API_LISTARMISCHEQUEOS;
 
-  // 🔧 Función corregida: usa data.data (backend real)
   const obtenerListas = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
     try {
       const res = await fetch(apiListarCheq, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       const data = await res.json();
@@ -67,9 +68,7 @@ const LectorChequeo: React.FC = () => {
     navigate("/nav/MidetalleChe", { state: item });
   };
 
-  const irCrear = () => {
-    navigate("/nav/creaListChe");
-  };
+  const irCrear = () => navigate("/nav/creaListChe");
 
   const formatearFecha = (fechaIso: string) => {
     if (!fechaIso) return "Sin fecha";
@@ -87,18 +86,26 @@ const LectorChequeo: React.FC = () => {
       .includes(busqueda.toLowerCase())
   );
 
-  return (
-    <div
+  // Paginación
+  const totalPaginas = Math.ceil(listasFiltradas.length / ITEMS_POR_PAGINA);
+  const listasPaginadas = listasFiltradas.slice(
+    (paginaActual - 1) * ITEMS_POR_PAGINA,
+    paginaActual * ITEMS_POR_PAGINA
+  );
 
-    >
-      {/* Encabezado estilo SST */}
+  const cambiarPagina = (num: number) => {
+    if (num < 1 || num > totalPaginas) return;
+    setPaginaActual(num);
+  };
+
+  return (
+    <div>
+      {/* Encabezado SST */}
       <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4 backdrop-blur-sm bg-opacity-90">
         <FaHardHat className="text-4xl" />
         <div>
           <h2 className="text-3xl font-bold">SST - Listas de Chequeo</h2>
-          <p className="text-white">
-            Control y revisión de vehículos y equipos
-          </p>
+          <p className="text-white">Control y revisión de vehículos y equipos</p>
         </div>
       </div>
 
@@ -125,14 +132,14 @@ const LectorChequeo: React.FC = () => {
         </div>
 
         {/* Listado */}
-        {listasFiltradas.length === 0 ? (
+        {listasPaginadas.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
             <FaExclamationTriangle className="text-yellow-500" />
             No hay listas registradas
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {listasFiltradas.map((item) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {listasPaginadas.map((item) => (
               <div
                 key={item.id}
                 className="p-6 rounded-xl border border-gray-200 shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
@@ -169,6 +176,35 @@ const LectorChequeo: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-center items-center mt-6 gap-2">
+            <button
+              onClick={() => cambiarPagina(paginaActual - 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {"<"}
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => cambiarPagina(i + 1)}
+                className={`px-3 py-1 rounded transition ${
+                  paginaActual === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => cambiarPagina(paginaActual + 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {">"}
+            </button>
           </div>
         )}
       </div>

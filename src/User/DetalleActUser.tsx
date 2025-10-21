@@ -103,11 +103,6 @@ const MiDetalleActividadLudica: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center relative px-6 py-10"
-      style={{
-        backgroundImage:
-          "url('https://onesoluciones.co/wp-content/uploads/2021/04/Pausas-1.jpg')",
-      }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 

@@ -65,11 +65,6 @@ const MiDetalleReporte: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative px-6 py-10"
-      style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80')",
-      }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 

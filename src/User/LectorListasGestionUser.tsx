@@ -6,6 +6,8 @@ import {
   FaExclamationTriangle,
   FaPlus,
   FaFolderOpen,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
@@ -46,6 +48,8 @@ const LectorMisGestiones: React.FC = () => {
   const [gestiones, setGestiones] = useState<Gestion[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+  const [paginaActual, setPaginaActual] = useState(1);
+  const porPagina = 6;
 
   const apiListarMisGestiones = import.meta.env.VITE_API_MISGESTIONES;
 
@@ -64,12 +68,7 @@ const LectorMisGestiones: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-
-      if (data && Array.isArray(data.data)) {
-        setGestiones(data.data);
-      } else {
-        setGestiones([]);
-      }
+      setGestiones(data && Array.isArray(data.data) ? data.data : []);
     } catch (error) {
       console.error("Error al obtener gestiones:", error);
       setGestiones([]);
@@ -90,34 +89,25 @@ const LectorMisGestiones: React.FC = () => {
 
   const generarPDF = (item: Gestion) => {
     const doc = new jsPDF();
-
-    // Fondo blanco
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, 210, 297, "F");
-
-    // Encabezado azul
-    doc.setFillColor(37, 99, 235); // azul-600
+    doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, 210, 30, "F");
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
     doc.text("INFORME DETALLADO DE GESTIÓN DE EPP", 20, 20);
-
     doc.setTextColor(0, 0, 0);
     let y = 45;
     const margenIzq = 20;
-
     const agregar = (titulo: string, valor: string | number | null | undefined) => {
       doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
       y += 8;
     };
-
-    // Sección Usuario
     doc.setFont("helvetica", "bold");
     doc.text("Datos del Usuario", margenIzq, y);
     y += 8;
     doc.setFont("helvetica", "normal");
-
     agregar("ID Gestión", item.id);
     agregar("ID Usuario", item.idUsuario);
     agregar("Nombre", `${item.nombre} ${item.apellido || ""}`);
@@ -129,8 +119,6 @@ const LectorMisGestiones: React.FC = () => {
     agregar("ID Empresa", item.idEmpresa);
     agregar("ID Área", item.idArea);
     agregar("Fecha de creación", formatearFecha(item.createdAt));
-
-    // Sección Empresa
     y += 10;
     doc.setFont("helvetica", "bold");
     doc.text("Datos de la Empresa", margenIzq, y);
@@ -139,8 +127,6 @@ const LectorMisGestiones: React.FC = () => {
     agregar("Nombre", item.empresa?.nombre);
     agregar("Dirección", item.empresa?.direccion);
     agregar("NIT", item.empresa?.nit);
-
-    // Sección Área
     y += 10;
     doc.setFont("helvetica", "bold");
     doc.text("Datos del Área", margenIzq, y);
@@ -149,8 +135,6 @@ const LectorMisGestiones: React.FC = () => {
     agregar("Nombre", item.area?.nombre);
     agregar("Código", item.area?.codigo);
     agregar("Descripción", item.area?.descripcion);
-
-    // Pie
     y += 10;
     doc.setFontSize(10);
     doc.line(margenIzq, y, 190, y);
@@ -160,7 +144,6 @@ const LectorMisGestiones: React.FC = () => {
       margenIzq,
       y
     );
-
     doc.save(`gestion_${item.nombre}_${item.id}.pdf`);
   };
 
@@ -169,6 +152,16 @@ const LectorMisGestiones: React.FC = () => {
       .toLowerCase()
       .includes(busqueda.toLowerCase())
   );
+
+  // 🔹 Paginación
+  const totalPaginas = Math.ceil(gestionesFiltradas.length / porPagina);
+  const indiceInicio = (paginaActual - 1) * porPagina;
+  const indiceFin = indiceInicio + porPagina;
+  const gestionesPaginadas = gestionesFiltradas.slice(indiceInicio, indiceFin);
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) setPaginaActual(nuevaPagina);
+  };
 
   return (
     <div>
@@ -207,48 +200,49 @@ const LectorMisGestiones: React.FC = () => {
         </div>
 
         {/* Listado */}
-        {gestionesFiltradas.length === 0 ? (
+        {gestionesPaginadas.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
             <FaExclamationTriangle className="text-blue-500" /> No hay gestiones registradas.
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {gestionesFiltradas.map((item) => (
+          <>
+           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {gestionesPaginadas.map((item) => (
               <div
                 key={item.id}
-                className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
+                className="p-4 rounded-lg border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
               >
-                <div className="mb-3">
-                  <h4 className="font-bold text-lg text-gray-800 flex items-center gap-2">
+                <div className="mb-2">
+                  <h4 className="font-bold text-base text-gray-800 flex items-center gap-2">
                     {item.nombre}
                   </h4>
-                  <p className="text-sm text-gray-600">{formatearFecha(item.createdAt)}</p>
+                  <p className="text-xs text-gray-600">{formatearFecha(item.createdAt)}</p>
                 </div>
 
-                <p className="text-gray-700 text-sm mb-1">
+                <p className="text-gray-700 text-xs mb-1">
                   <strong>Cédula:</strong> {item.cedula}
                 </p>
-                <p className="text-gray-700 text-sm mb-1">
+                <p className="text-gray-700 text-xs mb-1">
                   <strong>Importancia:</strong> {item.importancia}
                 </p>
-                <p className="text-gray-700 text-sm mb-1">
+                <p className="text-gray-700 text-xs mb-1">
                   <strong>Cantidad:</strong> {item.cantidad}
                 </p>
-                <p className="text-gray-700 text-sm mb-2">
+                <p className="text-gray-700 text-xs mb-2">
                   <strong>Estado:</strong> {item.estado ? "Activo" : "Inactivo"}
                 </p>
 
-                <div className="flex justify-end mt-4 gap-2">
+                <div className="flex justify-end mt-3 gap-2">
                   <button
                     onClick={() => navigate("/nav/Migestionepp", { state: item })}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition flex items-center gap-1"
+                    className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition flex items-center gap-1 text-xs"
                   >
                     <FaFolderOpen /> Abrir
                   </button>
 
                   <button
                     onClick={() => generarPDF(item)}
-                    className="bg-red-600 text-white px-4 py-1 rounded hover:bg-red-700 transition flex items-center gap-1"
+                    className="bg-red-600 text-white px-3 py-1 rounded hover:bg-red-700 transition flex items-center gap-1 text-xs"
                   >
                     <FaFilePdf /> PDF
                   </button>
@@ -256,6 +250,43 @@ const LectorMisGestiones: React.FC = () => {
               </div>
             ))}
           </div>
+
+
+            {/* 🔹 Paginación */}
+            {totalPaginas > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronLeft />
+                </button>
+
+                {[...Array(totalPaginas)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => cambiarPagina(i + 1)}
+                    className={`px-3 py-1 rounded text-sm font-semibold ${
+                      paginaActual === i + 1
+                        ? "bg-blue-700 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronRight />
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

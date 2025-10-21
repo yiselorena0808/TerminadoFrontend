@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import Swal from "sweetalert2";
 
 interface Producto {
@@ -179,11 +180,13 @@ const ProductosPage: React.FC = () => {
             <p>{p.descripcion}</p>
             <p className="text-sm text-gray-600">Estado: {p.estado ? "Activo" : "Inactivo"}</p>
             <div className="mt-3 flex gap-2">
-              <button onClick={() => editarProducto(p)} className="bg-yellow-500 text-white px-3 py-1 rounded hover:bg-yellow-600">
-                Editar
+              <button onClick={() => editarProducto(p)}className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-xl"
+              >
+              <FaEdit></FaEdit>
               </button>
-              <button onClick={() => eliminarProducto(p.idProducto)} className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">
-                Eliminar
+              <button onClick={() => eliminarProducto(p.idProducto)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl"
+              >
+              <FaTrash></FaTrash>
               </button>
             </div>
           </div>

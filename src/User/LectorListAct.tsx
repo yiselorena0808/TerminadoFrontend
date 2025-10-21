@@ -26,6 +26,9 @@ const LectorListasActividadesLudicas: React.FC = () => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
 
+  const [paginaActual, setPaginaActual] = useState(1);
+  const ITEMS_POR_PAGINA = 6; // 2 filas de 3 tarjetas cada una
+
   const apiListarAct = import.meta.env.VITE_API_MISACTIVIDADES;
 
   useEffect(() => {
@@ -73,12 +76,23 @@ const LectorListasActividadesLudicas: React.FC = () => {
       act.descripcion.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  // Paginación
+  const totalPaginas = Math.ceil(actividadesFiltradas.length / ITEMS_POR_PAGINA);
+  const actividadesPaginadas = actividadesFiltradas.slice(
+    (paginaActual - 1) * ITEMS_POR_PAGINA,
+    paginaActual * ITEMS_POR_PAGINA
+  );
+
+  const cambiarPagina = (num: number) => {
+    if (num < 1 || num > totalPaginas) return;
+    setPaginaActual(num);
+  };
+
   const descargarPDF = async (act: ActividadLudica) => {
     const doc = new jsPDF();
     const azul = [25, 86, 212];
     const blanco = [255, 255, 255];
 
-    // Encabezado azul
     doc.setFillColor(...azul);
     doc.rect(0, 0, 220, 35, "F");
 
@@ -89,7 +103,6 @@ const LectorListasActividadesLudicas: React.FC = () => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
 
-    // Contenido principal
     let y = 50;
     const espacio = 10;
 
@@ -128,7 +141,6 @@ const LectorListasActividadesLudicas: React.FC = () => {
     doc.text(`Actualizado en: ${new Date(act.updatedAt).toLocaleString()}`, 20, y);
     y += espacio * 1.5;
 
-    // Archivos y multimedia
     if (act.archivoAdjunto) {
       doc.text("Archivo Adjunto:", 20, y);
       y += 8;
@@ -153,25 +165,12 @@ const LectorListasActividadesLudicas: React.FC = () => {
       }
     }
 
-    // Pie
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text("Sistema de Gestión SST - Actividades Lúdicas", 20, 280);
 
     doc.save(`actividad_${act.id}.pdf`);
   };
-
-  if (error) {
-    return <div className="text-center mt-10 text-red-600">{error}</div>;
-  }
-
-  if (cargando) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-lg">Cargando actividades...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-8 min-h-screen">
@@ -205,13 +204,13 @@ const LectorListasActividadesLudicas: React.FC = () => {
         </div>
 
         {/* Tarjetas */}
-        {actividadesFiltradas.length === 0 ? (
+        {actividadesPaginadas.length === 0 ? (
           <p className="text-center text-gray-500 mt-6">
             No tienes actividades registradas.
           </p>
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {actividadesFiltradas.map((act) => (
+            {actividadesPaginadas.map((act) => (
               <div
                 key={act.id}
                 className="p-6 rounded-2xl border border-blue-200 shadow hover:shadow-lg transition bg-white flex flex-col justify-between"
@@ -248,6 +247,35 @@ const LectorListasActividadesLudicas: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-center items-center mt-6 gap-2">
+            <button
+              onClick={() => cambiarPagina(paginaActual - 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {"<"}
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => cambiarPagina(i + 1)}
+                className={`px-3 py-1 rounded transition ${
+                  paginaActual === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => cambiarPagina(paginaActual + 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {">"}
+            </button>
           </div>
         )}
       </div>

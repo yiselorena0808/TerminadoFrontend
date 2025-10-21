@@ -196,7 +196,7 @@ const handleSeleccionarUsuario = (u: any) => {
 
       <form
         onSubmit={handleSubmit}
-        className="relative bg-white/95 p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-yellow-500"
+        className="relative bg-white/95 p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600"
       >
         <div className="flex items-center gap-3 mb-6">
           <FaHardHat className="text-blue-600 text-3xl" />

@@ -32,6 +32,9 @@ const LectorListaReportes: React.FC = () => {
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
+  const [paginaActual, setPaginaActual] = useState(1);
+  const ITEMS_POR_PAGINA = 6; // 2 filas de 3 tarjetas cada una
+
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_MISREPORTES;
 
@@ -87,7 +90,7 @@ const LectorListaReportes: React.FC = () => {
 
   useEffect(() => {
     if (usuario) obtenerListas();
-  }, [usuario]);
+  }, [usuario, busqueda, estadoFiltro]);
 
   const abrirDetalle = (item: Reporte) => {
     navigate("/nav/MidetalleRepo", { state: item });
@@ -107,26 +110,19 @@ const LectorListaReportes: React.FC = () => {
 
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
-
-    // Fondo
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, 210, 297, "F");
-
-    // Encabezado azul
     doc.setFillColor(37, 99, 235);
     doc.rect(0, 0, 210, 30, "F");
-
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
     doc.text("INFORME DE REPORTE SST", 20, 20);
 
-    // Contenido
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
     let y = 45;
     const margenIzq = 20;
-
     const agregar = (titulo: string, valor: string | number | null | undefined) => {
       doc.text(`${titulo}: ${valor ?? "-"}`, margenIzq, y);
       y += 8;
@@ -140,12 +136,9 @@ const LectorListaReportes: React.FC = () => {
     agregar("Descripción", `${reporte.descripcion}`);
     agregar("Estado", `${reporte.estado}`);
 
-    // Pie de página
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text("Sistema de Gestión SST - Generado automáticamente", 20, 280);
-
-    // Guardar
     doc.save(`Reporte_${reporte.nombre_usuario}_${reporte.id_reporte}.pdf`);
   };
 
@@ -156,6 +149,18 @@ const LectorListaReportes: React.FC = () => {
         .toLowerCase()
         .includes(busqueda.toLowerCase())
   );
+
+  // Paginación
+  const totalPaginas = Math.ceil(reportesFiltrados.length / ITEMS_POR_PAGINA);
+  const reportesPaginados = reportesFiltrados.slice(
+    (paginaActual - 1) * ITEMS_POR_PAGINA,
+    paginaActual * ITEMS_POR_PAGINA
+  );
+
+  const cambiarPagina = (num: number) => {
+    if (num < 1 || num > totalPaginas) return;
+    setPaginaActual(num);
+  };
 
   const getBadgeColor = (estado: string) => {
     switch (estado) {
@@ -172,7 +177,6 @@ const LectorListaReportes: React.FC = () => {
 
   return (
     <div>
-      {/* Encabezado SST */}
       <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center gap-4">
         <FaHardHat className="text-4xl" />
         <div>
@@ -182,7 +186,6 @@ const LectorListaReportes: React.FC = () => {
       </div>
 
       <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* Filtros */}
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
@@ -210,15 +213,14 @@ const LectorListaReportes: React.FC = () => {
           </button>
         </div>
 
-        {/* Listado de reportes */}
-        {reportesFiltrados.length === 0 ? (
+        {reportesPaginados.length === 0 ? (
           <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
             <FaExclamationTriangle className="text-yellow-500" />
             No hay reportes registrados
           </p>
         ) : (
-          <div className="grid md:grid-cols-2 gap-6">
-            {reportesFiltrados.map((item) => (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {reportesPaginados.map((item) => (
               <div
                 key={item.id_reporte}
                 className="p-6 rounded-xl border shadow hover:shadow-lg transition bg-gray-50 flex flex-col justify-between"
@@ -234,18 +236,14 @@ const LectorListaReportes: React.FC = () => {
                       {item.estado}
                     </span>
                   </h4>
-                  <p className="text-sm text-gray-600">
-                    {formatearFecha(item.fecha)}
-                  </p>
+                  <p className="text-sm text-gray-600">{formatearFecha(item.fecha)}</p>
                 </div>
 
                 <p className="text-gray-700 mb-2">
                   <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
                   {item.lugar}
                 </p>
-                <p className="text-gray-600 text-sm mb-4">
-                  {item.descripcion}
-                </p>
+                <p className="text-gray-600 text-sm mb-4">{item.descripcion}</p>
 
                 <div className="flex justify-end gap-2">
                   <button
@@ -263,6 +261,35 @@ const LectorListaReportes: React.FC = () => {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-center items-center mt-6 gap-2">
+            <button
+              onClick={() => cambiarPagina(paginaActual - 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {"<"}
+            </button>
+            {Array.from({ length: totalPaginas }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => cambiarPagina(i + 1)}
+                className={`px-3 py-1 rounded transition ${
+                  paginaActual === i + 1 ? "bg-blue-600 text-white" : "bg-gray-200 hover:bg-gray-300"
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => cambiarPagina(paginaActual + 1)}
+              className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+            >
+              {">"}
+            </button>
           </div>
         )}
       </div>

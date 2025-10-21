@@ -96,11 +96,6 @@ const DetalleGestionEPPUser: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen bg-cover bg-center bg-no-repeat relative px-6 py-10"
-      style={{
-        backgroundImage:
-          "url('https://ccmty.com/wp-content/uploads/2018/02/1c257c52b98d4c8b895eac8364583bc9.jpg')",
-      }}
     >
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 

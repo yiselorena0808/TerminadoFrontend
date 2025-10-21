@@ -5,6 +5,8 @@ import {
   FaHardHat,
   FaMapMarkerAlt,
   FaExclamationTriangle,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -31,6 +33,9 @@ const ListarReportes: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+
+  const [paginaActual, setPaginaActual] = useState(1);
+  const reportesPorPagina = 9;
 
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
@@ -128,6 +133,18 @@ const ListarReportes: React.FC = () => {
         .includes(busqueda.toLowerCase())
   );
 
+  // 🔹 PAGINACIÓN
+  const totalPaginas = Math.ceil(reportesFiltrados.length / reportesPorPagina);
+  const indiceInicial = (paginaActual - 1) * reportesPorPagina;
+  const indiceFinal = indiceInicial + reportesPorPagina;
+  const reportesPaginados = reportesFiltrados.slice(indiceInicial, indiceFinal);
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
   const getBadgeColor = (estado: string) => {
     switch (estado) {
       case "Pendiente":
@@ -143,11 +160,11 @@ const ListarReportes: React.FC = () => {
 
   return (
     <div>
-      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
-        <FaHardHat className="text-3xl" />
+      <div className="bg-blue-600 to-black text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
+        <FaHardHat className="text-3xl text-white" />
         <div>
           <h2 className="text-2xl font-bold">SST - Reportes</h2>
-          <p className="text-blue-200">Control y seguimiento de incidentes</p>
+          <p className="text-gray-300">Control y seguimiento de incidentes</p>
         </div>
       </div>
 
@@ -173,68 +190,103 @@ const ListarReportes: React.FC = () => {
           </select>
           <button
             onClick={() => navigate("/nav/crearReportes")}
-            className="px-3 py-2 bg-blue-600 text-white rounded-md text-sm shadow hover:bg-blue-500 transition"
+            className="px-3 py-2 bg-blue-700 text-white rounded-md text-sm shadow hover:bg-blue-600 transition"
           >
             + Crear
           </button>
         </div>
 
-        {reportesFiltrados.length === 0 ? (
+        {reportesPaginados.length === 0 ? (
           <p className="text-center text-gray-500 mt-4 flex items-center justify-center gap-2 text-sm">
             <FaExclamationTriangle className="text-yellow-500" />
             No hay reportes registrados
           </p>
         ) : (
-          <div className="grid md:grid-cols-3 gap-4">
-            {reportesFiltrados.map((item) => (
-              <div
-                key={item.id_reporte}
-                className="p-6 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
-              >
-                <div className="mb-2">
-                  <h4 className="font-semibold text-gray-800 text-base flex items-center gap-2">
-                    {item.nombre_usuario}
-                    <span
-                      className={`px-2 py-0.5 text-xs rounded-full border ${getBadgeColor(
-                        item.estado
-                      )}`}
-                    >
-                      {item.estado}
-                    </span>
-                  </h4>
-                  <p className="text-xs text-gray-600">
-                    {formatearFecha(item.fecha)}
+          <>
+            <div className="grid md:grid-cols-3 gap-4">
+              {reportesPaginados.map((item) => (
+                <div
+                  key={item.id_reporte}
+                  className="p-6 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
+                >
+                  <div className="mb-2">
+                    <h4 className="font-semibold text-gray-800 text-base flex items-center gap-2">
+                      {item.nombre_usuario}
+                      <span
+                        className={`px-2 py-0.5 text-xs rounded-full border ${getBadgeColor(
+                          item.estado
+                        )}`}
+                      >
+                        {item.estado}
+                      </span>
+                    </h4>
+                    <p className="text-xs text-gray-600">
+                      {formatearFecha(item.fecha)}
+                    </p>
+                  </div>
+
+                  <p className="text-gray-700 text-sm mb-1 flex items-center">
+                    <FaMapMarkerAlt className="text-yellow-600 mr-2" />
+                    {item.lugar}
                   </p>
+
+                  <p className="text-gray-600 text-xs mb-2">
+                    {item.descripcion.length > 80
+                      ? item.descripcion.substring(0, 80) + "..."
+                      : item.descripcion}
+                  </p>
+
+                  <div className="flex justify-end gap-1 mt-1">
+                    <button
+                      onClick={() => abrirDetalle(item)}
+                      className="bg-blue-700 text-white px-3 py-1 text-xs rounded hover:bg-blue-800 transition"
+                    >
+                      Ver
+                    </button>
+                    <button
+                      onClick={() => descargarPDF(item)}
+                      className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600 flex items-center gap-1 transition"
+                    >
+                      <FaFilePdf /> PDF
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
 
-                <p className="text-gray-700 text-sm mb-1 flex items-center">
-                  <FaMapMarkerAlt className="text-yellow-600 mr-2" />
-                  {item.lugar}
-                </p>
-
-                <p className="text-gray-600 text-xs mb-2">
-                  {item.descripcion.length > 80
-                    ? item.descripcion.substring(0, 80) + "..."
-                    : item.descripcion}
-                </p>
-
-                <div className="flex justify-end gap-1 mt-1">
+            {/* 🔹 PAGINACIÓN */}
+            {totalPaginas > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-6">
+                <button
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronLeft />
+                </button>
+                {[...Array(totalPaginas)].map((_, i) => (
                   <button
-                    onClick={() => abrirDetalle(item)}
-                    className="bg-blue-600 text-white px-3 py-1 text-xs rounded hover:bg-blue-700 transition"
+                    key={i}
+                    onClick={() => cambiarPagina(i + 1)}
+                    className={`px-3 py-1 rounded ${
+                      paginaActual === i + 1
+                        ? "bg-blue-700 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
                   >
-                    Ver
+                    {i + 1}
                   </button>
-                  <button
-                    onClick={() => descargarPDF(item)}
-                    className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600 flex items-center gap-1 transition"
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
-                </div>
+                ))}
+                <button
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronRight />
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

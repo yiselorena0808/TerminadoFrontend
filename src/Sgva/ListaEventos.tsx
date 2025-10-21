@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getUsuarioFromToken } from "../utils/auth";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 interface UsuarioToken {
   id: number;
@@ -244,16 +245,16 @@ const ListaEventos: React.FC = () => {
 
                   <button
                     onClick={() => abrirModal(evento)}
-                    className="bg-yellow-400 text-white px-4 py-2 rounded hover:bg-yellow-500 transition font-semibold"
+                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded-xl"
                   >
-                    Editar
+                  <FaEdit></FaEdit>
                   </button>
 
                   <button
                     onClick={() => handleEliminar(evento.id)}
-                    className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition font-semibold"
-                  >
-                    Eliminar
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-xl"
+                    >
+                    <FaTrash></FaTrash>
                   </button>
                 </div>
               </div>

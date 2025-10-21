@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { FaFilePdf, FaPlus, FaEye, FaCalendarAlt, FaUserTie } from "react-icons/fa";
+import {
+  FaFilePdf,
+  FaPlus,
+  FaEye,
+  FaCalendarAlt,
+  FaUserTie,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -25,6 +33,8 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const actividadesPorPagina = 9;
 
   const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
   const usuario: UsuarioToken | null = getUsuarioFromToken();
@@ -77,7 +87,19 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
       act.descripcion?.toLowerCase().includes(busqueda.toLowerCase())
   );
 
- const descargarPDF = async (act: ActividadLudica) => {
+  // 🔹 Paginación
+  const totalPaginas = Math.ceil(actividadesFiltradas.length / actividadesPorPagina);
+  const indiceInicial = (paginaActual - 1) * actividadesPorPagina;
+  const indiceFinal = indiceInicial + actividadesPorPagina;
+  const actividadesPaginadas = actividadesFiltradas.slice(indiceInicial, indiceFinal);
+
+  const cambiarPagina = (nuevaPagina: number) => {
+    if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) {
+      setPaginaActual(nuevaPagina);
+    }
+  };
+
+  const descargarPDF = async (act: ActividadLudica) => {
     const doc = new jsPDF();
     const azul = [25, 86, 212];
     const blanco = [255, 255, 255];
@@ -92,7 +114,6 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(12);
 
-    // Contenido principal
     let y = 50;
     const espacio = 10;
 
@@ -115,23 +136,17 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
 
     doc.text(`Nombre del Usuario: ${act.nombreUsuario}`, 20, y);
     y += espacio;
-
     doc.text(`ID Actividad: ${act.id}`, 20, y);
     y += espacio;
-
     doc.text(`ID Usuario: ${act.idUsuario}`, 20, y);
     y += espacio;
-
     doc.text(`ID Empresa: ${act.idEmpresa}`, 20, y);
     y += espacio;
-
     doc.text(`Creado en: ${new Date(act.createdAt).toLocaleString()}`, 20, y);
     y += espacio;
-
     doc.text(`Actualizado en: ${new Date(act.updatedAt).toLocaleString()}`, 20, y);
     y += espacio * 1.5;
 
-    // Archivos y multimedia
     if (act.archivoAdjunto) {
       doc.text("Archivo Adjunto:", 20, y);
       y += 8;
@@ -151,33 +166,28 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
 
         doc.addImage(base64, "PNG", 20, y, 80, 60);
         y += 70;
-      } catch (e) {
+      } catch {
         doc.text("No se pudo cargar la imagen.", 20, y);
       }
     }
 
-    // Pie
     doc.setFontSize(10);
     doc.setTextColor(100);
     doc.text("Sistema de Gestión SST - Actividades Lúdicas", 20, 280);
-
     doc.save(`actividad_${act.id}.pdf`);
   };
 
-
   return (
-    <div>
-      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
-        <FaUserTie className="text-4xl" />
+    <div className="min-h-screen">
+      <div className="bg-blue-600 to-black text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
+        <FaUserTie className="text-4xl text-yellow-400" />
         <div>
           <h2 className="text-2xl font-bold">SST - Actividades Lúdicas</h2>
-          <p className="text-blue-200">
-            Visualiza todas las actividades de tu empresa
-          </p>
+          <p className="text-gray-300">Visualiza todas las actividades de tu empresa</p>
         </div>
       </div>
 
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white border border-blue-100">
+      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-7xl bg-white border border-gray-200">
         <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
           <input
             type="text"
@@ -188,54 +198,100 @@ const ListasActividadesLudicasEmpresa: React.FC = () => {
           />
           <button
             onClick={irCrear}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition flex items-center gap-2"
+            className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow hover:bg-blue-800 transition flex items-center gap-2"
           >
             <FaPlus /> Nueva Actividad
           </button>
         </div>
 
-        {actividadesFiltradas.length === 0 ? (
+        {cargando ? (
+          <p className="text-center text-gray-500">Cargando actividades...</p>
+        ) : error ? (
+          <p className="text-center text-red-500">{error}</p>
+        ) : actividadesPaginadas.length === 0 ? (
           <p className="text-center text-gray-500 mt-6">No hay actividades registradas</p>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {actividadesFiltradas.map((act) => (
-              <div
-                key={act.id}
-                className="p-6 rounded-2xl border border-blue-200 shadow hover:shadow-lg transition bg-white flex flex-col justify-between"
-              >
-                <div>
-                  <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2">
-                    <FaCalendarAlt className="text-blue-500" />
-                    {act.nombreActividad}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-1">
-                    <strong>Usuario:</strong> {act.nombreUsuario}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-1">
-                    <strong>Fecha:</strong>{" "}
-                    {act.fechaActividad
-                      ? new Date(act.fechaActividad).toLocaleDateString("es-CO")
-                      : "Sin fecha"}
-                  </p>
-                </div>
+          <>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {actividadesPaginadas.map((act) => (
+                <div
+                  key={act.id}
+                  className="p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between h-[260px]"
+                >
+                  <div>
+                    <h3 className="text-lg font-bold text-blue-700 mb-2 flex items-center gap-2">
+                      <FaCalendarAlt className="text-blue-500" />
+                      {act.nombreActividad}
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-1">
+                      <strong>Usuario:</strong> {act.nombreUsuario}
+                    </p>
+                    <p className="text-sm text-gray-700 mb-1">
+                      <strong>Fecha:</strong>{" "}
+                      {act.fechaActividad
+                        ? new Date(act.fechaActividad).toLocaleDateString("es-CO")
+                        : "Sin fecha"}
+                    </p>
+                    <p className="text-xs text-gray-600 mt-2">
+                      {act.descripcion?.length > 80
+                        ? act.descripcion.substring(0, 80) + "..."
+                        : act.descripcion || "Sin descripción"}
+                    </p>
+                  </div>
 
-                <div className="flex justify-end gap-2 mt-4">
-                  <button
-                    onClick={() => navigate("/nav/detalleActLudica", { state: act })}
-                    className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition flex items-center gap-1"
-                  >
-                    <FaEye /> Abrir
-                  </button>
-                  <button
-                    onClick={() => descargarPDF(act)}
-                    className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 transition flex items-center gap-1"
-                  >
-                    <FaFilePdf /> PDF
-                  </button>
+                  <div className="flex justify-end gap-2 mt-4">
+                    <button
+                      onClick={() =>
+                        navigate("/nav/detalleActLudica", { state: act })
+                      }
+                      className="bg-blue-700 text-white px-4 py-1 text-sm rounded hover:bg-blue-800 transition flex items-center gap-1"
+                    >
+                      <FaEye /> Abrir
+                    </button>
+                    <button
+                      onClick={() => descargarPDF(act)}
+                      className="bg-red-500 text-white px-4 py-1 text-sm rounded hover:bg-red-600 transition flex items-center gap-1"
+                    >
+                      <FaFilePdf /> PDF
+                    </button>
+                  </div>
                 </div>
+              ))}
+            </div>
+
+            {/* 🔹 Paginación */}
+            {totalPaginas > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-8">
+                <button
+                  onClick={() => cambiarPagina(paginaActual - 1)}
+                  disabled={paginaActual === 1}
+                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronLeft />
+                </button>
+                {[...Array(totalPaginas)].map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => cambiarPagina(i + 1)}
+                    className={`px-3 py-1 rounded text-sm font-semibold ${
+                      paginaActual === i + 1
+                        ? "bg-blue-700 text-white"
+                        : "bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => cambiarPagina(paginaActual + 1)}
+                  disabled={paginaActual === totalPaginas}
+                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                >
+                  <FaChevronRight />
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
     </div>

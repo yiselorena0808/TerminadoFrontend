@@ -11,6 +11,7 @@ import {
   AiOutlineProfile,
 } from "react-icons/ai";
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import logo from "../src/assets/logosst.jpg";
 
 interface Empresa {
   id_empresa: number;
@@ -43,12 +44,10 @@ const SUPER_ADMIN_ROLES = ["superadmin", "SuperAdmin"];
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
 
-  const ocultarSidebar =
-    location.pathname === "/" || location.pathname === "/registro";
+  const ocultarSidebar = location.pathname === "/" || location.pathname === "/registro";
   if (ocultarSidebar) return null;
 
   useEffect(() => {
@@ -65,128 +64,119 @@ const Navbar: React.FC = () => {
   };
 
   const superAdminMenu = [
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administracion de Empresas", path: "/nav/admEmpresas" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+    { icon: <AiOutlineSetting />, label: "Administración de Empresas", path: "/nav/admEmpresas" },
+    { icon: <AiOutlineProfile />, label: "Perfil", path: "/nav/perfil" },
   ];
 
   const adminMenu = [
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Administración de Áreas", path: "/nav/admAreas" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+    { icon: <AiOutlineUser />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
+    { icon: <AiOutlineSetting />, label: "Administración de Áreas", path: "/nav/admAreas" },
+    { icon: <AiOutlineProfile />, label: "Perfil", path: "/nav/perfil" },
   ];
 
   const sgvaMenu = [
-    { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicio" },
-    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Reportes", path: "/nav/reportesC" },
-    { icon: <AiOutlineBook className="text-4xl" />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
-    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
-    { icon: <AiOutlineTool className="text-4xl" />, label: "Gestión EPP", path: "/nav/gestionEpp" },
-    { icon: <AiOutlineProfile className="text-4xl" />, label: "Eventos", path: "/nav/blog" },
-     { icon: <AiOutlineSetting className="text-4xl" />, label: "Adicionales", path: "/nav/Admadicionales" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+    { icon: <AiOutlineHome />, label: "Inicio", path: "/nav/inicio" },
+    { icon: <AiOutlineBarChart />, label: "Reportes", path: "/nav/reportesC" },
+    { icon: <AiOutlineBook />, label: "Actividades Lúdicas", path: "/nav/actLudica" },
+    { icon: <AiOutlineCheckSquare />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
+    { icon: <AiOutlineTool />, label: "Gestión EPP", path: "/nav/gestionEpp" },
+    { icon: <AiOutlineSetting />, label: "Adicionales", path: "/nav/Admadicionales" },
+    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/blog" },
+    { icon: <AiOutlineUser />, label: "Perfil", path: "/nav/perfil" },
   ];
 
   const userMenu = [
-    { icon: <AiOutlineHome className="text-4xl" />, label: "Inicio", path: "/nav/inicioUser" },
-    { icon: <AiOutlineCheckSquare className="text-4xl" />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
-    { icon: <AiOutlineBarChart className="text-4xl" />, label: "Mis Reportes", path: "/nav/LectorUserRepo" },
-    { icon: <AiOutlineBook className="text-4xl" />, label: "Mis Actividades Lúdicas", path: "/nav/LectorUserAct" },
-    { icon: <AiOutlineTool className="text-4xl" />, label: "Mis Gestión EPP", path: "/nav/lectorgestionepp" },
-    { icon: <AiOutlineUser className="text-4xl" />, label: "Eventos", path: "/nav/EventosUser" },
-    { icon: <AiOutlineSetting className="text-4xl" />, label: "Perfil", path: "/nav/perfil" },
+    { icon: <AiOutlineHome />, label: "Inicio", path: "/nav/inicioUser" },
+    { icon: <AiOutlineCheckSquare />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
+    { icon: <AiOutlineBarChart />, label: "Mis Reportes", path: "/nav/LectorUserRepo" },
+    { icon: <AiOutlineBook />, label: "Mis Actividades Lúdicas", path: "/nav/LectorUserAct" },
+    { icon: <AiOutlineTool />, label: "Mi Gestión EPP", path: "/nav/lectorgestionepp" },
+    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/EventosUser" },
+    { icon: <AiOutlineUser />, label: "Perfil", path: "/nav/perfil" },
   ];
 
   const isSuperAdmin = usuario && SUPER_ADMIN_ROLES.includes(usuario.cargo);
   const isSgva = usuario && SGVA_ROLES.includes(usuario.cargo);
   const isAdmin = usuario && ADMIN_ROLES.includes(usuario.cargo);
-
   const menuItems = isSuperAdmin ? superAdminMenu : isSgva ? sgvaMenu : isAdmin ? adminMenu : userMenu;
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden">
-      {/* Sidebar */}
+    <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-white via-blue-50 to-blue-100">
+      {/* 🔹 Sidebar */}
       <div
-        className={`${isCollapsed ? "w-22" : "w-72"} h-full text-white flex flex-col transition-all duration-300 border-r border-gray-700 shadow-xl backdrop-blur-lg`}
-        style={{
-          backgroundImage: "linear-gradient(160deg, rgba(15,23,42,0.95) 0%, rgba(30,41,59,0.85) 100%), url('https://images.unsplash.com/photo-1519389950473-47ba0277781c')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
+        className={`${isCollapsed ? "w-20" : "w-72"} h-full flex flex-col text-gray-800 bg-white border-r border-blue-100 shadow-lg transition-all duration-300`}
       >
-        {/* Botón menú */}
-        <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
+        {/* 🔹 Logo y menú */}
+        <div className="flex items-center justify-between px-4 py-4 border-b border-blue-100">
           {!isCollapsed && (
-            <h1 className="text-xl font-bold tracking-wide bg-gradient-to-r from-blue-400 to-teal-300 bg-clip-text text-transparent">
-              {isSuperAdmin ? "Super Admin" : isSgva ? "Panel SGVA" : isAdmin ? "Panel Admin" : "Panel Usuario"}
-            </h1>
+            <div className="flex items-center space-x-2">
+              <img src={logo} alt="Logo" className="w-10 h-10 rounded-full object-cover" />
+              <h1 className="text-lg font-bold text-blue-800 tracking-wide">SST</h1>
+            </div>
           )}
-          <button onClick={() => setIsCollapsed(!isCollapsed)} className="p-2 hover:bg-blue-500/30 rounded-lg transition-colors">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="p-2 text-blue-700 hover:bg-blue-50 rounded-lg transition"
+          >
             <AiOutlineMenu className="text-2xl" />
           </button>
         </div>
 
-        {/* Perfil */}
+        {/* 🔹 Perfil */}
         {!isCollapsed && usuario && (
-          <div className="flex flex-col items-center py-6 border-b border-gray-700">
-            <div className="relative">
-              <img
-                src={usuario.fotoPerfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-                alt="Perfil"
-                className="w-24 h-24 rounded-full border-4 border-blue-500 shadow-lg hover:scale-105 transition-transform"
-                onClick={() =>
-                  navigate(
-                    isSuperAdmin
-                      ? "/nav/perfil"
-                      : isSgva
-                      ? "/nav/sgvaperfil"
-                      : isAdmin
-                      ? "/nav/Admperfil"
-                      : "/nav/perfil"
-                  )
-                }
-              />
-              <span className="absolute bottom-1 right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-gray-900"></span>
-            </div>
-            <h2 className="mt-3 font-semibold text-lg">{usuario.nombre} {usuario.apellido}</h2>
-            <p className="text-gray-400 text-sm">{usuario.cargo}</p>
+          <div className="flex flex-col items-center py-6 border-b border-blue-100 text-center">
+            <img
+              src={usuario.fotoPerfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+              alt="Perfil"
+              className="w-20 h-20 rounded-full border-4 border-blue-300 shadow-md object-cover"
+            />
+            <h2 className="mt-3 font-semibold text-blue-900">{usuario.nombre}</h2>
+            <p className="text-sm text-gray-500">{usuario.cargo}</p>
           </div>
         )}
 
-        {/* Menú */}
-        <nav className={`flex-1 mt-4 overflow-y-auto ${isCollapsed ? "flex flex-col items-center justify-evenly" : ""}`}>
-          <ul className={`${isCollapsed ? "space-y-0" : "space-y-1 w-full"}`}>
-            {menuItems.map((item, index) => (
-              <li key={index}>
+        {/* 🔹 Menú */}
+        <nav className="flex-1 mt-4 overflow-y-auto">
+          <ul className="space-y-1 px-2">
+            {menuItems.map((item, i) => (
+              <li key={i}>
                 <button
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center w-full ${isCollapsed ? "justify-center" : "gap-2 px-3"} py-3 text-sm text-black transition-all duration-200 border-l-4 border-transparent hover:border-blue-400 hover:bg-gradient-to-r hover:from-blue-500/20 hover:to-purple-500/20 rounded-lg`}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-lg text-gray-700 hover:text-blue-700 hover:bg-blue-50 transition-all"
                 >
-                  <span className="text-blue-300 group-hover:text-blue-400 transition-colors">{item.icon}</span>
-                  {!isCollapsed && <span className="group-hover:text-blue-300 transition-colors">{item.label}</span>}
+                  <span className="text-xl text-blue-700">{item.icon}</span>
+                  {!isCollapsed && <span className="font-medium">{item.label}</span>}
                 </button>
               </li>
             ))}
           </ul>
         </nav>
 
-        {/* Footer */}
+        {/* 🔹 Footer */}
         {!isCollapsed && (
-          <div className="p-4 border-t border-gray-700 text-center text-xs text-gray-400">
-            <button onClick={logout} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-lg w-full font-bold text-white">
-              🔒 Cerrar sesión
+          <div className="p-4 border-t border-blue-100">
+            <button
+              onClick={logout}
+              className="w-full bg-blue-700 hover:bg-blue-600 text-white font-semibold py-2 rounded-xl transition"
+            >
+              Cerrar sesión
             </button>
-            <p className="mt-2">© 2025 SST</p>
+            <p className="text-center mt-2 text-xs text-gray-500">© 2025 SST</p>
           </div>
         )}
       </div>
 
-      {/* Contenido principal */}
-      <div className="flex-1 overflow-auto" style={{
-        backgroundImage: "linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.85)), url('https://img.freepik.com/fotos-premium/trabajador-textura-oscura-fondo-concepto-sst-seguridad-salud-trabajo_488220-50664.jpg')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-      }}>
-        <div className="p-6">
+      {/* 🔹 Contenido principal */}
+      <div
+        className="flex-1 overflow-auto"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.95)), url('https://img.freepik.com/fotos-premium/trabajador-textura-oscura-fondo-concepto-sst-seguridad-salud-trabajo_488220-50664.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
+      >
+        <div className="p-8">
           <Outlet />
         </div>
       </div>
