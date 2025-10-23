@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import Swal from "sweetalert2";
+import logo from "../assets/logosst.jpg";
 
 const RegistroArea: React.FC = () => {
   const navigate = useNavigate();
@@ -118,38 +119,40 @@ const RegistroArea: React.FC = () => {
 
 
   return (
-       <div
-          className="min-h-screen flex flex-col"
-          style={{
-            backgroundImage: `url('https://e1.pxfuel.com/desktop-wallpaper/512/185/desktop-wallpaper-business-office-office-desk.jpg')`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+      <div className="min-h-screen flex flex-col bg-white font-inter text-gray-800">
+      {/* 🔷 HEADER IDÉNTICO AL INICIO */}
+      <header className="flex justify-between items-center px-10 py-5 bg-white shadow-md fixed w-full top-0 z-50">
+        <div className="flex items-center space-x-3">
+          <img src={logo} alt="Logo" className="w-12 h-12 rounded-full object-cover" />
+          <h1 className="text-xl md:text-2xl font-bold text-blue-800">
+            Sistema Integral de Seguridad Laboral
+          </h1>
+        </div>
+
+        <nav className="hidden md:flex space-x-8 text-gray-600 font-medium">
+          <Link to="/registroEmpresa" className="hover:text-blue-700 transition-colors">
+            Registrar Empresa
+          </Link>
+          <Link to="/registroArea" className="hover:text-blue-700 transition-colors">
+            Registrar Área
+          </Link>
+          <Link to="/registro" className="hover:text-blue-700 transition-colors">
+            Registrar Usuario
+          </Link>
+        </nav>
+
+        <button
+          onClick={() => navigate("/login")}
+          className="bg-blue-700 hover:bg-blue-600 text-white font-semibold px-6 py-2 rounded-xl shadow-md transition"
         >
-          {/* Barra de navegación */}
-          <nav className="bg-[#142943] shadow-md">
-            <div className="max-w-6xl mx-auto px-4">
-              <div className="flex justify-center space-x-8 h-14 items-center">
-                {links.map((link) => (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className={`px-4 py-2 font-medium text-sm rounded-md transition-colors duration-200 ${
-                      location.pathname === link.path
-                        ? "bg-[#1E3A5F] text-white"
-                        : "text-gray-200 hover:bg-[#1E3A5F] hover:text-white"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </nav>
+          Iniciar sesión
+        </button>
+      </header>
+
       <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen">
         <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
           {/* Lado izquierdo */}
-          <div className="md:w-1/2 bg-gradient-to-br from-[#1E3A5F] via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
+          <div className="md:w-1/2 bg-gradient-to-br bg-blue-900 via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">¡Registra un área!</h2>
               <p className="text-gray-200 text-sm">
@@ -168,7 +171,7 @@ const RegistroArea: React.FC = () => {
           {/* Lado derecho */}
           <div className="md:w-1/2 p-8 flex items-center">
             <div className="w-full">
-              <h3 className="text-2xl font-bold mb-6 text-white text-center">
+              <h3 className="text-2xl font-bold mb-6 text-black text-center">
                 Registrar Área
               </h3>
 
@@ -271,6 +274,10 @@ const RegistroArea: React.FC = () => {
           </div>
         </div>
       </div>
+       {/* FOOTER */}
+      <footer className="bg-blue-900 text-center py-6 text-gray-200 text-sm border-t border-blue-800">
+        © 2025 Sistema Integral SST — Desarrollado por aprendices del SENA
+      </footer>
       </div>
   );
 };

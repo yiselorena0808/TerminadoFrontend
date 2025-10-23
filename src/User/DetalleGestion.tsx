@@ -55,7 +55,8 @@ interface GestionDetalle {
 const DetalleGestionEPPUser: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const gestion: GestionDetalle | undefined = location.state as GestionDetalle;
+
+  const gestion = (location.state as GestionDetalle) ?? null;
 
   const [estado, setEstado] = useState(gestion?.estado ? "Activo" : "Inactivo");
   const [observacion, setObservacion] = useState("");
@@ -95,8 +96,7 @@ const DetalleGestionEPPUser: React.FC = () => {
   };
 
   return (
-    <div
-    >
+    <div>
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
@@ -118,9 +118,9 @@ const DetalleGestionEPPUser: React.FC = () => {
             </p>
           </div>
 
-          {/* Información general */}
+          {/* Información */}
           <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Información del Usuario */}
+            {/* Usuario */}
             <div className="space-y-4 bg-gray-50 rounded-xl p-6 shadow-sm">
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 👤 Información del Usuario
@@ -152,7 +152,7 @@ const DetalleGestionEPPUser: React.FC = () => {
               </p>
             </div>
 
-            {/* Información de la Empresa y Área */}
+            {/* Empresa y Área */}
             <div className="space-y-4 bg-gray-50 rounded-xl p-6 shadow-sm">
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 🏢 Información Empresarial
@@ -191,7 +191,7 @@ const DetalleGestionEPPUser: React.FC = () => {
             </div>
           </div>
 
-          {/* Lista de Productos */}
+          {/* Productos */}
           <div className="border-t border-gray-200 p-8 bg-gray-50">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               📦 Productos Asignados
@@ -218,7 +218,7 @@ const DetalleGestionEPPUser: React.FC = () => {
             )}
           </div>
 
-          {/* Panel de Administración */}
+          {/* Panel Admin */}
           <div className="border-t border-gray-300 p-8 bg-gray-100">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               ⚙️ Panel de Administración
