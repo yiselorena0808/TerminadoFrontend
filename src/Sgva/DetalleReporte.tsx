@@ -23,21 +23,56 @@ const DetalleReporte: React.FC = () => {
   const location = useLocation();
   const reporte = location.state as Reporte;
 
-  if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
-
   const [form, setForm] = useState<Reporte>({
     ...reporte,
     comentario: reporte.comentario || "",
   });
+  const [loading, setLoading] = useState(false);
+
+  if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
 
   const formatFecha = (fecha: string) => {
     const d = new Date(fecha);
     return d.toLocaleString("es-CO");
   };
 
+  // Función para simular huella desde imagen
+  const verificarHuellaSimulada = async (file: File) => {
+    setLoading(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const huellaBase64 = reader.result?.toString().split(",")[1];
+        if (!huellaBase64) {
+          alert("No se pudo leer la imagen");
+          setLoading(false);
+          return;
+        }
+
+        const res = await fetch(
+          `/verificarReporte/${form.id_reporte}/sgva`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ image: huellaBase64 }),
+          }
+        );
+
+        const data = await res.json();
+        alert(`Reporte ${data.estado} (score: ${data.score})`);
+        setForm((prev) => ({ ...prev, estado: data.estado }));
+        setLoading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error(error);
+      setLoading(false);
+      alert("Error verificando huella");
+    }
+  };
+
   return (
-    <div
-    >
+    <div>
       <div className="absolute inset-0 backdrop-blur-sm"></div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
@@ -97,9 +132,7 @@ const DetalleReporte: React.FC = () => {
                     Ver Imagen
                   </a>
                 ) : (
-                  <p className="text-gray-500 italic">
-                    No hay imagen adjunta
-                  </p>
+                  <p className="text-gray-500 italic">No hay imagen adjunta</p>
                 )}
               </div>
 
@@ -114,9 +147,7 @@ const DetalleReporte: React.FC = () => {
                     Ver Archivo
                   </a>
                 ) : (
-                  <p className="text-gray-500 italic">
-                    No hay archivo adjunto
-                  </p>
+                  <p className="text-gray-500 italic">No hay archivo adjunto</p>
                 )}
               </div>
             </div>
@@ -132,12 +163,27 @@ const DetalleReporte: React.FC = () => {
           </div>
         </div>
 
+        {/* Sección de huella simulada */}
+        <div className="mt-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
+          <h3 className="text-2xl font-bold text-gray-800 mb-4">
+            🔒 Verificar Huella SGVA
+          </h3>
+          <input
+            type="file"
+            accept="image/*"
+            disabled={loading}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) verificarHuellaSimulada(file);
+            }}
+          />
+        </div>
+
         {/* Sección de comentarios */}
         <div className="mt-8 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
           <h3 className="text-2xl font-bold text-gray-800 mb-4">
             💬 Comentarios del Administrador
           </h3>
-
           <CajaComentarios idReporte={form.id_reporte} />
         </div>
       </div>
