@@ -25,10 +25,13 @@ const Registro: React.FC = () => {
   const [metodoHuella, setMetodoHuella] = useState<"camara" | "huellero" | "archivo" | "">("");
   const [huella, setHuella] = useState<string | null>(null);
 
+  // APIs
   const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
+  const apiRegisterSGVA = import.meta.env.VITE_API_REGISTROSGVA;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
   const apiAreas = import.meta.env.VITE_API_LISTARAREAS;
 
+  // Cargar empresas
   useEffect(() => {
     const fetchEmpresas = async () => {
       try {
@@ -43,6 +46,7 @@ const Registro: React.FC = () => {
     fetchEmpresas();
   }, []);
 
+  // Cargar áreas según empresa
   useEffect(() => {
     const fetchAreas = async () => {
       if (!formData.id_empresa) {
@@ -66,13 +70,13 @@ const Registro: React.FC = () => {
     fetchAreas();
   }, [formData.id_empresa]);
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  // Manejar cambios en inputs
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Captura de huella por cámara
   const capturarHuella = () => {
     if (webcamRef.current) {
       const imagen = webcamRef.current.getScreenshot();
@@ -80,6 +84,7 @@ const Registro: React.FC = () => {
     }
   };
 
+  // Registrar usuario o SGVA
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -104,15 +109,29 @@ const Registro: React.FC = () => {
     }
 
     try {
-      const res = await fetch(apiRegister, {
+      const url = isSGVA ? apiRegisterSGVA : apiRegister;
+
+      const body = isSGVA
+        ? {
+            nombre: formData.nombre,
+            apellido: formData.apellido,
+            correo_electronico: formData.correo_electronico,
+            cargo: formData.cargo,
+            contrasena: formData.contrasena,
+            id_empresa: Number(formData.id_empresa),
+            id_area: Number(formData.id_area),
+            huella, // base64
+          }
+        : {
+            ...formData,
+            id_empresa: Number(formData.id_empresa),
+            id_area: Number(formData.id_area),
+          };
+
+      const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          id_empresa: Number(formData.id_empresa),
-          id_area: Number(formData.id_area),
-          huella: isSGVA ? huella : undefined,
-        }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();
@@ -140,13 +159,12 @@ const Registro: React.FC = () => {
         setHuella(null);
         setIsSGVA(false);
         setMetodoHuella("");
-
         navigate("/registro");
       } else {
         Swal.fire({
           icon: "error",
           title: "Error",
-          text: data.message || "No se pudo registrar el usuario",
+          text: data.error || "No se pudo registrar el usuario",
           confirmButtonColor: "#d33",
         });
       }
@@ -193,11 +211,11 @@ const Registro: React.FC = () => {
       </header>
 
       {/* FORM */}
-      <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen">
+      <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen mt-16">
         <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
           
           {/* IZQUIERDA */}
-          <div className="md:w-1/2 bg-gradient-to-br bg-blue-900 via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
+          <div className="md:w-1/2 bg-gradient-to-br from-blue-900 via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8">
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">
                 ¡Registra un usuario!
@@ -233,85 +251,14 @@ const Registro: React.FC = () => {
                   Es SGVA (Registro con huella)
                 </label>
 
-                {isSGVA && (
-                  <div className="mb-4">
-                    <label className="font-medium text-gray-700">Método de registro de huella:</label>
-                    <select
-                      value={metodoHuella}
-                      onChange={(e) => setMetodoHuella(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 mt-2"
-                      required
-                    >
-                      <option value="">Seleccione un método</option>
-                      <option value="camara">Cámara</option>
-                      <option value="huellero">Huellero</option>
-                      <option value="archivo">Archivo</option>
-                    </select>
-
-                    {metodoHuella === 'camara' && (
-                      <div className="flex flex-col items-center gap-2 mt-2">
-                        <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="rounded-lg" />
-                        <button
-                          type="button"
-                          onClick={capturarHuella}
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        >
-                          Capturar Huella
-                        </button>
-                        {huella && (
-                          <img
-                            src={huella}
-                            alt="Huella capturada"
-                            className="mt-2 w-32 h-32 border rounded-lg"
-                          />
-                        )}
-                      </div>
-                    )}
-
-                    {metodoHuella === 'huellero' && (
-                      <div className="mt-2">
-                        <p>🖐 Captura con huellero (integrar SDK aquí)</p>
-                      </div>
-                    )}
-
-                    {metodoHuella === 'archivo' && (
-                      <div className="mt-2">
-                        <label className="w-full text-gray-700 font-medium">
-                          Seleccionar archivo de huella:
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => setHuella(reader.result as string);
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                            className="mt-2"
-                            required
-                          />
-                        </label>
-                        {huella && (
-                          <img
-                            src={huella}
-                            alt="Huella seleccionada"
-                            className="mt-2 w-32 h-32 border rounded-lg object-cover"
-                          />
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {!isSGVA && (
-                  <>
+                {isSGVA ? (
+                  // SGVA
+                  <div>
                     <select
                       name="id_empresa"
                       value={formData.id_empresa}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
                       required
                     >
                       <option value="">Seleccione una Empresa</option>
@@ -326,9 +273,126 @@ const Registro: React.FC = () => {
                       name="id_area"
                       value={formData.id_area}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] mt-3"
                       required
-                      disabled={!formData.id_empresa || areas.length === 0}
+                    >
+                      <option value="">Seleccione un Área</option>
+                      {areas.map((area) => (
+                        <option key={area.idArea} value={area.idArea}>
+                          {area.descripcion}
+                        </option>
+                      ))}
+                    </select>
+
+                    <input
+                      type="text"
+                      name="nombre"
+                      placeholder="Nombre"
+                      value={formData.nombre}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border mt-3"
+                      required
+                    />
+
+                    <input
+                      type="text"
+                      name="apellido"
+                      placeholder="Apellido"
+                      value={formData.apellido}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border mt-3"
+                      required
+                    />
+
+                    <input
+                      type="email"
+                      name="correo_electronico"
+                      placeholder="Correo electrónico"
+                      value={formData.correo_electronico}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border mt-3"
+                      required
+                    />
+
+                    <input
+                      type="text"
+                      name="cargo"
+                      placeholder="Cargo"
+                      value={formData.cargo}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border mt-3"
+                    />
+
+                    {/* Métodos de huella */}
+                    <label className="font-medium text-gray-700 mt-4 block">Método de registro de huella:</label>
+                    <select
+                      value={metodoHuella}
+                      onChange={(e) => setMetodoHuella(e.target.value as any)}
+                      className="w-full px-4 py-2 rounded-lg border mt-2"
+                      required
+                    >
+                      <option value="">Seleccione un método</option>
+                      <option value="camara">Cámara</option>
+                      <option value="huellero">Huellero</option>
+                      <option value="archivo">Archivo</option>
+                    </select>
+
+                    {metodoHuella === "camara" && (
+                      <div className="flex flex-col items-center gap-2 mt-2">
+                        <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={capturarHuella}
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        >
+                          Capturar Huella
+                        </button>
+                        {huella && <img src={huella} alt="Huella capturada" className="mt-2 w-32 h-32 border rounded-lg" />}
+                      </div>
+                    )}
+
+                    {metodoHuella === "archivo" && (
+                      <div className="mt-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => setHuella(reader.result as string);
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        {huella && <img src={huella} alt="Huella seleccionada" className="mt-2 w-32 h-32 border rounded-lg" />}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  // Registro normal
+                  <>
+                    <select
+                      name="id_empresa"
+                      value={formData.id_empresa}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
+                      required
+                    >
+                      <option value="">Seleccione una Empresa</option>
+                      {empresas.map((empresa) => (
+                        <option key={empresa.idEmpresa} value={empresa.idEmpresa}>
+                          {empresa.nombre}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      name="id_area"
+                      value={formData.id_area}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
+                      required
                     >
                       <option value="">Seleccione un Área</option>
                       {areas.map((area) => (
@@ -345,7 +409,7 @@ const Registro: React.FC = () => {
                         placeholder="Nombre"
                         value={formData.nombre}
                         onChange={handleChange}
-                        className="px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                        className="px-4 py-2 rounded-lg border"
                         required
                       />
                       <input
@@ -354,7 +418,7 @@ const Registro: React.FC = () => {
                         placeholder="Apellido"
                         value={formData.apellido}
                         onChange={handleChange}
-                        className="px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                        className="px-4 py-2 rounded-lg border"
                         required
                       />
                     </div>
@@ -365,7 +429,7 @@ const Registro: React.FC = () => {
                       placeholder="Nombre de usuario"
                       value={formData.nombre_usuario}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border"
                       required
                     />
 
@@ -375,7 +439,7 @@ const Registro: React.FC = () => {
                       placeholder="Correo electrónico"
                       value={formData.correo_electronico}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border"
                       required
                     />
 
@@ -385,7 +449,7 @@ const Registro: React.FC = () => {
                       placeholder="Cargo"
                       value={formData.cargo}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border"
                     />
 
                     <input
@@ -394,7 +458,7 @@ const Registro: React.FC = () => {
                       placeholder="Contraseña"
                       value={formData.contrasena}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border"
                       required
                     />
 
@@ -404,7 +468,7 @@ const Registro: React.FC = () => {
                       placeholder="Confirmar contraseña"
                       value={formData.confirmacion}
                       onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white text-gray-900"
+                      className="w-full px-4 py-2 rounded-lg border"
                       required
                     />
                   </>

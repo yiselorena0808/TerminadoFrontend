@@ -1,75 +1,106 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
-import CajaComentarios from "../components/CajaComentarios";
+import React, { useState } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
+import { ArrowLeft } from "lucide-react"
+import CajaComentarios from "../components/CajaComentarios"
 
 interface Reporte {
-  id_reporte: number;
-  id_usuario: number;
-  nombre_usuario: string;
-  cargo: string;
-  cedula: string | number;
-  fecha: string;
-  lugar: string;
-  descripcion: string;
-  imagen: string | null;
-  archivos: string | null;
-  estado: string;
-  comentario?: string;
+  id_reporte: number
+  id_usuario: number
+  nombre_usuario: string
+  cargo: string
+  cedula: string
+  fecha: string
+  lugar: string
+  descripcion: string
+  imagen: string | null
+  archivos: string | null
+  estado: string
+  comentario?: string
 }
 
 const DetalleReporte: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const reporte = location.state as Reporte;
+  const navigate = useNavigate()
+  const location = useLocation()
+  const reporte = location.state as Reporte
 
   const [form, setForm] = useState<Reporte>({
     ...reporte,
-    comentario: reporte.comentario || "",
-  });
-  const [loading, setLoading] = useState(false);
+    comentario: reporte?.comentario || "",
+  })
+  const [loading, setLoading] = useState(false)
+  const [huellaFile, setHuellaFile] = useState<File | null>(null)
+  const [huellaPreview, setHuellaPreview] = useState<string | null>(null)
 
-  if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
+  if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>
 
   const formatFecha = (fecha: string) => {
-    const d = new Date(fecha);
-    return d.toLocaleString("es-CO");
-  };
+    const d = new Date(fecha)
+    return d.toLocaleString("es-CO")
+  }
 
-  // Función para simular huella desde imagen
-  const verificarHuellaSimulada = async (file: File) => {
-    setLoading(true);
+  // Guardar archivo seleccionado y generar preview
+  const handleFileChange = (file: File) => {
+    setHuellaFile(file)
+    const reader = new FileReader()
+    reader.onload = () => setHuellaPreview(reader.result as string)
+    reader.readAsDataURL(file)
+  }
+
+  // Función para verificar huella
+  const verificarHuella = async () => {
+    if (!huellaFile) {
+      alert("Seleccione un archivo de huella antes de verificar")
+      return
+    }
+
+    setLoading(true)
     try {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onload = async () => {
-        const huellaBase64 = reader.result?.toString().split(",")[1];
+        const huellaBase64 = (reader.result as string).split(",")[1]
         if (!huellaBase64) {
-          alert("No se pudo leer la imagen");
-          setLoading(false);
-          return;
+          alert("No se pudo leer la huella")
+          setLoading(false)
+          return
         }
 
-        const res = await fetch(
-          `/verificarReporte/${form.id_reporte}/sgva`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ image: huellaBase64 }),
-          }
-        );
+        try {
+          const res = await fetch(
+            `https://backsst.onrender.com/verificarReporte/${form.id_reporte}/sgva`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`,
+              },
+              body: JSON.stringify({ image: huellaBase64 }),
+            }
+          )
 
-        const data = await res.json();
-        alert(`Reporte ${data.estado} (score: ${data.score})`);
-        setForm((prev) => ({ ...prev, estado: data.estado }));
-        setLoading(false);
-      };
-      reader.readAsDataURL(file);
+          const data = await res.json()
+
+          if (!res.ok) {
+            alert(`Error: ${data.error || "Servidor"}`)
+            setLoading(false)
+            return
+          }
+
+          setForm((prev) => ({ ...prev, estado: data.estado }))
+          alert(`Reporte ${data.estado} (score: ${data.score})`)
+        } catch (err: any) {
+          console.error("Error verificando huella:", err)
+          alert("Error verificando huella")
+        } finally {
+          setLoading(false)
+        }
+      }
+      reader.readAsDataURL(huellaFile)
     } catch (error) {
-      console.error(error);
-      setLoading(false);
-      alert("Error verificando huella");
+      console.error(error)
+      alert("Error leyendo el archivo de huella")
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div>
@@ -156,14 +187,12 @@ const DetalleReporte: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-2">
                 Descripción
               </h3>
-              <p className="text-gray-700 whitespace-pre-line">
-                {form.descripcion}
-              </p>
+              <p className="text-gray-700 whitespace-pre-line">{form.descripcion}</p>
             </div>
           </div>
         </div>
 
-        {/* Sección de huella simulada */}
+        {/* Sección de huella con vista previa */}
         <div className="mt-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
           <h3 className="text-2xl font-bold text-gray-800 mb-4">
             🔒 Verificar Huella SGVA
@@ -173,10 +202,27 @@ const DetalleReporte: React.FC = () => {
             accept="image/*"
             disabled={loading}
             onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) verificarHuellaSimulada(file);
+              const file = e.target.files?.[0]
+              if (file) handleFileChange(file)
             }}
           />
+          {huellaPreview && (
+            <div className="mt-4">
+              <p className="mb-2 font-medium">Vista previa:</p>
+              <img
+                src={huellaPreview}
+                alt="Huella Preview"
+                className="w-40 h-40 object-contain border rounded-md"
+              />
+            </div>
+          )}
+          <button
+            onClick={verificarHuella}
+            disabled={loading || !huellaFile}
+            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 disabled:bg-gray-400"
+          >
+            {loading ? "Verificando..." : "Verificar Huella"}
+          </button>
         </div>
 
         {/* Sección de comentarios */}
@@ -188,7 +234,7 @@ const DetalleReporte: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default DetalleReporte;
+export default DetalleReporte
