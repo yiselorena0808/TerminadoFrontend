@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import Swal from "sweetalert2";
-import { FaTheaterMasks, FaPaperPlane } from "react-icons/fa";
+import { FaTheaterMasks, FaPaperPlane, FaArrowLeft } from "react-icons/fa";
 
 const UserActividadLudica: React.FC = () => {
   const navigate = useNavigate();
@@ -109,7 +109,16 @@ const UserActividadLudica: React.FC = () => {
       }}
     >
       {/* overlay */}
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm">
+         {/* 🔙 BOTÓN VOLVER */}
+        <button
+          type="button"
+          onClick={() => navigate(-1)} // ← Vuelve a la página anterior
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
+        >
+          <FaArrowLeft /> Volver
+        </button>
+      </div>
 
       <form
         onSubmit={handleSubmit}

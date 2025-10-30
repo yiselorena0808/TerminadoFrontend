@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
-import { FaHardHat, FaPaperPlane } from "react-icons/fa";
+import { FaArrowLeft, FaHardHat, FaPaperPlane } from "react-icons/fa";
 
 interface Cargo { idCargo: number; cargo: string; }
 interface Area { idArea: number; nombre: string; }
@@ -126,7 +126,16 @@ const CrearGestionEpp: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative"
          style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm">
+         {/* 🔙 BOTÓN VOLVER */}
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)} // ← Vuelve a la página anterior
+                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
+                >
+                  <FaArrowLeft /> Volver
+                </button>
+      </div>
       <form onSubmit={handleSubmit} className="relative bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl w-full max-w-3xl border border-blue-600">
         <div className="flex items-center gap-3 mb-6">
           <FaHardHat className="text-blue-600 text-3xl" />

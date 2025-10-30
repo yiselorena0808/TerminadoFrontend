@@ -161,10 +161,10 @@ const AdmAreas: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-4xl font-extrabold text-white flex items-center gap-3">
+          <h1 className="text-4xl font-extrabold text-black flex items-center gap-3">
             <FaBuilding className="text-yellow-400" /> Gestión de Áreas
           </h1>
-          <p className="text-blue-200 mt-1 max-w-md">
+          <p className="text-black mt-1 max-w-md">
             Aquí puedes crear, editar o eliminar áreas de tu empresa. Usa la barra de búsqueda para filtrar rápidamente por nombre de área.
           </p>
         </div>

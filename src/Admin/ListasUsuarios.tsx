@@ -1,9 +1,17 @@
 import React, { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import { FaUsers, FaPlus, FaSearch, FaFileExcel, FaEdit, FaTrash } from "react-icons/fa";
+import {
+  FaUsers,
+  FaPlus,
+  FaSearch,
+  FaFileExcel,
+  FaEdit,
+  FaTrash,
+} from "react-icons/fa";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
 import UploadExcel from "../Admin/Excel";
+import RegistrarUsuario from "./CrearUsuario";
 
 interface Empresa {
   idEmpresa: number;
@@ -34,9 +42,11 @@ const AdmUsuariosCompleto: React.FC = () => {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [filtro, setFiltro] = useState("");
   const [usuarioAEditar, setUsuarioAEditar] = useState<Usuario | null>(null);
-  const [usuarioLogueado, setUsuarioLogueado] = useState<UsuarioToken | null>(null);
+  const [usuarioLogueado, setUsuarioLogueado] =
+    useState<UsuarioToken | null>(null);
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
 
+  // ✅ Tus APIs sin cambios
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
@@ -46,7 +56,8 @@ const AdmUsuariosCompleto: React.FC = () => {
 
   const obtenerUsuarios = async (id_empresa?: number) => {
     const empresaId = id_empresa || usuarioLogueado?.id_empresa;
-    if (!empresaId) return Swal.fire("Error", "No se encontró la empresa del usuario", "error");
+    if (!empresaId)
+      return Swal.fire("Error", "No se encontró la empresa del usuario", "error");
 
     const token = localStorage.getItem("token");
     if (!token) return Swal.fire("Error", "Usuario no autenticado", "error");
@@ -72,8 +83,21 @@ const AdmUsuariosCompleto: React.FC = () => {
     }
   }, []);
 
+  // ✅ Confirmación con Toast y SweetAlert2
   const eliminarUsuario = async (id: number) => {
-    if (!confirm("¿Estás seguro de eliminar este usuario?")) return;
+    const confirm = await Swal.fire({
+      title: "¿Eliminar usuario?",
+      text: "Esta acción no se puede deshacer.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+    });
+
+    if (!confirm.isConfirmed) return;
+
     const token = localStorage.getItem("token");
     if (!token) return;
 
@@ -83,9 +107,23 @@ const AdmUsuariosCompleto: React.FC = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
-      Swal.fire("Eliminado", "Usuario eliminado correctamente", "success");
+
+      // ✅ ToastAlert (sin bloqueos)
+      const Toast = Swal.mixin({
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+
+      Toast.fire({
+        icon: "success",
+        title: "Usuario eliminado correctamente",
+      });
     } catch (error) {
       console.error("No se pudo eliminar el usuario:", error);
+      Swal.fire("Error", "No se pudo eliminar el usuario", "error");
     }
   };
 
@@ -170,10 +208,7 @@ const AdmUsuariosCompleto: React.FC = () => {
             </thead>
             <tbody>
               {usuariosFiltrados.map((u, idx) => (
-                <tr
-                  key={u.id}
-                  className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}
-                >
+                <tr key={u.id} className={idx % 2 === 0 ? "bg-gray-50" : "bg-white"}>
                   <td className="px-4 py-2">{u.id}</td>
                   <td className="px-4 py-2">{u.nombre}</td>
                   <td className="px-4 py-2">{u.apellido}</td>
@@ -185,14 +220,16 @@ const AdmUsuariosCompleto: React.FC = () => {
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => setUsuarioAEditar(u)}
-                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-xl transition shadow">
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-xl transition shadow"
+                    >
                       <FaEdit />
                     </button>
                   </td>
                   <td className="px-4 py-2 text-center">
                     <button
                       onClick={() => eliminarUsuario(u.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl transition shadow">
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl transition shadow"
+                    >
                       <FaTrash />
                     </button>
                   </td>
@@ -200,10 +237,7 @@ const AdmUsuariosCompleto: React.FC = () => {
               ))}
               {usuariosFiltrados.length === 0 && (
                 <tr>
-                  <td
-                    colSpan={10}
-                    className="px-4 py-6 text-center text-gray-500"
-                  >
+                  <td colSpan={10} className="px-4 py-6 text-center text-gray-500">
                     No se encontraron usuarios.
                   </td>
                 </tr>
@@ -223,12 +257,13 @@ const AdmUsuariosCompleto: React.FC = () => {
       )}
 
       {mostrarModalCrear && (
-        <RegistrarUsuarioModal
+        <RegistrarUsuario
           onClose={() => setMostrarModalCrear(false)}
           onUsuarioCreado={() => obtenerUsuarios(usuarioLogueado?.id_empresa)}
           apiEmpresas={apiEmpresas}
           apiAreas={apiAreas}
           apiRegister={apiRegister}
+          mostrarComoModal={true}
         />
       )}
     </div>

@@ -151,45 +151,7 @@ const DetalleGestionEPPUser: React.FC = () => {
                 {formatearFecha(gestion.createdAt || gestion.fechaCreacion || gestion.updatedAt)}
               </p>
             </div>
-
-            {/* Empresa y Área */}
-            <div className="space-y-4 bg-gray-50 rounded-xl p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
-                🏢 Información Empresarial
-              </h3>
-              <p className="flex items-center gap-2 text-gray-700">
-                <Building className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Empresa:</span>{" "}
-                {gestion.empresa?.nombre}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold text-gray-900">Dirección:</span>{" "}
-                {gestion.empresa?.direccion}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold text-gray-900">NIT:</span>{" "}
-                {gestion.empresa?.nit}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold text-gray-900">Alias:</span>{" "}
-                {gestion.empresa?.alias}
-              </p>
-
-              <h3 className="text-lg font-bold text-gray-800 border-t pt-3">
-                🧩 Área Asignada
-              </h3>
-              <p className="flex items-center gap-2 text-gray-700">
-                <Layers className="w-5 h-5 text-blue-600" />
-                <span className="font-semibold text-gray-900">Área:</span>{" "}
-                {gestion.area?.nombre}
-              </p>
-              <p className="text-gray-700">
-                <span className="font-semibold text-gray-900">Código:</span>{" "}
-                {gestion.area?.codigo}
-              </p>
-              <p className="text-gray-700 italic">{gestion.area?.descripcion}</p>
             </div>
-          </div>
 
           {/* Productos */}
           <div className="border-t border-gray-200 p-8 bg-gray-50">
