@@ -52,7 +52,7 @@ const Inicio: React.FC = () => {
         <div className="max-w-4xl mx-auto">
           <h2 className="text-4xl md:text-5xl font-extrabold text-blue-900 mb-6 leading-tight">
             Seguridad y Salud en el Trabajo <br />
-            <span className="text-blue-600">Digital, Inteligente y Multitenant</span>
+            <span className="text-blue-600">Digital y Multi-Empresa</span>
           </h2>
           <p className="max-w-2xl mx-auto text-gray-700 mb-10 text-lg">
             Una plataforma moderna desarrollada por aprendices del SENA, para gestionar la

@@ -21,7 +21,7 @@ const Login: React.FC = () => {
       });
 
       const data = await res.json();
-      const mensaje = data.mensaje || data.msj || "Error desconocido";
+      const mensaje = data.mensaje || data.msj || "Error de correo o contraseña.";
 
       if (!res.ok || mensaje !== "Login correcto") {
         Swal.fire({ icon: "error", title: "Error", text: mensaje });
