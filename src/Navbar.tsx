@@ -38,7 +38,7 @@ interface Usuario {
 }
 
 const ADMIN_ROLES = ["administrador", "Administrador"];
-const SGVA_ROLES = ["SGVA", "sgva"];
+const SGVA_ROLES = ["SG-SST", "sg-sst"];
 const SUPER_ADMIN_ROLES = ["superadmin", "SuperAdmin"];
 
 const Navbar: React.FC = () => {
