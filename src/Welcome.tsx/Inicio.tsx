@@ -105,7 +105,7 @@ const Inicio: React.FC = () => {
             },
             {
               icon: <FaHardHat className="text-blue-500 text-5xl mb-3 mx-auto" />,
-              title: "SGVA",
+              title: "SG-SST",
               desc: "Supervisión de listas de chequeo, reportes, actividades y EPP.",
             },
             {

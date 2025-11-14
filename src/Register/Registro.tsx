@@ -73,12 +73,43 @@ const Registro: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+<<<<<<< HEAD
   const capturarHuella = () => {
     if (webcamRef.current) {
       const imagen = webcamRef.current.getScreenshot();
       setHuella(imagen);
     }
   };
+=======
+ const capturarHuellaHuellero = async () => {
+  try {
+    Swal.fire({
+      title: "Coloca el dedo en el lector...",
+      icon: "info",
+      showConfirmButton: false,
+      timer: 2500
+    });
+
+    const capturarHuellaHuellero = async () => {
+  const res = await fetch("http://127.0.0.1:5000/capturar_huella", {
+    method: "POST",
+  });
+  const data = await res.json();
+  console.log(data);
+};
+
+    Swal.fire({
+      icon: "success",
+      title: "Huella capturada correctamente",
+      showConfirmButton: false,
+      timer: 1500
+    });
+
+  } catch (err) {
+    Swal.fire("Error", "No se pudo conectar con el servicio de huellas", "error");
+  }
+};
+>>>>>>> 6b6186cd0b97d9a9d175476274cc7e314edf64d6
 
   // -------------------
   // REGISTRAR USUARIO
@@ -276,6 +307,7 @@ const Registro: React.FC = () => {
                 />
               </>
 
+<<<<<<< HEAD
               <button
                 type="submit"
                 className="w-full py-2 bg-[#1E3A5F] text-white rounded-lg"
@@ -283,6 +315,177 @@ const Registro: React.FC = () => {
                 Registrar Usuario
               </button>
             </form>
+=======
+                    <input
+                      type="text"
+                      name="cargo"
+                      placeholder="Cargo"
+                      value={formData.cargo}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border mt-3"
+                    />
+
+                    {/* Métodos de huella */}
+                    <label className="font-medium text-gray-700 mt-4 block">Método de registro de huella:</label>
+                    <select
+                      value={metodoHuella}
+                      onChange={(e) => setMetodoHuella(e.target.value as any)}
+                      className="w-full px-4 py-2 rounded-lg border mt-2"
+                      required
+                    >
+                      <option value="">Seleccione un método</option>
+                      <option value="camara">Cámara</option>
+                      <option value="huellero">Huellero</option>
+                      <option value="archivo">Archivo</option>
+                    </select>
+
+                    {metodoHuella === "camara" && (
+
+                      <div className="flex flex-col items-center gap-2 mt-2">
+                        <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="rounded-lg" />
+                        <button
+                          type="button"
+                        
+                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                        >
+                          Capturar Huella
+                        </button>
+                        {huella && <img src={huella} alt="Huella capturada" className="mt-2 w-32 h-32 border rounded-lg" />}
+                      </div>
+                    )}
+
+                    {metodoHuella === "huellero" && (
+                  <div className="mt-3 flex flex-col items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={capturarHuellaHuellero}
+                      className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                    >
+                      Capturar Huella con Lector USB
+                    </button>
+
+                    {huella && (
+                      <p className="text-green-600 font-semibold">
+                        ✅ Huella registrada correctamente
+                      </p>
+                    )}
+                  </div>
+                )}
+                  </div>
+                ) : (
+                  // Registro normal
+                  <>
+                    <select
+                      name="id_empresa"
+                      value={formData.id_empresa}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
+                      required
+                    >
+                      <option value="">Seleccione una Empresa</option>
+                      {empresas.map((empresa) => (
+                        <option key={empresa.idEmpresa} value={empresa.idEmpresa}>
+                          {empresa.nombre}
+                        </option>
+                      ))}
+                    </select>
+
+                    <select
+                      name="id_area"
+                      value={formData.id_area}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
+                      required
+                    >
+                      <option value="">Seleccione un Área</option>
+                      {areas.map((area) => (
+                        <option key={area.idArea} value={area.idArea}>
+                          {area.descripcion}
+                        </option>
+                      ))}
+                    </select>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <input
+                        type="text"
+                        name="nombre"
+                        placeholder="Nombre"
+                        value={formData.nombre}
+                        onChange={handleChange}
+                        className="px-4 py-2 rounded-lg border"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="apellido"
+                        placeholder="Apellido"
+                        value={formData.apellido}
+                        onChange={handleChange}
+                        className="px-4 py-2 rounded-lg border"
+                        required
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      name="nombre_usuario"
+                      placeholder="Nombre de usuario"
+                      value={formData.nombre_usuario}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border"
+                      required
+                    />
+
+                    <input
+                      type="email"
+                      name="correo_electronico"
+                      placeholder="Correo electrónico"
+                      value={formData.correo_electronico}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border"
+                      required
+                    />
+
+                    <input
+                      type="text"
+                      name="cargo"
+                      placeholder="Cargo"
+                      value={formData.cargo}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border"
+                    />
+
+                    <input
+                      type="password"
+                      name="contrasena"
+                      placeholder="Contraseña"
+                      value={formData.contrasena}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border"
+                      required
+                    />
+
+                    <input
+                      type="password"
+                      name="confirmacion"
+                      placeholder="Confirmar contraseña"
+                      value={formData.confirmacion}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border"
+                      required
+                    />
+                  </>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full py-2 rounded-lg bg-[#1E3A5F] text-white font-semibold hover:bg-[#142943] transition"
+                >
+                  Registrar Usuario
+                </button>
+              </form>
+            </div>
+>>>>>>> 6b6186cd0b97d9a9d175476274cc7e314edf64d6
           </div>
         </div>
       </div>
