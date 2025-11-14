@@ -76,13 +76,34 @@ const Registro: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Captura de huella por cámara
-  const capturarHuella = () => {
-    if (webcamRef.current) {
-      const imagen = webcamRef.current.getScreenshot();
-      setHuella(imagen);
-    }
-  };
+ const capturarHuellaHuellero = async () => {
+  try {
+    Swal.fire({
+      title: "Coloca el dedo en el lector...",
+      icon: "info",
+      showConfirmButton: false,
+      timer: 2500
+    });
+
+    const capturarHuellaHuellero = async () => {
+  const res = await fetch("http://127.0.0.1:5000/capturar_huella", {
+    method: "POST",
+  });
+  const data = await res.json();
+  console.log(data);
+};
+
+    Swal.fire({
+      icon: "success",
+      title: "Huella capturada correctamente",
+      showConfirmButton: false,
+      timer: 1500
+    });
+
+  } catch (err) {
+    Swal.fire("Error", "No se pudo conectar con el servicio de huellas", "error");
+  }
+};
 
   // Registrar usuario o SGVA
   const registrar = async (e: React.FormEvent) => {
@@ -338,11 +359,12 @@ const Registro: React.FC = () => {
                     </select>
 
                     {metodoHuella === "camara" && (
+
                       <div className="flex flex-col items-center gap-2 mt-2">
                         <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="rounded-lg" />
                         <button
                           type="button"
-                          onClick={capturarHuella}
+                        
                           className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                         >
                           Capturar Huella
@@ -351,23 +373,23 @@ const Registro: React.FC = () => {
                       </div>
                     )}
 
-                    {metodoHuella === "archivo" && (
-                      <div className="mt-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const reader = new FileReader();
-                              reader.onloadend = () => setHuella(reader.result as string);
-                              reader.readAsDataURL(file);
-                            }
-                          }}
-                        />
-                        {huella && <img src={huella} alt="Huella seleccionada" className="mt-2 w-32 h-32 border rounded-lg" />}
-                      </div>
+                    {metodoHuella === "huellero" && (
+                  <div className="mt-3 flex flex-col items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={capturarHuellaHuellero}
+                      className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                    >
+                      Capturar Huella con Lector USB
+                    </button>
+
+                    {huella && (
+                      <p className="text-green-600 font-semibold">
+                        ✅ Huella registrada correctamente
+                      </p>
                     )}
+                  </div>
+                )}
                   </div>
                 ) : (
                   // Registro normal
