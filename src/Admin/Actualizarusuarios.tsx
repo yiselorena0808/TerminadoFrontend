@@ -49,7 +49,7 @@ const ActualizarUsuarioModal: React.FC<Props> = ({ usuario, onClose, onUpdate })
 
       const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARUSUARIO}${form.id}`, {
         method: 'PUT',
-        headers: {
+        headers: {'ngrok-skip-browser-warning': 'true',
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },

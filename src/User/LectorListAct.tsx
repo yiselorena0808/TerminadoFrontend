@@ -44,7 +44,7 @@ const LectorListasActividadesLudicas: React.FC = () => {
       if (!token) throw new Error("Usuario no autenticado");
 
       const response = await fetch(apiListarAct, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
 
       if (!response.ok) throw new Error("Error al obtener actividades");

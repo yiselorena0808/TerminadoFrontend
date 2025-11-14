@@ -46,7 +46,7 @@ const MiDetalleReporte: React.FC = () => {
       const apiActualizar = import.meta.env.VITE_API_ACTUALIZARREPORTE;
       const res = await fetch(`${apiActualizar}/${form.idReporte}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
         body: JSON.stringify({
           estado: form.estado,
           comentario: form.comentario,

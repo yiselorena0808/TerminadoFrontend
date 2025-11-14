@@ -65,7 +65,7 @@ const LectorMisGestiones: React.FC = () => {
 
     try {
       const res = await fetch(apiListarMisGestiones, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setGestiones(data && Array.isArray(data.data) ? data.data : []);

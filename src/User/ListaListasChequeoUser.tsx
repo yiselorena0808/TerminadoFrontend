@@ -26,7 +26,12 @@ const ListasChequeoUser: React.FC = () => {
 
   const obtenerListas = async () => {
     try {
-      const res = await fetch(apiListarCheq);
+      const res = await fetch(apiListarCheq, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
       const data = await res.json();
       setListas(data.datos);
     } catch (error) {
@@ -62,7 +67,6 @@ const ListasChequeoUser: React.FC = () => {
 
   const listasFiltradas = listas.filter(filtrar);
 
-  
   const descargarPDF = (lista: ListaChequeo) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -89,12 +93,14 @@ const ListasChequeoUser: React.FC = () => {
       }}
     >
       <div className="bg-white bg-opacity-90 rounded-3xl shadow-2xl p-8 mx-auto max-w-5xl">
+
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
           <h3 className="font-extrabold text-3xl text-gray-800">
             📋 Listas de Chequeo Recibidas
           </h3>
         </div>
+
         <button
           onClick={ir}
           className="mb-4 px-4 py-2 bg-indigo-600 text-white rounded-lg shadow hover:bg-indigo-700 flex items-center gap-2"

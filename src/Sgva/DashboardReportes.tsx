@@ -49,7 +49,7 @@ const DashboardReportes: React.FC = () => {
 
     try {
       const res = await fetch(apiDashboard, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {  'ngrok-skip-browser-warning': 'true',  Authorization: `Bearer ${token}` },
       });
       const result = await res.json();
       setDataFuncionalidad(result.datos || []);

@@ -70,7 +70,7 @@ const CrearListChequeo: React.FC = () => {
     try {
       const res = await fetch(apiCrearLista, {
         method: "POST",
-        headers: {
+        headers: {'ngrok-skip-browser-warning': 'true',
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },

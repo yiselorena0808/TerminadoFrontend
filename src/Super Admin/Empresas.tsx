@@ -4,8 +4,6 @@ import {
   FaPlus,
   FaEdit,
   FaTrash,
-  FaToggleOn,
-  FaToggleOff,
   FaIndustry,
 } from "react-icons/fa";
 
@@ -63,12 +61,10 @@ const SuperAdminDashboard: React.FC = () => {
   const apiCrearEmp = import.meta.env.VITE_API_REGISTROEMPRESA;
   const apiEditarEmp = import.meta.env.VITE_API_ACTUALIZAREMPRESA;
   const apiEliminarEmp = import.meta.env.VITE_API_ELIMINAREMPRESA;
-  const apiEstadoEmp = import.meta.env.VITE_API_CAMBIARESTADOEMPRESA;
 
   const apiCrearArea = import.meta.env.VITE_API_REGISTROAREA;
   const apiEditarArea = import.meta.env.VITE_API_ACTUALIZARAREA;
   const apiEliminarArea = import.meta.env.VITE_API_ELIMINARAREA;
-  const apiEstadoArea = import.meta.env.VITE_API_CAMBIARESTADOAREA;
 
   useEffect(() => {
     listarEmpresas();
@@ -77,7 +73,9 @@ const SuperAdminDashboard: React.FC = () => {
 
   const listarEmpresas = async () => {
     try {
-      const res = await fetch(apiEmpresas);
+      const res = await fetch(apiEmpresas, {
+        headers: { "ngrok-skip-browser-warning": "true" },
+      });
       const data = await res.json();
       if (Array.isArray(data.datos)) setEmpresas(data.datos);
     } catch (err) {
@@ -85,22 +83,20 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
- const listarAreas = async () => {
-  try {
-    const res = await fetch(apiAreas);
-    const data = await res.json();
-    console.log("ÁREAS desde API:", data);
+  const listarAreas = async () => {
+    try {
+      const res = await fetch(apiAreas, {
+        headers: { "ngrok-skip-browser-warning": "true" },
+      });
+      const data = await res.json();
+      console.log("ÁREAS desde API:", data);
 
-    if (Array.isArray(data)) {
-      setAreas(data);
-    } 
-    else if (Array.isArray(data.datos)) {
-      setAreas(data.datos);
+      if (Array.isArray(data)) setAreas(data);
+      else if (Array.isArray(data.datos)) setAreas(data.datos);
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error(err);
-  }
-};
+  };
 
   const abrirModal = (
     tipo: "empresa" | "area",
@@ -175,12 +171,19 @@ const SuperAdminDashboard: React.FC = () => {
     try {
       const res = await fetch(endpoint, {
         method: metodo,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok) {
-        Swal.fire("Éxito", modoEdicion ? "Empresa actualizada" : "Empresa creada", "success");
+        Swal.fire(
+          "Éxito",
+          modoEdicion ? "Empresa actualizada" : "Empresa creada",
+          "success"
+        );
         setMostrarModal(false);
         listarEmpresas();
       } else {
@@ -204,7 +207,10 @@ const SuperAdminDashboard: React.FC = () => {
     try {
       const res = await fetch(endpoint, {
         method: metodo,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true",
+        },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -235,7 +241,10 @@ const SuperAdminDashboard: React.FC = () => {
       tipo === "empresa" ? `${apiEliminarEmp}/${id}` : `${apiEliminarArea}/${id}`;
 
     try {
-      const res = await fetch(endpoint, { method: "DELETE" });
+      const res = await fetch(endpoint, {
+        method: "DELETE",
+        headers: { "ngrok-skip-browser-warning": "true" },
+      });
       if (res.ok) {
         Swal.fire("Eliminado", `${tipo} eliminado correctamente`, "success");
         tipo === "empresa" ? listarEmpresas() : listarAreas();

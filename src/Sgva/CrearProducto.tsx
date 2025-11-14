@@ -22,7 +22,7 @@ const ProductosPage: React.FC = () => {
   const listarProductos = async () => {
     try {
       const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al listar productos");
       const data = await res.json();
@@ -48,7 +48,7 @@ const ProductosPage: React.FC = () => {
     try {
       const res = await fetch(import.meta.env.VITE_API_CREARPRODUCTO, {
         method: "POST",
-        headers: {
+        headers: {'ngrok-skip-browser-warning': 'true',
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
@@ -82,7 +82,7 @@ const ProductosPage: React.FC = () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_ELIMINARPRODUCTO}${idProducto}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al eliminar producto");
       listarProductos();
@@ -121,6 +121,7 @@ const ProductosPage: React.FC = () => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            'ngrok-skip-browser-warning': 'true',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(formValues),
@@ -141,11 +142,11 @@ const ProductosPage: React.FC = () => {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Productos</h1>
+      <h1 className="text-3xl font-bold text-blue-700 mb-6">Gestión de Equipos de proteccion personal</h1>
 
       {/* Crear Producto */}
       <div className="bg-white shadow-md rounded p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">Nuevo Producto</h2>
+        <h2 className="text-xl font-bold mb-4">Crear Equipo de proteccion personal</h2>
         <input
           type="text"
           placeholder="Nombre"

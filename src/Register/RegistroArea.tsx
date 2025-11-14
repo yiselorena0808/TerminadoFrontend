@@ -24,7 +24,10 @@ const RegistroArea: React.FC = () => {
   useEffect(() => {
     const fetchEmpresas = async () => {
       try {
-        const res = await fetch(apiEmpresas);
+        const res = await fetch(apiEmpresas, {
+          headers: { "ngrok-skip-browser-warning": "true" }
+        });
+
         const data = await res.json();
 
         console.log("🔍 Empresas recibidas del backend:", data);
@@ -63,7 +66,10 @@ const RegistroArea: React.FC = () => {
     try {
       const res = await fetch(apiCrearArea, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           nombre,
           codigo,
@@ -111,16 +117,15 @@ const RegistroArea: React.FC = () => {
       });
     }
   };
-   const links = [
-        { path: "/registroEmpresa", label: "Registrar una empresa" },
+
+  const links = [
+    { path: "/registroEmpresa", label: "Registrar una empresa" },
     { path: "/registroArea", label: "Registrar una área" },
     { path: "/registro", label: "Registrar un usuario" },
   ];
 
-
   return (
-      <div className="min-h-screen flex flex-col bg-white font-inter text-gray-800">
-      {/* 🔷 HEADER IDÉNTICO AL INICIO */}
+    <div className="min-h-screen flex flex-col bg-white font-inter text-gray-800">
       <header className="flex justify-between items-center px-10 py-5 bg-white shadow-md fixed w-full top-0 z-50">
         <div className="flex items-center space-x-3">
           <img src={logo} alt="Logo" className="w-12 h-12 rounded-full object-cover" />
@@ -151,7 +156,7 @@ const RegistroArea: React.FC = () => {
 
       <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen">
         <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
-          {/* Lado izquierdo */}
+
           <div className="md:w-1/2 bg-gradient-to-br bg-blue-900 via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8 relative">
             <div className="text-center space-y-4 z-10">
               <h2 className="text-3xl font-bold text-white">¡Registra un área!</h2>
@@ -159,6 +164,7 @@ const RegistroArea: React.FC = () => {
                 Ingresa los datos requeridos para crear un área dentro de tu empresa.
               </p>
             </div>
+
             <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-white shadow-lg mt-8">
               <img
                 src="https://cdn-icons-png.flaticon.com/512/3449/3449677.png"
@@ -168,7 +174,6 @@ const RegistroArea: React.FC = () => {
             </div>
           </div>
 
-          {/* Lado derecho */}
           <div className="md:w-1/2 p-8 flex items-center">
             <div className="w-full">
               <h3 className="text-2xl font-bold mb-6 text-black text-center">
@@ -182,9 +187,7 @@ const RegistroArea: React.FC = () => {
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <input
@@ -193,38 +196,25 @@ const RegistroArea: React.FC = () => {
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <textarea
                   placeholder="Descripción"
                   value={descripcion}
                   onChange={(e) => setDescripcion(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <select
                   value={id_empresa === "" ? "" : String(id_empresa)}
-                  onChange={(e) =>
-                    setIdEmpresa(
-                      e.target.value === "" ? "" : Number(e.target.value)
-                    )
-                  }
+                  onChange={(e) => setIdEmpresa(e.target.value === "" ? "" : Number(e.target.value))}
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 >
                   <option value="">-- Selecciona una empresa --</option>
                   {empresas.map((empresa) => (
-                    <option
-                      key={`empresa-${empresa.id_empresa}`}
-                      value={empresa.id_empresa}
-                    >
+                    <option key={`empresa-${empresa.id_empresa}`} value={empresa.id_empresa}>
                       {empresa.nombre}
                     </option>
                   ))}
@@ -235,9 +225,7 @@ const RegistroArea: React.FC = () => {
                   placeholder="Esquema"
                   value={esquema}
                   onChange={(e) => setEsquema(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <input
@@ -245,9 +233,7 @@ const RegistroArea: React.FC = () => {
                   placeholder="Alias"
                   value={alias}
                   onChange={(e) => setAlias(e.target.value)}
-                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] 
-                  bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] 
-                  text-gray-900 placeholder-gray-500"
+                  className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F] bg-white/80 focus:outline-none focus:ring-2 focus:ring-[#1E3A5F] text-gray-900 placeholder-gray-500"
                 />
 
                 <div className="flex items-center space-x-2 text-sm">
@@ -258,7 +244,7 @@ const RegistroArea: React.FC = () => {
                     onChange={(e) => setEstado(e.target.checked)}
                     className="w-4 h-4 border-[#1E3A5F] text-[#1E3A5F] focus:ring-[#1E3A5F]"
                   />
-                  <label htmlFor="estado" className="text-gray-200">
+                  <label htmlFor="estado" className="text-gray-700">
                     Estado activo
                   </label>
                 </div>
@@ -272,13 +258,14 @@ const RegistroArea: React.FC = () => {
               </form>
             </div>
           </div>
+
         </div>
       </div>
-       {/* FOOTER */}
+
       <footer className="bg-blue-900 text-center py-6 text-gray-200 text-sm border-t border-blue-800">
         © 2025 Sistema Integral SST — Desarrollado por aprendices del SENA
       </footer>
-      </div>
+    </div>
   );
 };
 

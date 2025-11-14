@@ -59,7 +59,7 @@ const MiDetalleActividadLudica: React.FC = () => {
       const token = localStorage.getItem("token");
       const res = await fetch(`${apiBase}/actividad/${actividad.id}/responder`, {
         method: "POST",
-        headers: {
+        headers: {'ngrok-skip-browser-warning': 'true',
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },

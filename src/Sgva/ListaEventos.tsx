@@ -66,7 +66,7 @@ const ListaEventos: React.FC = () => {
         const res = await fetch(
           `${import.meta.env.VITE_API_lISTARBLOG}${usuario.id_empresa}`,
           {
-            headers: {
+            headers: {'ngrok-skip-browser-warning': 'true',
               Authorization: `Bearer ${token}`,
             },
           }
@@ -119,7 +119,7 @@ const ListaEventos: React.FC = () => {
         `${import.meta.env.VITE_API_ACTUALIZAREVENTO}${eventoEditar.id}`,
         {
           method: "PUT",
-          headers: {
+          headers: {'ngrok-skip-browser-warning': 'true',
             Authorization: `Bearer ${token}`,
           },
           body: formData,
@@ -156,7 +156,7 @@ const ListaEventos: React.FC = () => {
       try {
         const res = await fetch(`${import.meta.env.VITE_API_ELIMINAREVENTO}${id}`, {
           method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
         });
 
         if (!res.ok) throw new Error("Error eliminando publicación");

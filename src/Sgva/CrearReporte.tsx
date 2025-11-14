@@ -35,7 +35,7 @@ const CrearReporte: React.FC = () => {
       if (!token) return;
       const listarCargos = async () => {
         try {
-          const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: { Authorization: `Bearer ${token}` } });
+          const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: {'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` } });
           if (!res.ok) throw new Error("Error al listar cargos");
           const data = await res.json();
           setCargos(data);
@@ -75,6 +75,7 @@ const CrearReporte: React.FC = () => {
       fetch(url, {
         method: "GET",
         headers: {
+          'ngrok-skip-browser-warning': 'true',
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },

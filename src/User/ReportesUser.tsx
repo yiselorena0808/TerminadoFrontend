@@ -60,7 +60,7 @@ const ListarReportesUser: React.FC = () => {
     try {
       const res = await fetch(`${apiActualizarReporte}/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
         body: JSON.stringify({ estado: nuevoEstado }),
       });
 
@@ -79,6 +79,7 @@ const ListarReportesUser: React.FC = () => {
     try {
       const res = await fetch(`${apiEliminarReporte}/${id}`, {
         method: "DELETE",
+         headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
       });
 
       const data = await res.json().catch(() => null);

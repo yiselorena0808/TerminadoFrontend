@@ -65,7 +65,7 @@ const ListaEventosEmpresa: React.FC = () => {
         const res = await fetch(
           `${import.meta.env.VITE_API_lISTARBLOG}${usuario.id_empresa}`,
           {
-            headers: {
+            headers: {'ngrok-skip-browser-warning': 'true',
               Authorization: `Bearer ${token}`,
             },
           }

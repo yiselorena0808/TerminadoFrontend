@@ -31,32 +31,36 @@ const LectorChequeo: React.FC = () => {
 
   // Paginación
   const [paginaActual, setPaginaActual] = useState(1);
-  const ITEMS_POR_PAGINA = 6; // 2 filas de 3 tarjetas cada una
+  const ITEMS_POR_PAGINA = 6;
 
   const apiListarCheq = import.meta.env.VITE_API_LISTARMISCHEQUEOS;
 
   const obtenerListas = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+  const token = localStorage.getItem("token");
+  if (!token) return;
 
-    try {
-      const res = await fetch(apiListarCheq, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  try {
+    const res = await fetch(apiListarCheq, {
+      headers: {'ngrok-skip-browser-warning': 'true',
+         Authorization: `Bearer ${token}` },
+    });
 
-      const data = await res.json();
+    const texto = await res.text();
+    console.log("Respuesta cruda:", texto);
 
-      if (data.data && Array.isArray(data.data)) {
-        setListas(data.data);
-      } else {
-        setListas([]);
-        console.warn("No se recibieron datos válidos de la API");
-      }
-    } catch (error) {
-      console.error("Error al obtener listas:", error);
+    const data = JSON.parse(texto);
+
+    if (data.datos && Array.isArray(data.datos)) {
+      setListas(data.datos);
+    } else {
+      console.warn("No se recibieron datos válidos de la API");
       setListas([]);
     }
-  };
+  } catch (error) {
+    console.error("Error al obtener listas:", error);
+    setListas([]);
+  }
+};
 
   useEffect(() => {
     const u = getUsuarioFromToken();

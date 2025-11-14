@@ -56,7 +56,7 @@ const LectorListaReportes: React.FC = () => {
 
       const res = await fetch(`${apiListarReportes}?${params.toString()}`, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Error al obtener reportes");

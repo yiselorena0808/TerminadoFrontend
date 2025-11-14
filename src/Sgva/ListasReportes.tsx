@@ -54,7 +54,7 @@ const ListarReportes: React.FC = () => {
     try {
       const res = await fetch(apiListarReportes, {
         method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
 

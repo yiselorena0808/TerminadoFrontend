@@ -18,7 +18,8 @@ const CargosPage2: React.FC = () => {
 
   const listarCargos = async () => {
     const res = await fetch(import.meta.env.VITE_API_CARGOS, {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { 'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return;
     const data = await res.json();
@@ -34,6 +35,7 @@ const CargosPage2: React.FC = () => {
     const res = await fetch(import.meta.env.VITE_API_CREARCARGO, {
       method: "POST",
       headers: {
+        'ngrok-skip-browser-warning': 'true',
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
@@ -61,7 +63,7 @@ const CargosPage2: React.FC = () => {
 
     const res = await fetch(`${import.meta.env.VITE_API_ELIMINARCARGO}${idCargo}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return Swal.fire("Error", "No se pudo eliminar el cargo", "error");
 
@@ -82,7 +84,7 @@ const CargosPage2: React.FC = () => {
 
     const res = await fetch(`${import.meta.env.VITE_API_ACTUALIZARCARGO}${cargo.idCargo}`, {
       method: "PUT",
-      headers: {
+      headers: {'ngrok-skip-browser-warning': 'true',
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },

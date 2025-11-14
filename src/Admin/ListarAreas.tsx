@@ -53,7 +53,9 @@ const AdmAreas: React.FC = () => {
 
   const fetchAreas = async (idEmpresa: number) => {
     try {
-      const res = await fetch(apiListar);
+      const res = await fetch(apiListar, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+      });
       const data = await res.json();
       setAreas(Array.isArray(data) ? data.filter((a) => a.idEmpresa === idEmpresa) : []);
     } catch (err) {
@@ -63,8 +65,11 @@ const AdmAreas: React.FC = () => {
 
   const fetchEmpresas = async () => {
     try {
-      const res = await fetch(apiEmpresas);
+      const res = await fetch(apiEmpresas, {
+        headers: { "ngrok-skip-browser-warning": "true" }
+      });
       const data = await res.json();
+
       if (Array.isArray(data.datos)) {
         setEmpresas(
           data.datos.map((e: any) => ({
@@ -111,10 +116,15 @@ const AdmAreas: React.FC = () => {
     try {
       const res = await fetch(endpoint, {
         method: metodo,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify({ nombre, codigo, descripcion, id_empresa, estado, esquema, alias }),
       });
+
       const data = await res.json();
+
       if (res.ok) {
         Swal.fire("Éxito", modoEdicion ? "Área actualizada" : "Área creada", "success");
         setMostrarModal(false);
@@ -136,10 +146,21 @@ const AdmAreas: React.FC = () => {
       confirmButtonText: "Sí, eliminar",
       cancelButtonText: "Cancelar",
     });
+
     if (!confirm.isConfirmed) return;
 
+    const token = localStorage.getItem("token");
+    if (!token) return Swal.fire("Error", "Usuario no autenticado", "error");
+
     try {
-      const res = await fetch(`${apiEliminar}/${idArea}`, { method: "DELETE" });
+      const res = await fetch(`${apiEliminar}/${idArea}`, {
+        method: "DELETE",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          Authorization: `Bearer ${token}`
+        }
+      });
+
       if (res.ok) {
         Swal.fire("Eliminado", "Área eliminada correctamente", "success");
         setAreas((prev) => prev.filter((a) => a.idArea !== idArea));
@@ -150,7 +171,6 @@ const AdmAreas: React.FC = () => {
       Swal.fire("Error", "Error de conexión con el servidor", "error");
     }
   };
-
 
   const areasFiltradas = areas.filter((a) =>
     a.nombre.toLowerCase().includes(filtro.toLowerCase())
@@ -165,9 +185,10 @@ const AdmAreas: React.FC = () => {
             <FaBuilding className="text-yellow-400" /> Gestión de Áreas
           </h1>
           <p className="text-black mt-1 max-w-md">
-            Aquí puedes crear, editar o eliminar áreas de tu empresa. Usa la barra de búsqueda para filtrar rápidamente por nombre de área.
+            Aquí puedes crear, editar o eliminar áreas de tu empresa. Usa la barra de búsqueda para filtrar rápidamente.
           </p>
         </div>
+
         <button
           onClick={() => abrirModal("crear")}
           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 shadow-2xl font-semibold flex items-center gap-2 transform hover:scale-105 transition-all duration-300"
@@ -176,7 +197,7 @@ const AdmAreas: React.FC = () => {
         </button>
       </div>
 
-      {/* Barra de búsqueda */}
+      {/* Buscador */}
       <div className="flex items-center gap-2 mb-6">
         <div className="flex items-center bg-white rounded-full shadow-xl px-4 py-2 w-full max-w-md">
           <FaSearch className="text-gray-400 mr-2" />
@@ -193,7 +214,7 @@ const AdmAreas: React.FC = () => {
       {/* Tabla */}
       <div className="bg-white rounded-2xl shadow-md p-5">
         <table className="min-w-full text-gray-800 rounded-2xl shadow-md">
-          <thead className="bg-blue-600 text-whitel rounded-2xl shadow-md">
+          <thead className="bg-blue-600 text-white rounded-2xl">
             <tr>
               {["ID", "Nombre", "Código", "Descripción", "Alias", "Esquema", "Estado", "Acción"].map((header) => (
                 <th key={header} className="px-6 py-3 text-left font-medium">
@@ -202,6 +223,7 @@ const AdmAreas: React.FC = () => {
               ))}
             </tr>
           </thead>
+
           <tbody>
             {areasFiltradas.length ? (
               areasFiltradas.map((a) => (
@@ -215,11 +237,19 @@ const AdmAreas: React.FC = () => {
                   <td className={`px-6 py-3 font-bold ${a.estado ? "text-green-600" : "text-red-600"}`}>
                     {a.estado ? "Activo" : "Inactivo"}
                   </td>
+
                   <td className="px-6 py-3 flex justify-center gap-2">
-                    <button onClick={() => abrirModal("editar", a)} className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-xl transition shadow">
+                    <button
+                      onClick={() => abrirModal("editar", a)}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-2 rounded-xl shadow"
+                    >
                       <FaEdit />
                     </button>
-                    <button onClick={() => eliminarArea(a.idArea)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl transition shadow">
+
+                    <button
+                      onClick={() => eliminarArea(a.idArea)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-xl shadow"
+                    >
                       <FaTrash />
                     </button>
                   </td>
@@ -246,9 +276,11 @@ const AdmAreas: React.FC = () => {
             >
               ×
             </button>
+
             <h2 className="text-2xl font-extrabold mb-6 text-center text-blue-800">
               {modoEdicion ? "Editar Área" : "Registrar Área"}
             </h2>
+
             <form className="space-y-4" onSubmit={guardarArea}>
               {[
                 { placeholder: "Nombre", value: nombre, setter: setNombre },
@@ -263,7 +295,7 @@ const AdmAreas: React.FC = () => {
                     placeholder={field.placeholder}
                     value={field.value}
                     onChange={(e) => field.setter(e.target.value)}
-                    className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 transition shadow"
+                    className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 shadow"
                   />
                 ) : (
                   <input
@@ -272,15 +304,18 @@ const AdmAreas: React.FC = () => {
                     placeholder={field.placeholder}
                     value={field.value}
                     onChange={(e) => field.setter(e.target.value)}
-                    className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 transition shadow"
+                    className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 shadow"
                   />
                 )
               )}
+
               <select
                 value={id_empresa === "" ? "" : String(id_empresa)}
-                onChange={(e) => setIdEmpresa(e.target.value === "" ? "" : Number(e.target.value))}
+                onChange={(e) =>
+                  setIdEmpresa(e.target.value === "" ? "" : Number(e.target.value))
+                }
                 required
-                className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 transition shadow"
+                className="w-full px-5 py-3 rounded-2xl border-2 border-blue-600 focus:ring-2 focus:ring-blue-500 shadow"
               >
                 <option value="">-- Selecciona una empresa --</option>
                 {empresas.map((empresa) => (
@@ -289,10 +324,17 @@ const AdmAreas: React.FC = () => {
                   </option>
                 ))}
               </select>
+
               <div className="flex items-center gap-2">
-                <input type="checkbox" checked={estado} onChange={(e) => setEstado(e.target.checked)} className="accent-blue-600" />
+                <input
+                  type="checkbox"
+                  checked={estado}
+                  onChange={(e) => setEstado(e.target.checked)}
+                  className="accent-blue-600"
+                />
                 <span className="text-blue-800 font-semibold">Área activa</span>
               </div>
+
               <button
                 type="submit"
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-3xl shadow-lg transform hover:scale-105 transition-all duration-300"

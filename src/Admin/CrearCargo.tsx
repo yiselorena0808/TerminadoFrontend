@@ -33,7 +33,7 @@ const CargosPage: React.FC = () => {
 
     const res = await fetch(import.meta.env.VITE_API_CREARCARGO, {
       method: "POST",
-      headers: {
+      headers: {'ngrok-skip-browser-warning': 'true',
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },

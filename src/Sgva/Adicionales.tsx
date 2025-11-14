@@ -36,7 +36,7 @@ const DashboardPage: React.FC = () => {
               : "bg-white text-gray-600 hover:bg-blue-600"
           }`}
         >
-          Productos
+          Equipos
         </button>
       </div>
 

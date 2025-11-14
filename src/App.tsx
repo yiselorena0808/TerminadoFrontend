@@ -54,6 +54,12 @@ import MiEvento from "./User/CreaEvento";
 import DetalleGestionEPPUser from "./User/DetalleGestion";
 import CrearGestionEppUser from "./User/GestionEppUser";
 
+//superAdim
+
+import ListaDeReportesGenerales from "./Super Admin/ListaDeReportesGenerales";
+import ListaDeActividadesGenerales from './Super Admin/ListaDeActividadesGenerales';
+import ListasChequeoGenerales from "./Super Admin/ListaDeChequeoGenerales";
+
 // --- Perfil ---
 import Perfil from "./perfil";
 import SuperAdminDashboard from "./Super Admin/Empresas";
@@ -120,6 +126,10 @@ function App() {
           <Route path="lectorgestionepp" element={<LectorMisGestiones></LectorMisGestiones>} />
           <Route path="Migestionepp" element={<DetalleGestionEPPUser />} />
           <Route path="CreargestioneppUser" element={<CrearGestionEppUser></CrearGestionEppUser>} />
+
+          <Route path="ListaDeReportesGenerales" element={<ListaDeReportesGenerales></ListaDeReportesGenerales>} />
+          <Route path="ListaDeActividadesGenerales" element={<ListaDeActividadesGenerales></ListaDeActividadesGenerales>}></Route>
+          <Route path="ListaChequeoGenerales" element={<ListasChequeoGenerales></ListasChequeoGenerales>}></Route>
 
 
           {/* Redirección por defecto */}

@@ -23,7 +23,6 @@ const ListasActividadesLudicas: React.FC = () => {
   const apiEliminarAct = import.meta.env.VITE_API_ELIMINARACTIVIDAD;
   const apiListarAct = import.meta.env.VITE_API_LISTARACTIVIDADES;
 
-
   const descargarPDF = (actividad: ActividadLudica) => {
     const doc = new jsPDF();
 
@@ -57,7 +56,12 @@ const ListasActividadesLudicas: React.FC = () => {
 
   const obtenerActividades = async () => {
     try {
-      const res = await fetch(apiListarAct);
+      const res = await fetch(apiListarAct, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
+
       const data = await res.json();
       setActividades(data.datos);
     } catch (error) {
@@ -78,7 +82,11 @@ const ListasActividadesLudicas: React.FC = () => {
     try {
       await fetch(apiEliminarAct + id, {
         method: "DELETE",
+        headers: { 
+          "ngrok-skip-browser-warning": "true"
+        }
       });
+
       setActividades((prev) => prev.filter((a) => a.id !== id));
     } catch (error) {
       console.error("Error eliminando actividad:", error);

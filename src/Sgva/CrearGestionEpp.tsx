@@ -33,7 +33,7 @@ const CrearGestionEpp: React.FC = () => {
     if (!token) return;
     const listarCargos = async () => {
       try {
-        const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: {'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error("Error al listar cargos");
         const data = await res.json();
         setCargos(data);
@@ -46,7 +46,7 @@ const CrearGestionEpp: React.FC = () => {
     if (!token) return;
     const listarAreas = async () => {
       try {
-        const res = await fetch(import.meta.env.VITE_API_LISTARAREAS, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(import.meta.env.VITE_API_LISTARAREAS, { headers: {'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error("Error al listar áreas");
         const data = await res.json();
         setAreas(data);
@@ -59,7 +59,7 @@ const CrearGestionEpp: React.FC = () => {
     if (!token) return;
     const listarProductos = async () => {
       try {
-        const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, { headers: { Authorization: `Bearer ${token}` } });
+        const res = await fetch(import.meta.env.VITE_API_PRODUCTOS, { headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` } });
         if (!res.ok) throw new Error("Error al listar productos");
         const data = await res.json();
         setProductos(data);
@@ -109,7 +109,7 @@ const CrearGestionEpp: React.FC = () => {
 
       const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(body),
       });
 

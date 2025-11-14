@@ -68,7 +68,7 @@ const GestionEPP: React.FC = () => {
 
     try {
       const res = await fetch(apiListarEpp, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
 

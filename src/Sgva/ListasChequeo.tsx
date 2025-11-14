@@ -42,7 +42,7 @@ const ListasChequeoRecibidas: React.FC = () => {
 
     try {
       const res = await fetch(apiListarCheq, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setListas(data.datos && Array.isArray(data.datos) ? data.datos : []);

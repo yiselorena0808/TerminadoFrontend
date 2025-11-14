@@ -65,7 +65,7 @@ const AdmUsuariosCompleto: React.FC = () => {
     try {
       const base = apiListar.endsWith("/") ? apiListar : `${apiListar}/`;
       const res = await fetch(`${base}${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
       setUsuarios(Array.isArray(data.datos) ? data.datos : []);
@@ -104,7 +104,7 @@ const AdmUsuariosCompleto: React.FC = () => {
     try {
       await fetch(`${apiEliminar}${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
       });
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
 

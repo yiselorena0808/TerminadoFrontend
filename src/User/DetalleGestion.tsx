@@ -84,7 +84,7 @@ const DetalleGestionEPPUser: React.FC = () => {
       const apiUpdate = import.meta.env.VITE_API_ACTUALIZARGESTION;
       const response = await fetch(`${apiUpdate}/${gestion.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
         body: JSON.stringify({ estado, observacion }),
       });
       const data = await response.json();

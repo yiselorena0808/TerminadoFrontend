@@ -62,7 +62,7 @@ const MiEvento: React.FC = () => {
 
       const res = await fetch(apiCrearEvento, {
         method: "POST",
-        headers: {
+        headers: {'ngrok-skip-browser-warning': 'true',
           Authorization: `Bearer ${token}`,
         },
         body: formData,

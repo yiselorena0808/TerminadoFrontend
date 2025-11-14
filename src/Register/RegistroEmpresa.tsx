@@ -22,7 +22,7 @@ const RegistroEmpresa: React.FC = () => {
     try {
       const res = await fetch(apiRegisterEmpresa, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {'ngrok-skip-browser-warning': 'true', "Content-Type": "application/json" },
         body: JSON.stringify({
           nombre,
           direccion,

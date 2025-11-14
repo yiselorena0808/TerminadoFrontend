@@ -82,7 +82,7 @@ const UserActividadLudica: React.FC = () => {
 
       const res = await fetch(apiCrearActividad, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
         body: data,
       });
 
