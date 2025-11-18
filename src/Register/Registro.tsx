@@ -8,8 +8,22 @@ const Registro: React.FC = () => {
   const navigate = useNavigate();
   const webcamRef = useRef<Webcam>(null);
 
+  // Datos API
+  const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
+  const apiRegisterSGVA = import.meta.env.VITE_API_REGISTROSGVA;
+  const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
+  const apiAreas = import.meta.env.VITE_API_LISTARAREAS;
+
+  // Estados
+  const [modo, setModo] = useState<"normal" | "sgva">("normal");
+  const [metodoHuella, setMetodoHuella] = useState<
+    "camara" | "archivo" | "huellero" | ""
+  >("");
+  const [huella, setHuella] = useState<string | null>(null);
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [areas, setAreas] = useState<any[]>([]);
+
+  // Formulario general
   const [formData, setFormData] = useState({
     id_empresa: "",
     id_area: "",
@@ -22,34 +36,24 @@ const Registro: React.FC = () => {
     confirmacion: "",
   });
 
-  const [isSGVA, setIsSGVA] = useState(false);
-  const [metodoHuella, setMetodoHuella] = useState<"camara" | "huellero" | "archivo" | "">("");
-  const [huella, setHuella] = useState<string | null>(null);
-
-  const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
-  const apiRegisterSGVA = import.meta.env.VITE_API_REGISTROSGVA;
-  const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
-  const apiAreas = import.meta.env.VITE_API_LISTARAREAS;
-
-  // -------------------
+  // -------------------------------
   // LISTAR EMPRESAS
-  // -------------------
+  // -------------------------------
   useEffect(() => {
     fetch(apiEmpresas, {
       headers: { "ngrok-skip-browser-warning": "true" },
     })
       .then((res) => res.json())
-      .then((data) => setEmpresas(Array.isArray(data.datos) ? data.datos : []))
+      .then((data) => setEmpresas(data.datos || []))
       .catch(() => setEmpresas([]));
   }, []);
 
-  // -------------------
-  // LISTAR ÁREAS
-  // -------------------
+  // -------------------------------
+  // LISTAR ÁREAS SEGÚN EMPRESA
+  // -------------------------------
   useEffect(() => {
     if (!formData.id_empresa) {
       setAreas([]);
-      setFormData((prev) => ({ ...prev, id_area: "" }));
       return;
     }
 
@@ -58,93 +62,102 @@ const Registro: React.FC = () => {
     })
       .then((res) => res.json())
       .then((data) => {
-        const filtered = Array.isArray(data)
-          ? data.filter((a: any) => a.idEmpresa === Number(formData.id_empresa))
+        const filtradas = Array.isArray(data)
+          ? data.filter(
+              (a: any) => a.idEmpresa === Number(formData.id_empresa)
+            )
           : [];
-
-        setAreas(filtered);
-        setFormData((prev) => ({ ...prev, id_area: "" }));
+        setAreas(filtradas);
       })
       .catch(() => setAreas([]));
   }, [formData.id_empresa]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  // -------------------------------
+  // MANEJO FORM
+  // -------------------------------
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-<<<<<<< HEAD
-  const capturarHuella = () => {
+  // -------------------------------
+  // HUELLAS
+  // -------------------------------
+  const capturarHuellaCamara = () => {
     if (webcamRef.current) {
-      const imagen = webcamRef.current.getScreenshot();
-      setHuella(imagen);
+      const img = webcamRef.current.getScreenshot();
+      setHuella(img);
     }
   };
-=======
- const capturarHuellaHuellero = async () => {
-  try {
-    Swal.fire({
-      title: "Coloca el dedo en el lector...",
-      icon: "info",
-      showConfirmButton: false,
-      timer: 2500
-    });
 
-    const capturarHuellaHuellero = async () => {
-  const res = await fetch("http://127.0.0.1:5000/capturar_huella", {
-    method: "POST",
-  });
-  const data = await res.json();
-  console.log(data);
-};
+  const capturarHuellaArchivo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    Swal.fire({
-      icon: "success",
-      title: "Huella capturada correctamente",
-      showConfirmButton: false,
-      timer: 1500
-    });
+    const reader = new FileReader();
+    reader.onloadend = () => setHuella(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
-  } catch (err) {
-    Swal.fire("Error", "No se pudo conectar con el servicio de huellas", "error");
-  }
-};
->>>>>>> 6b6186cd0b97d9a9d175476274cc7e314edf64d6
+  const capturarHuellaHuellero = async () => {
+    try {
+      Swal.fire({
+        title: "Coloca el dedo en el lector...",
+        icon: "info",
+        showConfirmButton: false,
+        timer: 2000,
+      });
 
-  // -------------------
+      const res = await fetch("http://127.0.0.1:5000/capturar_huella", {
+        method: "POST",
+      });
+
+      const data = await res.json();
+      if (data.huella) {
+        setHuella(data.huella);
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Huella capturada",
+        timer: 1500,
+        showConfirmButton: false,
+      });
+    } catch (err) {
+      Swal.fire("Error", "No se pudo conectar con el lector", "error");
+    }
+  };
+
+  // -------------------------------
   // REGISTRAR USUARIO
-  // -------------------
+  // -------------------------------
   const registrar = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isSGVA && !huella) {
+    if (modo === "sgva" && !huella)
       return Swal.fire("Error", "Debe capturar la huella", "error");
-    }
 
-    if (!isSGVA && formData.contrasena !== formData.confirmacion) {
+    if (modo === "normal" && formData.contrasena !== formData.confirmacion)
       return Swal.fire("Error", "Las contraseñas no coinciden", "error");
-    }
 
     try {
-      const url = isSGVA ? apiRegisterSGVA : apiRegister;
+      const url = modo === "sgva" ? apiRegisterSGVA : apiRegister;
 
-      const body = isSGVA
-        ? {
-            nombre: formData.nombre,
-            apellido: formData.apellido,
-            nombre_usuario: formData.nombre_usuario,
-            correo_electronico: formData.correo_electronico,
-            cargo: formData.cargo,
-            contrasena: formData.contrasena,
-            id_empresa: Number(formData.id_empresa),
-            id_area: Number(formData.id_area),
-            huella,
-          }
-        : {
-            ...formData,
-            id_empresa: Number(formData.id_empresa),
-            id_area: Number(formData.id_area),
-          };
+      const body =
+        modo === "sgva"
+          ? {
+              ...formData,
+              id_empresa: Number(formData.id_empresa),
+              id_area: Number(formData.id_area),
+              huella,
+            }
+          : {
+              ...formData,
+              id_empresa: Number(formData.id_empresa),
+              id_area: Number(formData.id_area),
+            };
 
       const res = await fetch(url, {
         method: "POST",
@@ -168,124 +181,151 @@ const Registro: React.FC = () => {
     }
   };
 
+  // ----------------------------------------------------------------
+  // RENDER
+  // ----------------------------------------------------------------
   return (
-    <div className="min-h-screen flex flex-col bg-white font-inter text-gray-800">
+    <div className="min-h-screen flex flex-col bg-white">
+      {/* HEADER */}
       <header className="flex justify-between items-center px-10 py-5 bg-white shadow-md fixed w-full top-0 z-50">
         <div className="flex items-center space-x-3">
-          <img src={logo} className="w-12 h-12 rounded-full object-cover" />
-          <h1 className="text-xl md:text-2xl font-bold text-blue-800">
+          <img src={logo} className="w-12 h-12 rounded-full" />
+          <h1 className="text-xl font-bold text-blue-800">
             Sistema Integral de Seguridad Laboral
           </h1>
         </div>
 
         <nav className="hidden md:flex space-x-8 text-gray-600 font-medium">
-          <Link to="/registroEmpresa" className="hover:text-blue-700">Registrar Empresa</Link>
-          <Link to="/registroArea" className="hover:text-blue-700">Registrar Área</Link>
-          <Link to="/registro" className="hover:text-blue-700">Registrar Usuario</Link>
+          <Link to="/registroEmpresa">Registrar Empresa</Link>
+          <Link to="/registroArea">Registrar Área</Link>
+          <Link to="/registro">Registrar Usuario</Link>
         </nav>
 
         <button
           onClick={() => navigate("/login")}
-          className="bg-blue-700 hover:bg-blue-600 text-white px-6 py-2 rounded-xl shadow-md"
+          className="bg-blue-700 text-white px-6 py-2 rounded-xl"
         >
           Iniciar sesión
         </button>
       </header>
 
-      <div className="flex flex-1 items-center justify-center p-6 w-screen h-screen mt-16">
-        <div className="w-full max-w-5xl bg-white/10 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col md:flex-row">
-          <div className="md:w-1/2 bg-gradient-to-br from-blue-900 via-[#162a44] to-[#0F1C2E] text-white flex flex-col items-center justify-center p-8">
-            <h2 className="text-3xl font-bold">¡Registra un usuario!</h2>
-            <p className="text-gray-200 text-sm mt-2">Forma parte de tu empresa en el sistema.</p>
-            <img
-              src="https://cdn-icons-png.flaticon.com/512/3135/3135768.png"
-              className="w-40 h-40 rounded-full border-4 border-white mt-8"
-            />
+      {/* CONTENIDO */}
+      <div className="flex flex-1 items-center justify-center p-6 w-screen mt-20">
+        <div className="w-full max-w-4xl bg-white rounded-xl shadow-lg p-8">
+
+          <h2 className="text-2xl font-bold text-center mb-6">
+            Registro de Usuario
+          </h2>
+
+          {/* BOTONES DE TIPO */}
+          <div className="flex justify-center gap-4 mb-6">
+            <button
+              onClick={() => setModo("normal")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                modo === "normal"
+                  ? "bg-blue-700 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              Registro Normal
+            </button>
+
+            <button
+              onClick={() => setModo("sgva")}
+              className={`px-6 py-2 rounded-lg font-semibold ${
+                modo === "sgva"
+                  ? "bg-green-700 text-white"
+                  : "bg-gray-200 text-gray-700"
+              }`}
+            >
+              Registro SGVA
+            </button>
           </div>
 
-          <div className="md:w-1/2 p-8">
-            <h3 className="text-2xl font-bold mb-6 text-center">Registro de Usuario</h3>
+          <form className="space-y-4" onSubmit={registrar}>
+            {/* CAMPOS COMPARTIDOS */}
+            <select
+              name="id_empresa"
+              value={formData.id_empresa}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            >
+              <option value="">Seleccione una Empresa</option>
+              {empresas.map((e) => (
+                <option key={e.idEmpresa} value={e.idEmpresa}>
+                  {e.nombre}
+                </option>
+              ))}
+            </select>
 
-            <form className="space-y-4" onSubmit={registrar}>
-              <select
-                name="id_empresa"
-                value={formData.id_empresa}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
-                required
-              >
-                <option value="">Seleccione una Empresa</option>
-                {empresas.map((e) => (
-                  <option key={e.idEmpresa} value={e.idEmpresa}>
-                    {e.nombre}
-                  </option>
-                ))}
-              </select>
+            <select
+              name="id_area"
+              value={formData.id_area}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            >
+              <option value="">Seleccione un Área</option>
+              {areas.map((a) => (
+                <option key={a.idArea} value={a.idArea}>
+                  {a.descripcion}
+                </option>
+              ))}
+            </select>
 
-              <select
-                name="id_area"
-                value={formData.id_area}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
-                required
-              >
-                <option value="">Seleccione un Área</option>
-                {areas.map((a) => (
-                  <option key={a.idArea} value={a.idArea}>
-                    {a.descripcion}
-                  </option>
-                ))}
-              </select>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <input
-                  type="text"
-                  name="nombre"
-                  placeholder="Nombre"
-                  value={formData.nombre}
-                  onChange={handleChange}
-                  className="px-4 py-2 rounded-lg border"
-                  required
-                />
-                <input
-                  type="text"
-                  name="apellido"
-                  placeholder="Apellido"
-                  value={formData.apellido}
-                  onChange={handleChange}
-                  className="px-4 py-2 rounded-lg border"
-                  required
-                />
-                <input
-                  type="text"
-                  name="nombre_usuario"
-                  placeholder="Nombre de usuario"
-                  value={formData.nombre_usuario}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border"
-                  required
-                />
-              </div>
-
-              <input
-                type="email"
-                name="correo_electronico"
-                placeholder="Correo electrónico"
-                value={formData.correo_electronico}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
-                required
-              />
-
+            <div className="grid grid-cols-2 gap-4">
               <input
                 type="text"
-                name="cargo"
-                placeholder="Cargo"
-                value={formData.cargo}
+                name="nombre"
+                placeholder="Nombre"
+                value={formData.nombre}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border"
+                className="px-4 py-2 border rounded-lg"
+                required
               />
+              <input
+                type="text"
+                name="apellido"
+                placeholder="Apellido"
+                value={formData.apellido}
+                onChange={handleChange}
+                className="px-4 py-2 border rounded-lg"
+                required
+              />
+            </div>
 
+            <input
+              type="text"
+              name="nombre_usuario"
+              placeholder="Nombre de usuario"
+              value={formData.nombre_usuario}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+
+            <input
+              type="email"
+              name="correo_electronico"
+              placeholder="Correo electrónico"
+              value={formData.correo_electronico}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+              required
+            />
+
+            <input
+              type="text"
+              name="cargo"
+              placeholder="Cargo"
+              value={formData.cargo}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border rounded-lg"
+            />
+
+            {/* REGISTRO NORMAL */}
+            {modo === "normal" && (
               <>
                 <input
                   type="password"
@@ -293,203 +333,118 @@ const Registro: React.FC = () => {
                   placeholder="Contraseña"
                   value={formData.contrasena}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border"
+                  className="w-full px-4 py-2 border rounded-lg"
                   required
                 />
+
                 <input
                   type="password"
                   name="confirmacion"
                   placeholder="Confirmar contraseña"
                   value={formData.confirmacion}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border"
+                  className="w-full px-4 py-2 border rounded-lg"
                   required
                 />
               </>
+            )}
 
-<<<<<<< HEAD
-              <button
-                type="submit"
-                className="w-full py-2 bg-[#1E3A5F] text-white rounded-lg"
-              >
-                Registrar Usuario
-              </button>
-            </form>
-=======
-                    <input
-                      type="text"
-                      name="cargo"
-                      placeholder="Cargo"
-                      value={formData.cargo}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border mt-3"
+            {/* REGISTRO SGVA */}
+            {modo === "sgva" && (
+              <div className="mt-4">
+                <label className="font-medium block mb-2">
+                  Método de captura de huella:
+                </label>
+
+                <select
+                  value={metodoHuella}
+                  onChange={(e) => setMetodoHuella(e.target.value as any)}
+                  className="w-full px-4 py-2 border rounded-lg"
+                  required
+                >
+                  <option value="">Seleccione</option>
+                  <option value="camara">Cámara</option>
+                  <option value="archivo">Archivo</option>
+                  <option value="huellero">Lector USB</option>
+                </select>
+
+                {/* CÁMARA */}
+                {metodoHuella === "camara" && (
+                  <div className="mt-4 flex flex-col items-center gap-2">
+                    <Webcam
+                      ref={webcamRef}
+                      screenshotFormat="image/jpeg"
+                      className="rounded-lg"
                     />
 
-                    {/* Métodos de huella */}
-                    <label className="font-medium text-gray-700 mt-4 block">Método de registro de huella:</label>
-                    <select
-                      value={metodoHuella}
-                      onChange={(e) => setMetodoHuella(e.target.value as any)}
-                      className="w-full px-4 py-2 rounded-lg border mt-2"
-                      required
-                    >
-                      <option value="">Seleccione un método</option>
-                      <option value="camara">Cámara</option>
-                      <option value="huellero">Huellero</option>
-                      <option value="archivo">Archivo</option>
-                    </select>
-
-                    {metodoHuella === "camara" && (
-
-                      <div className="flex flex-col items-center gap-2 mt-2">
-                        <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="rounded-lg" />
-                        <button
-                          type="button"
-                        
-                          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                        >
-                          Capturar Huella
-                        </button>
-                        {huella && <img src={huella} alt="Huella capturada" className="mt-2 w-32 h-32 border rounded-lg" />}
-                      </div>
-                    )}
-
-                    {metodoHuella === "huellero" && (
-                  <div className="mt-3 flex flex-col items-center gap-3">
                     <button
                       type="button"
-                      onClick={capturarHuellaHuellero}
-                      className="px-4 py-2 bg-purple-700 text-white rounded-lg hover:bg-purple-800"
+                      onClick={capturarHuellaCamara}
+                      className="px-4 py-2 bg-green-700 text-white rounded-lg"
                     >
-                      Capturar Huella con Lector USB
+                      Capturar Huella
                     </button>
 
                     {huella && (
-                      <p className="text-green-600 font-semibold">
-                        ✅ Huella registrada correctamente
+                      <img
+                        src={huella}
+                        className="w-32 h-32 mt-2 border rounded-lg"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* ARCHIVO */}
+                {metodoHuella === "archivo" && (
+                  <div className="mt-4">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={capturarHuellaArchivo}
+                      className="w-full"
+                    />
+
+                    {huella && (
+                      <img
+                        src={huella}
+                        className="w-32 h-32 mt-2 border rounded-lg"
+                      />
+                    )}
+                  </div>
+                )}
+
+                {/* HUELLLERO */}
+                {metodoHuella === "huellero" && (
+                  <div className="mt-4 flex flex-col items-center">
+                    <button
+                      type="button"
+                      onClick={capturarHuellaHuellero}
+                      className="px-4 py-2 bg-purple-700 text-white rounded-lg"
+                    >
+                      Capturar con Lector USB
+                    </button>
+
+                    {huella && (
+                      <p className="text-green-600 font-semibold mt-2">
+                        Huella capturada correctamente ✓
                       </p>
                     )}
                   </div>
                 )}
-                  </div>
-                ) : (
-                  // Registro normal
-                  <>
-                    <select
-                      name="id_empresa"
-                      value={formData.id_empresa}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
-                      required
-                    >
-                      <option value="">Seleccione una Empresa</option>
-                      {empresas.map((empresa) => (
-                        <option key={empresa.idEmpresa} value={empresa.idEmpresa}>
-                          {empresa.nombre}
-                        </option>
-                      ))}
-                    </select>
+              </div>
+            )}
 
-                    <select
-                      name="id_area"
-                      value={formData.id_area}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border border-[#1E3A5F]"
-                      required
-                    >
-                      <option value="">Seleccione un Área</option>
-                      {areas.map((area) => (
-                        <option key={area.idArea} value={area.idArea}>
-                          {area.descripcion}
-                        </option>
-                      ))}
-                    </select>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <input
-                        type="text"
-                        name="nombre"
-                        placeholder="Nombre"
-                        value={formData.nombre}
-                        onChange={handleChange}
-                        className="px-4 py-2 rounded-lg border"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="apellido"
-                        placeholder="Apellido"
-                        value={formData.apellido}
-                        onChange={handleChange}
-                        className="px-4 py-2 rounded-lg border"
-                        required
-                      />
-                    </div>
-
-                    <input
-                      type="text"
-                      name="nombre_usuario"
-                      placeholder="Nombre de usuario"
-                      value={formData.nombre_usuario}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border"
-                      required
-                    />
-
-                    <input
-                      type="email"
-                      name="correo_electronico"
-                      placeholder="Correo electrónico"
-                      value={formData.correo_electronico}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border"
-                      required
-                    />
-
-                    <input
-                      type="text"
-                      name="cargo"
-                      placeholder="Cargo"
-                      value={formData.cargo}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border"
-                    />
-
-                    <input
-                      type="password"
-                      name="contrasena"
-                      placeholder="Contraseña"
-                      value={formData.contrasena}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border"
-                      required
-                    />
-
-                    <input
-                      type="password"
-                      name="confirmacion"
-                      placeholder="Confirmar contraseña"
-                      value={formData.confirmacion}
-                      onChange={handleChange}
-                      className="w-full px-4 py-2 rounded-lg border"
-                      required
-                    />
-                  </>
-                )}
-
-                <button
-                  type="submit"
-                  className="w-full py-2 rounded-lg bg-[#1E3A5F] text-white font-semibold hover:bg-[#142943] transition"
-                >
-                  Registrar Usuario
-                </button>
-              </form>
-            </div>
->>>>>>> 6b6186cd0b97d9a9d175476274cc7e314edf64d6
-          </div>
+            <button
+              type="submit"
+              className="w-full py-2 rounded-lg bg-blue-700 text-white font-semibold mt-6"
+            >
+              Registrar Usuario
+            </button>
+          </form>
         </div>
       </div>
 
+      {/* FOOTER */}
       <footer className="bg-blue-900 text-center py-6 text-gray-200 text-sm">
         © 2025 Sistema Integral SST — Desarrollado por aprendices del SENA
       </footer>

@@ -59,6 +59,7 @@ import CrearGestionEppUser from "./User/GestionEppUser";
 import ListaDeReportesGenerales from "./Super Admin/ListaDeReportesGenerales";
 import ListaDeActividadesGenerales from './Super Admin/ListaDeActividadesGenerales';
 import ListasChequeoGenerales from "./Super Admin/ListaDeChequeoGenerales";
+import ListaDeGestionEppGeneral from "./Super Admin/ListaDeGestionEpp";
 
 // --- Perfil ---
 import Perfil from "./perfil";
@@ -130,6 +131,7 @@ function App() {
           <Route path="ListaDeReportesGenerales" element={<ListaDeReportesGenerales></ListaDeReportesGenerales>} />
           <Route path="ListaDeActividadesGenerales" element={<ListaDeActividadesGenerales></ListaDeActividadesGenerales>}></Route>
           <Route path="ListaChequeoGenerales" element={<ListasChequeoGenerales></ListasChequeoGenerales>}></Route>
+          <Route path="ListaDeGestionEppGeneral" element={<ListaDeGestionEppGeneral></ListaDeGestionEppGeneral>}></Route>
 
 
           {/* Redirección por defecto */}
