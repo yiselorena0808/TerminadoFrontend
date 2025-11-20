@@ -6,6 +6,10 @@ import {
   FaMapMarkerAlt,
   FaExclamationTriangle,
   FaSearch,
+  FaPlus,
+  FaBuilding,
+  FaChevronDown,
+  FaChevronUp
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -29,6 +33,9 @@ interface Reporte {
 interface Empresa {
   idEmpresa: number;
   nombre: string;
+  direccion?: string;
+  nit?: string;
+  estado?: boolean;
 }
 
 const ListaDeReportesGenerales: React.FC = () => {
@@ -153,13 +160,13 @@ const ListaDeReportesGenerales: React.FC = () => {
   const getBadgeColor = (estado: string) => {
     switch (estado) {
       case "Pendiente":
-        return "bg-yellow-100 text-yellow-800 border-yellow-400";
+        return "bg-yellow-100 text-yellow-800";
       case "Revisado":
-        return "bg-blue-100 text-blue-800 border-blue-400";
+        return "bg-blue-100 text-blue-800";
       case "Finalizado":
-        return "bg-green-100 text-green-800 border-green-400";
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-600 border-gray-300";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
@@ -168,91 +175,132 @@ const ListaDeReportesGenerales: React.FC = () => {
     setEmpresaAbierta((prev) => (prev === id ? null : id));
   };
 
-  /** Filtrar empresas */
-  const empresasFiltradas = empresas.filter((e) =>
+  /** Filtrar empresas con reportes */
+  const empresasConReportes = empresas.filter(empresa => 
+    (reportesPorEmpresa[empresa.idEmpresa] || []).length > 0
+  );
+
+  /** Filtrar empresas por búsqueda */
+  const empresasFiltradas = empresasConReportes.filter((e) =>
     e.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
   return (
-    <div>
+    <div className="p-6">
       {/* HEADER */}
-      <div className="bg-blue-600 text-white rounded-3xl shadow-xl p-8 mb-8 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <FaHardHat className="text-4xl" />
-          <div>
-            <h2 className="text-3xl font-bold">SST - Reportes por Empresa</h2>
-            <p>Organización automática por carpetas</p>
-          </div>
-        </div>
+      <div className="flex justify-between items-center mb-6 ">
+        <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
+          <FaHardHat className="text-blue-700" /> 
+          Reportes por Empresa
+        </h1>
+        <button
+          onClick={() => navigate("/nav/CrearReporteSA")}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-colors"
+        >
+          <FaPlus /> Nuevo Reporte
+        </button>
       </div>
 
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-6xl bg-white">
-        {/* 🔎 BUSCADOR */}
-        <div className="mb-6 flex items-center gap-3 bg-gray-100 p-3 rounded-xl border">
-          <FaSearch className="text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar empresa..."
-            className="w-full p-2 bg-transparent outline-none"
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
+      {/* CONTENEDOR PRINCIPAL */}
+      <div className="space-y-6">
+        {/* BUSCADOR */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <div className="relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar empresa..."
+                className="w-full px-4 py-3 pl-12 border-2 border-blue-600 rounded-xl focus:outline-none focus:border-blue-700"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
+          </div>
         </div>
 
+        {/* LISTA DE EMPRESAS CON REPORTES */}
         {listas.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" />
-            No hay reportes registrados
-          </p>
+          <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
+            <FaExclamationTriangle className="text-6xl mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">
+              No hay reportes registrados
+            </h3>
+            <p className="text-gray-500">
+              Crea el primer reporte usando el botón "Nuevo Reporte"
+            </p>
+          </div>
         ) : (
-          <div className="space-y-8">
+          <div className="space-y-6">
             {empresasFiltradas.map((empresa) => {
               const empresaId = empresa.idEmpresa;
               const reportes = reportesPorEmpresa[empresaId] || [];
               const abierta = empresaAbierta === empresaId;
 
               return (
-                <div
-                  key={empresaId}
-                  className="border rounded-xl shadow-xl bg-gray-50 cursor-pointer"
-                  onClick={() => toggleEmpresa(empresaId)}
-                >
-                  {/* ENCABEZADO SIN FLECHAS */}
-                  <div className="w-full text-left p-6 hover:bg-gray-100 transition">
-                    <h3 className="text-2xl font-bold text-blue-700 flex items-center gap-2">
-                      📁 {empresa.nombre}
-                    </h3>
+                <div key={empresaId} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+                  {/* ENCABEZADO DE EMPRESA */}
+                  <div 
+                    className="p-6 cursor-pointer hover:bg-blue-50 transition-colors border-b-2 border-blue-200"
+                    onClick={() => toggleEmpresa(empresaId)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div className="flex items-center gap-4">
+                        <div className="bg-blue-100 p-3 rounded-xl">
+                          <FaBuilding className="text-blue-600 text-2xl" />
+                        </div>
+                        <div>
+                          <h2 className="text-2xl font-bold text-blue-800">{empresa.nombre}</h2>
+                          <p className="text-gray-600 text-sm">
+                            {empresa.nit} • {empresa.direccion || "Sin dirección"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                          {reportes.length} reporte(s)
+                        </span>
+                        {abierta ? (
+                          <FaChevronUp className="text-gray-400" />
+                        ) : (
+                          <FaChevronDown className="text-gray-400" />
+                        )}
+                      </div>
+                    </div>
                   </div>
 
+                  {/* REPORTES DE LA EMPRESA */}
                   {abierta && (
-                    <div className="p-6 border-t">
+                    <div className="p-6">
                       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {reportes.map((item) => (
                           <div
                             key={item.id_reporte}
-                            className="p-6 rounded-xl border shadow bg-white hover:shadow-lg transition"
+                            className="border-2 border-blue-200 rounded-xl p-4 hover:shadow-md transition-shadow bg-white"
                           >
-                            <h4 className="font-bold text-lg flex items-center gap-2">
-                              {item.nombre_usuario}
+                            <div className="flex justify-between items-start mb-3">
+                              <h3 className="font-bold text-lg text-gray-800">
+                                {item.nombre_usuario}
+                              </h3>
                               <span
-                                className={`px-2 py-1 text-xs rounded-full border ${getBadgeColor(
+                                className={`px-2 py-1 rounded-full text-xs font-semibold ${getBadgeColor(
                                   item.estado
                                 )}`}
                               >
                                 {item.estado}
                               </span>
-                            </h4>
+                            </div>
 
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-500 mb-3">
                               {formatearFecha(item.fecha)}
                             </p>
 
-                            <p className="text-gray-700 mt-2">
-                              <FaMapMarkerAlt className="inline mr-2 text-yellow-600" />
-                              {item.lugar}
-                            </p>
+                            <div className="flex items-center gap-2 text-gray-600 mb-3">
+                              <FaMapMarkerAlt className="text-yellow-500" />
+                              <span className="text-sm">{item.lugar}</span>
+                            </div>
 
-                            <p className="text-gray-600 text-sm mt-2 mb-4">
+                            <p className="text-gray-700 text-sm mb-4 line-clamp-3">
                               {item.descripcion}
                             </p>
 
@@ -262,17 +310,16 @@ const ListaDeReportesGenerales: React.FC = () => {
                                   e.stopPropagation();
                                   abrirDetalle(item);
                                 }}
-                                className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition-colors text-sm font-semibold"
                               >
-                                Abrir
+                                Ver Detalle
                               </button>
-
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   descargarPDF(item);
                                 }}
-                                className="bg-red-500 text-white px-4 py-1 rounded hover:bg-red-600 flex items-center gap-1"
+                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-xl transition-colors flex items-center gap-2 text-sm font-semibold"
                               >
                                 <FaFilePdf /> PDF
                               </button>
@@ -280,11 +327,31 @@ const ListaDeReportesGenerales: React.FC = () => {
                           </div>
                         ))}
                       </div>
+
+                      {reportes.length === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <FaExclamationTriangle className="text-4xl mx-auto mb-2 text-gray-300" />
+                          <p>No hay reportes para esta empresa</p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Mensaje cuando no hay empresas con reportes */}
+        {listas.length > 0 && empresasFiltradas.length === 0 && (
+          <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
+            <FaSearch className="text-6xl mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">
+              No se encontraron empresas
+            </h3>
+            <p className="text-gray-500">
+              No hay empresas que coincidan con tu búsqueda
+            </p>
           </div>
         )}
       </div>

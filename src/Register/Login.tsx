@@ -16,7 +16,7 @@ const Login: React.FC = () => {
     try {
       const res = await fetch(apiLogin, {
         method: "POST",
-        headers: {  "ngrok-skip-browser-warning": "true","Content-Type": "application/json" },
+        headers: {"ngrok-skip-browser-warning": "true","Content-Type": "application/json" },
         body: JSON.stringify({ correo_electronico, contrasena }),
       });
 
@@ -31,19 +31,34 @@ const Login: React.FC = () => {
       localStorage.setItem("token", data.token);
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
-      if (data.user?.id_empresa) {
-        localStorage.setItem("idEmpresa", data.user.id_empresa.toString());
+      if (data.user?.idEmpresa) {
+  localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
+}
+    const obtenerRutaSegunRol = (cargo: string) => {
+      if (["superadmin", "SuperAdmin"].includes(cargo)) {
+        return "/nav/admEmpresas";
       }
+      if (["administrador", "Administrador"].includes(cargo)) {
+        return "/nav/Admusuarios";
+      }
+      if (["SG-SST", "sg-sst"].includes(cargo)) {
+        return "/nav/inicio";
+      }
+      return "/nav/inicioUser";
+    };
 
-      Swal.fire({
-        icon: "success",
-        title: "Inicio de sesión exitoso",
-        text: "Bienvenido al Sistema SST",
-        timer: 1800,
-        showConfirmButton: false,
-      }).then(() => {
-        navigate("/nav/", { replace: true });
-      });
+
+
+     Swal.fire({
+      icon: "success",
+      title: "Inicio de sesión exitoso",
+      text: "Bienvenido al Sistema SST",
+      timer: 1800,
+      showConfirmButton: false,
+    }).then(() => {
+      const rutaInicial = obtenerRutaSegunRol(data.user.cargo);
+      navigate(rutaInicial, { replace: true });
+    });
     } catch (error) {
       Swal.fire({
         icon: "error",

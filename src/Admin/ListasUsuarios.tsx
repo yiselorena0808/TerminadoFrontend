@@ -46,7 +46,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     useState<UsuarioToken | null>(null);
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
 
-  // ✅ Tus APIs sin cambios
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
@@ -83,7 +82,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     }
   }, []);
 
-  // ✅ Confirmación con Toast y SweetAlert2
   const eliminarUsuario = async (id: number) => {
     const confirm = await Swal.fire({
       title: "¿Eliminar usuario?",
@@ -108,7 +106,7 @@ const AdmUsuariosCompleto: React.FC = () => {
       });
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
 
-      // ✅ ToastAlert (sin bloqueos)
+
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

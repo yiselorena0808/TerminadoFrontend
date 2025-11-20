@@ -68,9 +68,10 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineSetting />, label: "Administración de Reportes", path: "/nav/ListaDeReportesGenerales" },
     { icon: <AiOutlineSetting />, label: "Administración de Evidencias", path: "/nav/ListaDeActividadesGenerales" },
     { icon: <AiOutlineSetting />, label: "Administración de Listas de Chequeo", path: "/nav/ListaChequeoGenerales" },
-    { icon: <AiOutlineSetting />, label: "Administración de Gestiones Epp", path: "/nav/ListaDeGestionEppGeneral" },
-    { icon: <AiOutlineSetting />, label: "Administración de Eventos", path: "/nav/admEmpresas" },
-    { icon: <AiOutlineSetting />, label: "Administración de Cargos", path: "/nav/admEmpresas" },
+    { icon: <AiOutlineSetting />, label: "Administración de Gestiones Epp", path: "/nav/ListaDeGestionEppGeneral"},
+    { icon: <AiOutlineSetting />, label: "Administración de Eventos", path: "/nav/ListaDeEventosGenerales" },
+    { icon: <AiOutlineSetting />, label: "Administración de Cargos", path: "/nav/ListaCargos" },
+    { icon: <AiOutlineSetting />, label: "Administración de Equipos de protección personal", path: "/nav/ListaProductos" },
     { icon: <AiOutlineProfile />, label: "Perfil", path: "/nav/perfil" },
   ];
 

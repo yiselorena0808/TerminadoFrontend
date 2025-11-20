@@ -97,14 +97,13 @@ const CrearEvento: React.FC = () => {
         backgroundPosition: "center",
       }}
     >
-      {/* Overlay amarillo */}
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+      
 
       {/* Card central */}
-      <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-yellow-500">
+      <div className="relative w-full max-w-2xl bg-white/95 backdrop-blur-md p-8 rounded-3xl shadow-2xl border border-blue-700">
         <div className="flex items-center gap-3 mb-6">
           <FaCalendarPlus className="text-blue-600 text-3xl" />
-          <h2 className="text-2xl font-bold text-gray-800">📝 Crear Evento</h2>
+          <h2 className="text-2xl font-bold text-gray-800"> Crear Evento</h2>
         </div>
 
         {usuario && (

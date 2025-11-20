@@ -12,23 +12,23 @@ import Inicio from "./Welcome.tsx/Inicio"
 import Navbar from "./Navbar";
 
 // --- SGVA ---
-import ListarGestiones from "./Sgva/ListasGestionEPP";
-import ListasChequeoRecibidas from "./Sgva/ListasChequeo";
-import ListasReportes from "./Sgva/ListasReportes";
-import ListasActividadesLudicas from "./Sgva/ListasActLudicas";
-import CrearActividadLudica from "./Sgva/CrearActLudica";
-import DetalleReporte from "./Sgva/DetalleReporte";
-import DetalleListaChequeo from "./Sgva/DetalleListaChqueo";
-import DetalleActividad from "./Sgva/DetalleActLudica";
-import DetalleGestionEPP from "./Sgva/DetalleGestionEpp";
-import CrearListaChequeo from "./Sgva/CrearListaChequeo";
-import CrearReporte from "./Sgva/CrearReporte";
-import DashboardReportes from "./Sgva/DashboardReportes";
-import CrearGestionEpp from "./Sgva/CrearGestionEpp";
-import CrearEventos from "./Sgva/Eventos";
-import ListaEventos from "./Sgva/ListaEventos";
-import DashboardPage from "./Sgva/Adicionales";
-import ProductosPage from "./Sgva/CrearProducto";
+import ListarGestiones from "./Sg-sst/ListasGestionEPP";
+import ListasChequeoRecibidas from "./Sg-sst/ListasChequeo";
+import ListasReportes from "./Sg-sst/ListasReportes";
+import ListasActividadesLudicas from "./Sg-sst/ListasActLudicas";
+import CrearActividadLudica from "./Sg-sst/CrearActLudica";
+import DetalleReporte from "./Sg-sst/DetalleReporte";
+import DetalleListaChequeo from "./Sg-sst/DetalleListaChqueo";
+import DetalleActividad from "./Sg-sst/DetalleActLudica";
+import DetalleGestionEPP from "./Sg-sst/DetalleGestionEpp";
+import CrearListaChequeo from "./Sg-sst/CrearListaChequeo";
+import CrearReporte from "./Sg-sst/CrearReporte";
+import DashboardReportes from "./Sg-sst/DashboardReportes";
+import CrearGestionEpp from "./Sg-sst/CrearGestionEpp";
+import CrearEventos from "./Sg-sst/Eventos";
+import ListaEventos from "./Sg-sst/ListaEventos";
+import DashboardPage from "./Sg-sst/Adicionales";
+import ProductosPage from "./Sg-sst/CrearProducto";
 import CajaComentarios from "./components/CajaComentarios";
 
 // --- Admin ---
@@ -60,6 +60,12 @@ import ListaDeReportesGenerales from "./Super Admin/ListaDeReportesGenerales";
 import ListaDeActividadesGenerales from './Super Admin/ListaDeActividadesGenerales';
 import ListasChequeoGenerales from "./Super Admin/ListaDeChequeoGenerales";
 import ListaDeGestionEppGeneral from "./Super Admin/ListaDeGestionEpp";
+import ListaDeEventosGenerales from "./Super Admin/ListaDeEventosGenerales"
+import CrearReporteSA from "./Super Admin/CrearReporte"
+import ListaCargos from "./Super Admin/ListaDeCargos";
+import ListaProductos from "./Super Admin/ListaEquiposDeProteccion";
+
+
 
 // --- Perfil ---
 import Perfil from "./perfil";
@@ -131,9 +137,11 @@ function App() {
           <Route path="ListaDeReportesGenerales" element={<ListaDeReportesGenerales></ListaDeReportesGenerales>} />
           <Route path="ListaDeActividadesGenerales" element={<ListaDeActividadesGenerales></ListaDeActividadesGenerales>}></Route>
           <Route path="ListaChequeoGenerales" element={<ListasChequeoGenerales></ListasChequeoGenerales>}></Route>
-          <Route path="ListaDeGestionEppGeneral" element={<ListaDeGestionEppGeneral></ListaDeGestionEppGeneral>}></Route>
-
-
+          <Route path="ListaDeGestionEppGeneral"element={<ListaDeGestionEppGeneral></ListaDeGestionEppGeneral>}></Route>
+          <Route path="ListaDeEventosGenerales" element={<ListaDeEventosGenerales></ListaDeEventosGenerales>}></Route>
+          <Route path="CrearReporteSA" element={<CrearReporteSA></CrearReporteSA>}></Route>
+          <Route path="ListaCargos" element={<ListaCargos></ListaCargos>}></Route>
+          <Route path="ListaProductos" element={<ListaProductos></ListaProductos>}></Route>
           {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="inicio" />} />
         </Route>
