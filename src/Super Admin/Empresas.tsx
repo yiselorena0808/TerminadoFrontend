@@ -440,14 +440,15 @@ const SuperAdminDashboard: React.FC = () => {
     setMostrarModalExcel(true);
   };
 
-  const handleUsuariosCreados = () => {
-    listarUsuarios();
-    if (empresaSeleccionada) {
-      const usuariosEmpresa = usuarios.filter(u => u.idEmpresa === empresaSeleccionada.idEmpresa);
-      setUsuariosFiltrados(usuariosEmpresa);
-    }
-    setMostrarModalExcel(false);
-  };
+ // Esta función ya debería estar en tu código, pero por si acaso:
+const handleUsuariosCreados = () => {
+  listarUsuarios();
+  if (empresaSeleccionada) {
+    const usuariosEmpresa = usuarios.filter(u => u.idEmpresa === empresaSeleccionada.idEmpresa);
+    setUsuariosFiltrados(usuariosEmpresa);
+  }
+  setMostrarModalExcel(false);
+};
 
   // ================================
   // EMPRESAS Y ÁREAS
@@ -679,7 +680,7 @@ const SuperAdminDashboard: React.FC = () => {
                   <button onClick={() => eliminarItem("empresa", empresa.idEmpresa)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-xl transition-all duration-300 shadow-lg">
                     <FaTrash />
                   </button>
-                  <button onClick={() => abrirModal("area", "crear")} className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg">
+                  <button onClick={() => abrirModal("area", "crear")} className="bg-blue-300 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg">
                     <FaPlus /> Nueva Área
                   </button>
                 </div>
@@ -1142,47 +1143,39 @@ const SuperAdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* MODAL EXCEL */}
-      {mostrarModalExcel && empresaSeleccionada && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md border-2 border-blue-100">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-xl">
-                    <FaFileExcel className="text-white text-lg" />
-                  </div>
-                  Cargar Usuarios desde Excel
-                </h2>
-                <button onClick={() => setMostrarModalExcel(false)} className="text-gray-600 hover:text-gray-800 text-2xl font-bold transition-colors duration-300">
-                  <FaTimes />
-                </button>
-              </div>
+      {/* MODAL EXCEL - USANDO EL COMPONENTE UPLOADEXCEL */}
+{mostrarModalExcel && empresaSeleccionada && (
+  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl border-2 border-blue-100">
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex justify-between items-center">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+            <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-xl">
+              <FaFileExcel className="text-white text-lg" />
             </div>
-
-            <div className="p-6 space-y-6">
-              <p className="text-gray-600 text-center">
-                Selecciona un archivo Excel con los usuarios para <strong>{empresaSeleccionada.nombre}</strong>
-              </p>
-              
-              <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-400 transition-colors duration-300">
-                <input type="file" accept=".xlsx,.xls" onChange={handleArchivoExcel} className="w-full" />
-                {archivoExcel && <p className="mt-2 text-sm text-green-600">Archivo seleccionado: {archivoExcel.name}</p>}
-              </div>
-
-              <div className="flex justify-end gap-4 pt-4">
-                <button onClick={() => setMostrarModalExcel(false)} className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-300">
-                  Cancelar
-                </button>
-                <button onClick={subirExcel} disabled={!archivoExcel || loading} className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
-                  {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <FaFileExcel />}
-                  {loading ? "Cargando..." : "Cargar Excel"}
-                </button>
-              </div>
-            </div>
-          </div>
+            Cargar Usuarios desde Excel
+          </h2>
+          <button 
+            onClick={() => setMostrarModalExcel(false)} 
+            className="text-gray-600 hover:text-gray-800 text-2xl font-bold transition-colors duration-300"
+          >
+            <FaTimes />
+          </button>
         </div>
-      )}
+        <p className="text-gray-600 mt-2">
+          Empresa: <strong>{empresaSeleccionada.nombre}</strong>
+        </p>
+      </div>
+
+      <div className="p-6">
+        <UploadExcel 
+          apiBulk={apiBulkUsuarios}
+          onUsuariosCreados={handleUsuariosCreados}
+        />
+      </div>
+    </div>
+  </div>
+)}
 
       {/* MODAL EMPRESA */}
       {mostrarModal && tipoModal === "empresa" && (
@@ -1266,7 +1259,7 @@ const SuperAdminDashboard: React.FC = () => {
             <div className="p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-3xl">
               <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-xl">
+                  <div className="bg-blue-700 p-2 rounded-xl">
                     <FaBuilding className="text-white text-lg" />
                   </div>
                   {modoEdicion ? "Editar Área" : "Registrar Área"}
@@ -1336,7 +1329,7 @@ const SuperAdminDashboard: React.FC = () => {
                 <button type="button" onClick={() => setMostrarModal(false)} className="px-6 py-3 text-gray-600 hover:text-gray-800 font-semibold transition-colors duration-300">
                   Cancelar
                 </button>
-                <button type="submit" disabled={loading} className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
+                <button type="submit" disabled={loading} className="bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2">
                   {loading ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div> : <FaSave />}
                   {loading ? "Guardando..." : (modoEdicion ? "Actualizar Área" : "Registrar Área")}
                 </button>

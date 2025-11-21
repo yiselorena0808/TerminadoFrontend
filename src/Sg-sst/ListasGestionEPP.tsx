@@ -214,128 +214,175 @@ const GestionEPP: React.FC = () => {
   };
 
   return (
-    <div>
-      {/* Encabezado */}
-      <div className="bg-blue-600 text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
-        <FaHardHat className="text-4xl text-yellow-400" />
-        <div>
-          <h2 className="text-2xl font-bold">SST - Gestión de EPP</h2>
-          <p className="text-yellow-200">Control y entrega de equipos de protección</p>
+    <div className="p-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-6">
+          <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
+            <FaHardHat className="text-blue-700" /> 
+            Gestión de EPP
+          </h1>
+          {/* CONTADOR DE GESTIONES - EN EL HEADER */}
+          <div className="bg-blue-50 px-4 py-2 rounded-xl border-2 border-blue-200">
+            <p className="text-sm text-blue-800 font-semibold">
+              Total: <span className="text-blue-600">{eppsFiltrados.length}</span> gestiones
+            </p>
+          </div>
         </div>
+        <button
+          onClick={irCrear}
+          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+        >
+          <FaPlus /> Crear Gestión
+        </button>
       </div>
 
-      {/* Contenedor */}
-      <div className="rounded-3xl shadow-2xl p-8 mx-auto max-w-7xl bg-white">
-        {/* Buscador */}
-        <div className="flex flex-col md:flex-row justify-between mb-6 gap-4">
-          <div className="flex items-center border rounded-lg px-3 py-2 flex-1">
-            <FaSearch className="text-gray-400 mr-2" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, empresa o área..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-              className="flex-1 outline-none"
-            />
+      {/* CONTENEDOR PRINCIPAL */}
+      <div className="space-y-6">
+        {/* BUSCADOR */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <div className="relative">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Buscar por nombre, empresa o área..."
+                className="w-full px-4 py-3 pl-12 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
+                value={busqueda}
+                onChange={(e) => setBusqueda(e.target.value)}
+              />
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400" />
+            </div>
           </div>
-          <button
-            onClick={irCrear}
-            className="px-4 py-2 bg-blue-700 text-white rounded-lg shadow hover:bg-blue-800 transition flex items-center gap-2"
-          >
-            <FaPlus /> Crear Gestión
-          </button>
         </div>
 
-        {/* Listado */}
-        {eppsPaginados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-6 flex items-center justify-center gap-2">
-            <FaExclamationTriangle className="text-yellow-500" /> No hay gestiones registradas
-          </p>
+        {/* LISTA DE GESTIONES */}
+        {eppsFiltrados.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
+            <FaExclamationTriangle className="text-6xl mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">
+              {epps.length === 0 ? "No hay gestiones registradas" : "No se encontraron gestiones"}
+            </h3>
+            <p className="text-gray-500">
+              {epps.length === 0 
+                ? "Crea la primera gestión usando el botón 'Crear Gestión'" 
+                : "Intenta con otros términos de búsqueda"}
+            </p>
+          </div>
         ) : (
           <>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* GRID DE GESTIONES */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {eppsPaginados.map((item) => (
                 <div
                   key={item.id}
-                  className="p-4 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between h-[240px]"
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 border-2 border-transparent hover:border-blue-100 overflow-hidden group"
                 >
-                  <div>
-                    <h4 className="font-semibold text-base text-blue-700 flex items-center gap-2 mb-1">
-                      <FaBox className="text-blue-500 text-lg" /> {item.nombre}
-                    </h4>
-                    <p className="text-xs text-gray-500 mb-2">{formatearFecha(item.fecha)}</p>
+                  <div className="p-6">
+                    {/* ENCABEZADO */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300 flex items-center gap-2">
+                          <FaBox className="text-blue-500" /> {item.nombre}
+                        </h3>
+                        <p className="text-gray-600 text-sm">
+                          {item.apellido ? `${item.nombre} ${item.apellido}` : item.nombre}
+                        </p>
+                      </div>
+                      <span
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${
+                          item.estado 
+                            ? "bg-green-100 text-green-800" 
+                            : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {item.estado ? "Activo" : "Inactivo"}
+                      </span>
+                    </div>
 
-                    <p className="text-gray-700 text-sm mb-1">
-                      <strong>Empresa:</strong> {item.empresa.nombre}
-                    </p>
-                    <p className="text-gray-700 text-sm mb-1">
-                      <strong>Área:</strong> {item.area.nombre}
-                    </p>
-                    <p className="text-gray-700 text-sm mb-1">
-                      <strong>Importancia:</strong> {item.importancia}
-                    </p>
-                    <p className="text-gray-700 text-sm mb-1">
-                      <strong>Cantidad:</strong> {item.cantidad}
+                    {/* FECHA */}
+                    <p className="text-sm text-gray-500 mb-4">
+                      {formatearFecha(item.fecha)}
                     </p>
 
-                    {item.productos.length > 0 && (
-                      <p className="text-xs text-gray-600 mt-1">
-                        <strong>Productos:</strong> {item.productos.map((p) => p.nombre).join(", ")}
+                    {/* INFORMACIÓN */}
+                    <div className="space-y-2 mb-4">
+                      <p className="text-gray-700 text-sm">
+                        <strong>Empresa:</strong> {item.empresa.nombre}
                       </p>
+                      <p className="text-gray-700 text-sm">
+                        <strong>Área:</strong> {item.area.nombre}
+                      </p>
+                      <p className="text-gray-700 text-sm">
+                        <strong>Importancia:</strong> {item.importancia}
+                      </p>
+                      <p className="text-gray-700 text-sm">
+                        <strong>Cantidad:</strong> {item.cantidad}
+                      </p>
+                    </div>
+
+                    {/* PRODUCTOS */}
+                    {item.productos.length > 0 && (
+                      <div className="mb-4">
+                        <p className="text-sm text-gray-600">
+                          <strong>Productos:</strong> {item.productos.map((p) => p.nombre).join(", ")}
+                        </p>
+                      </div>
                     )}
-                  </div>
 
-                  <div className="flex justify-end mt-3 gap-2">
-                    <button
-                      onClick={() => navigate("/nav/detalleGestionEpp", { state: item })}
-                      className="bg-blue-700 text-white px-3 py-1 rounded text-xs hover:bg-blue-800 transition"
-                    >
-                      Ver Detalle
-                    </button>
-
-                    <button
-                      onClick={() => generarPDF(item)}
-                      className="bg-red-600 text-white px-3 py-1 rounded text-xs hover:bg-red-700 transition flex items-center gap-1"
-                    >
-                      <FaFilePdf /> PDF
-                    </button>
+                    {/* BOTONES DE ACCIÓN */}
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => navigate("/nav/detalleGestionEpp", { state: item })}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg font-semibold text-sm"
+                      >
+                        Ver Detalle
+                      </button>
+                      <button
+                        onClick={() => generarPDF(item)}
+                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg flex items-center gap-2 font-semibold text-sm"
+                      >
+                        <FaFilePdf /> PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 🔹 Paginación numerada */}
+            {/* PAGINACIÓN */}
             {totalPaginas > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-8">
-                <button
-                  onClick={() => cambiarPagina(paginaActual - 1)}
-                  disabled={paginaActual === 1}
-                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                >
-                  <FaChevronLeft />
-                </button>
-
-                {[...Array(totalPaginas)].map((_, i) => (
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
+                <div className="flex justify-center items-center gap-2">
                   <button
-                    key={i}
-                    onClick={() => cambiarPagina(i + 1)}
-                    className={`px-3 py-1 rounded text-sm font-semibold ${
-                      paginaActual === i + 1
-                        ? "bg-blue-700 text-white"
-                        : "bg-gray-200 hover:bg-gray-300"
-                    }`}
+                    onClick={() => cambiarPagina(paginaActual - 1)}
+                    disabled={paginaActual === 1}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {i + 1}
+                    <FaChevronLeft />
                   </button>
-                ))}
-
-                <button
-                  onClick={() => cambiarPagina(paginaActual + 1)}
-                  disabled={paginaActual === totalPaginas}
-                  className="p-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                >
-                  <FaChevronRight />
-                </button>
+                  
+                  {[...Array(totalPaginas)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => cambiarPagina(i + 1)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                        paginaActual === i + 1
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => cambiarPagina(paginaActual + 1)}
+                    disabled={paginaActual === totalPaginas}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronRight />
+                  </button>
+                </div>
               </div>
             )}
           </>

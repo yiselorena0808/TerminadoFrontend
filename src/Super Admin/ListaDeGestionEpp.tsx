@@ -52,7 +52,7 @@ const ListaDeGestionEppGeneral: React.FC = () => {
 
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
   const apiGestiones = import.meta.env.VITE_API_LISTARGESTIONES_GENERAL;
-
+  const apiExcel= import.meta.env.VITE_API_EXCELGESTION;
   
   useEffect(() => {
     cargarEmpresas();
@@ -173,6 +173,47 @@ const ListaDeGestionEppGeneral: React.FC = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
+  async function descargarExcel() {
+  try {
+    const token = localStorage.getItem('token')
+    if (!token) {
+      alert('Usuario no autenticado')
+      return
+    }
+
+    const res = await fetch(apiExcel, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'ngrok-skip-browser-warning': 'true',
+      },
+    })
+
+    // Esto te ayuda a depurar si NO viene realmente un Excel
+    console.log('Status:', res.status)
+    console.log('Content-Type:', res.headers.get('Content-Type'))
+
+    if (!res.ok) {
+      const errorText = await res.text()
+      console.error('Respuesta de error:', errorText)
+      throw new Error(`Error HTTP ${res.status}`)
+    }
+
+    // 👇 Aquí está la clave: mantenerlo como BLOB, sin tocarlo
+    const blob = await res.blob()
+
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'reportes.xlsx' // nombre del archivo
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Error descargando Excel:', err)
+  }
+}
 
   return (
     <div className="p-6">
@@ -207,6 +248,12 @@ const ListaDeGestionEppGeneral: React.FC = () => {
             </div>
           </div>
         </div>
+         <button
+      onClick={descargarExcel}
+      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+    >
+      📊 Excel
+    </button>
 
         {/* LISTADO POR EMPRESA */}
         {epps.length === 0 ? (

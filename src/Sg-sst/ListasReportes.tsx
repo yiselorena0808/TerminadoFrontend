@@ -5,6 +5,8 @@ import {
   FaHardHat,
   FaMapMarkerAlt,
   FaExclamationTriangle,
+  FaSearch,
+  FaPlus,
   FaChevronLeft,
   FaChevronRight,
 } from "react-icons/fa";
@@ -37,6 +39,7 @@ const ListarReportes: React.FC = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const reportesPorPagina = 9;
 
+
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
 
@@ -54,7 +57,10 @@ const ListarReportes: React.FC = () => {
     try {
       const res = await fetch(apiListarReportes, {
         method: "GET",
-        headers: { 'ngrok-skip-browser-warning': 'true',Authorization: `Bearer ${token}` },
+        headers: { 
+          'ngrok-skip-browser-warning': 'true',
+          Authorization: `Bearer ${token}` 
+        },
       });
       const data = await res.json();
 
@@ -103,7 +109,7 @@ const ListarReportes: React.FC = () => {
     const fecha = new Date(fechaIso);
     return fecha.toLocaleDateString("es-CO", {
       year: "numeric",
-      month: "short",
+      month: "long",
       day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
@@ -148,142 +154,185 @@ const ListarReportes: React.FC = () => {
   const getBadgeColor = (estado: string) => {
     switch (estado) {
       case "Pendiente":
-        return "bg-yellow-100 text-yellow-800 border-yellow-400";
+        return "bg-yellow-100 text-yellow-800";
       case "Revisado":
-        return "bg-blue-100 text-blue-800 border-blue-400";
+        return "bg-blue-100 text-blue-800";
       case "Finalizado":
-        return "bg-green-100 text-green-800 border-green-400";
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-600 border-gray-300";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
   return (
-    <div>
-      <div className="bg-blue-600 to-black text-white rounded-2xl shadow-lg p-6 mb-6 flex items-center gap-3">
-        <FaHardHat className="text-3xl text-white" />
-        <div>
-          <h2 className="text-2xl font-bold">SST - Reportes</h2>
-          <p className="text-gray-300">Control y seguimiento de incidentes</p>
-        </div>
-      </div>
+    <div className="p-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+  <div className="flex items-center gap-6">
+    <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
+      <FaHardHat className="text-blue-700" /> 
+      Mis Reportes SST
+    </h1>
 
-      <div className="rounded-2xl shadow-lg p-6 mx-auto max-w-6xl bg-white">
-        <div className="flex flex-col md:flex-row justify-between mb-4 gap-3">
-          <input
-            type="text"
-            placeholder="Buscar reporte..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-            className="px-3 py-2 border rounded-md flex-1 text-sm focus:ring-2 focus:ring-blue-500"
-          />
-          <select
-            value={estadoFiltro}
-            onChange={(e) => setEstadoFiltro(e.target.value)}
-            className="px-3 py-2 border rounded-md text-sm focus:ring-2 focus:ring-blue-400"
-          >
-            {estados.map((estado) => (
-              <option key={estado} value={estado}>
-                {estado}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => navigate("/nav/crearReportes")}
-            className="px-3 py-2 bg-blue-700 text-white rounded-md text-sm shadow hover:bg-blue-600 transition"
-          >
-            + Crear
-          </button>
+    <div className="bg-blue-50 px-4 py-2 rounded-xl border-2 border-blue-200">
+      <p className="text-sm text-blue-800 font-semibold">
+        Total: <span className="text-blue-600">{reportesFiltrados.length}</span> reportes
+      </p>
+    </div>
+  </div>
+
+  <div className="flex gap-4">
+    <button
+      onClick={() => navigate("/nav/crearReportes")}
+      className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+    >
+      <FaPlus /> Nuevo Reporte
+    </button>
+  </div>
+</div>
+
+      {/* CONTENEDOR PRINCIPAL */}
+      <div className="space-y-6">
+        {/* BUSCADOR Y FILTROS */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="relative">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar reporte..."
+                  className="w-full px-4 py-3 pl-12 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
+                  value={busqueda}
+                  onChange={(e) => setBusqueda(e.target.value)}
+                />
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400" />
+              </div>
+            </div>
+            
+            <select
+              value={estadoFiltro}
+              onChange={(e) => setEstadoFiltro(e.target.value)}
+              className="px-4 py-3 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
+            >
+              {estados.map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
-        {reportesPaginados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-4 flex items-center justify-center gap-2 text-sm">
-            <FaExclamationTriangle className="text-yellow-500" />
-            No hay reportes registrados
-          </p>
+        {/* LISTA DE REPORTES */}
+        {reportesFiltrados.length === 0 ? (
+          <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
+            <FaExclamationTriangle className="text-6xl mx-auto mb-4 text-gray-300" />
+            <h3 className="text-xl font-bold text-gray-600 mb-2">
+              {listas.length === 0 ? "No hay reportes registrados" : "No se encontraron reportes"}
+            </h3>
+            <p className="text-gray-500">
+              {listas.length === 0 
+                ? "Crea el primer reporte usando el botón 'Nuevo Reporte'" 
+                : "Intenta con otros términos de búsqueda"}
+            </p>
+          </div>
         ) : (
           <>
-            <div className="grid md:grid-cols-3 gap-4">
+            {/* GRID DE REPORTES */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {reportesPaginados.map((item) => (
                 <div
                   key={item.id_reporte}
-                  className="p-6 rounded-lg border shadow-sm hover:shadow-md transition bg-gray-50 flex flex-col justify-between"
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 border-2 border-transparent hover:border-blue-100 overflow-hidden group"
                 >
-                  <div className="mb-2">
-                    <h4 className="font-semibold text-gray-800 text-base flex items-center gap-2">
-                      {item.nombre_usuario}
+                  <div className="p-6">
+                    {/* ENCABEZADO */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                          {item.nombre_usuario}
+                        </h3>
+                        <p className="text-gray-600 text-sm">{item.cargo}</p>
+                      </div>
                       <span
-                        className={`px-2 py-0.5 text-xs rounded-full border ${getBadgeColor(
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
                           item.estado
                         )}`}
                       >
                         {item.estado}
                       </span>
-                    </h4>
-                    <p className="text-xs text-gray-600">
+                    </div>
+
+                    {/* FECHA */}
+                    <p className="text-sm text-gray-500 mb-4">
                       {formatearFecha(item.fecha)}
                     </p>
-                  </div>
 
-                  <p className="text-gray-700 text-sm mb-1 flex items-center">
-                    <FaMapMarkerAlt className="text-yellow-600 mr-2" />
-                    {item.lugar}
-                  </p>
+                    {/* LUGAR */}
+                    <div className="flex items-center gap-2 text-gray-600 mb-4">
+                      <FaMapMarkerAlt className="text-yellow-500" />
+                      <span className="text-sm font-medium">{item.lugar}</span>
+                    </div>
 
-                  <p className="text-gray-600 text-xs mb-2">
-                    {item.descripcion.length > 80
-                      ? item.descripcion.substring(0, 80) + "..."
-                      : item.descripcion}
-                  </p>
+                    {/* DESCRIPCIÓN */}
+                    <p className="text-gray-700 mb-6 line-clamp-3">
+                      {item.descripcion}
+                    </p>
 
-                  <div className="flex justify-end gap-1 mt-1">
-                    <button
-                      onClick={() => abrirDetalle(item)}
-                      className="bg-blue-700 text-white px-3 py-1 text-xs rounded hover:bg-blue-800 transition"
-                    >
-                      Ver
-                    </button>
-                    <button
-                      onClick={() => descargarPDF(item)}
-                      className="bg-red-500 text-white px-3 py-1 text-xs rounded hover:bg-red-600 flex items-center gap-1 transition"
-                    >
-                      <FaFilePdf /> PDF
-                    </button>
+                    {/* BOTONES DE ACCIÓN */}
+                    <div className="flex justify-end gap-3">
+                      <button
+                        onClick={() => abrirDetalle(item)}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg font-semibold text-sm"
+                      >
+                        Ver Detalle
+                      </button>
+                      <button
+                        onClick={() => descargarPDF(item)}
+                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg flex items-center gap-2 font-semibold text-sm"
+                      >
+                        <FaFilePdf /> PDF
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* 🔹 PAGINACIÓN */}
+            {/* PAGINACIÓN */}
             {totalPaginas > 1 && (
-              <div className="flex justify-center items-center gap-2 mt-6">
-                <button
-                  onClick={() => cambiarPagina(paginaActual - 1)}
-                  disabled={paginaActual === 1}
-                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                >
-                  <FaChevronLeft />
-                </button>
-                {[...Array(totalPaginas)].map((_, i) => (
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
+                <div className="flex justify-center items-center gap-2">
                   <button
-                    key={i}
-                    onClick={() => cambiarPagina(i + 1)}
-                    className={`px-3 py-1 rounded ${
-                      paginaActual === i + 1
-                        ? "bg-blue-700 text-white"
-                        : "bg-gray-200 hover:bg-gray-300"
-                    }`}
+                    onClick={() => cambiarPagina(paginaActual - 1)}
+                    disabled={paginaActual === 1}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {i + 1}
+                    <FaChevronLeft />
                   </button>
-                ))}
-                <button
-                  onClick={() => cambiarPagina(paginaActual + 1)}
-                  disabled={paginaActual === totalPaginas}
-                  className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
-                >
-                  <FaChevronRight />
-                </button>
+                  
+                  {[...Array(totalPaginas)].map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => cambiarPagina(i + 1)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                        paginaActual === i + 1
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  
+                  <button
+                    onClick={() => cambiarPagina(paginaActual + 1)}
+                    disabled={paginaActual === totalPaginas}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronRight />
+                  </button>
+                </div>
               </div>
             )}
           </>

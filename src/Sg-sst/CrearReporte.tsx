@@ -166,7 +166,9 @@ const handleSeleccionarUsuario = (u: any) => {
 
     const res = await fetch(`${apiBase}/crearReporte`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+         'ngrok-skip-browser-warning': 'true',
+        Authorization: `Bearer ${token}` },
       body: data,
     });
 
