@@ -19,9 +19,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const savedToken = localStorage.getItem("token");
     if (savedToken) {
       setToken(savedToken);
-      const usuario = getUsuarioFromToken(savedToken);
+
+      // ✔ CORRECTO: No pasar el token, la función lo toma sola
+      const usuario = getUsuarioFromToken();
+
       setUser(usuario);
-      localStorage.setItem("usuario", JSON.stringify(usuario));
+
+      if (usuario) {
+        localStorage.setItem("usuario", JSON.stringify(usuario));
+      }
     }
   }, []);
 
@@ -29,7 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("token", token);
     setToken(token);
 
-    const usuario = getUsuarioFromToken(token);
+    // ✔ Igual, no pasar token como parámetro
+    const usuario = getUsuarioFromToken();
     setUser(usuario);
 
     localStorage.setItem("usuario", JSON.stringify(usuario));
@@ -48,4 +55,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     </AuthContext.Provider>
   );
 };
+
 export const useAuth = () => useContext(AuthContext);
