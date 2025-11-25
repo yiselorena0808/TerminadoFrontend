@@ -217,7 +217,7 @@ const ListaDeActividadesGenerales: React.FC = () => {
     e.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
 
-  const irCrear = () => navigate("/nav/crearActLudica");
+  const irCrear = () => navigate("/nav/CrearActividadLudicaSA");
 
   async function descargarExcel() {
   try {

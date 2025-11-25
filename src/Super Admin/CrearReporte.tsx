@@ -5,15 +5,20 @@ import Swal from "sweetalert2";
 import { FaArrowLeft, FaHardHat, FaPaperPlane, FaUser } from "react-icons/fa";
 
 interface Cargo { idCargo: number; cargo: string; }
+
 const CrearReporteSA: React.FC = () => {
   const navigate = useNavigate();
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [usuarioSeleccionado, setUsuarioSeleccionado] = useState<any>(null);
   const [usuarios, setUsuarios] = useState<any[]>([]);
-    const [cargos, setCargos] = useState<Cargo[]>([]);
+  const [cargos, setCargos] = useState<Cargo[]>([]);
   const [buscar, setBuscar] = useState("");
   const [showModal, setShowModal] = useState(false);
+
+  // --- NUEVOS: empresas y empresaSeleccionada ---
+  const [empresas, setEmpresas] = useState<any[]>([]);
+  const [empresaSeleccionada, setEmpresaSeleccionada] = useState<string>("");
 
   const [formData, setFormData] = useState({
     cargo: "",
@@ -27,23 +32,69 @@ const CrearReporteSA: React.FC = () => {
   const [imagen, setImagen] = useState<File | null>(null);
   const [archivos, setArchivos] = useState<File | null>(null);
 
-  const apiBase = import.meta.env.VITE_API_REGISTROREPORTE; 
+  const apiBase = import.meta.env.VITE_API_REGISTROREPORTE;
   const apiUsuariosBase = import.meta.env.VITE_API_LISTARUSUARIOS;
-  
-  const token = localStorage.getItem("token");
-  useEffect(() => {
-      if (!token) return;
-      const listarCargos = async () => {
-        try {
-          const res = await fetch(import.meta.env.VITE_API_CARGOS, { headers: {'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` } });
-          if (!res.ok) throw new Error("Error al listar cargos");
-          const data = await res.json();
-          setCargos(data);
-        } catch { Swal.fire("Error", "No se pudieron cargar los cargos", "error"); }
-      };
-      listarCargos();
-    }, [token]);
+  // La variable de entorno de empresas que mencionaste:
+  // VITE_API_LISTAREMPRESAS=https://unreproaching-rancorously-evelina.ngrok-free.dev/listarEmpresas
+  const apiEmpresasBase = import.meta.env.VITE_API_LISTAREMPRESAS;
 
+  const token = localStorage.getItem("token");
+
+  /* ---------- CARGAR CARGOS ---------- */
+  useEffect(() => {
+    if (!token) return;
+    const listarCargos = async () => {
+      try {
+        const res = await fetch(import.meta.env.VITE_API_CARGOS, {
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) throw new Error("Error al listar cargos");
+        const data = await res.json();
+        setCargos(data);
+      } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "No se pudieron cargar los cargos", "error");
+      }
+    };
+    listarCargos();
+  }, [token]);
+
+  /* ---------- CARGAR EMPRESAS (nuevo) ---------- */
+  useEffect(() => {
+    if (!token) return;
+    const cargarEmpresas = async () => {
+      try {
+        const base = apiEmpresasBase?.endsWith("/") ? apiEmpresasBase : `${apiEmpresasBase}`;
+        const res = await fetch(base, {
+          method: "GET",
+          headers: {
+            "ngrok-skip-browser-warning": "true",
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (!res.ok) {
+          const txt = await res.text();
+          throw new Error(`Error ${res.status}: ${txt}`);
+        }
+        const data = await res.json();
+        // soporta diferentes formas de respuesta
+        if (Array.isArray(data)) setEmpresas(data);
+        else if (Array.isArray(data.datos)) setEmpresas(data.datos);
+        else if (Array.isArray(data.empresas)) setEmpresas(data.empresas);
+        else setEmpresas([]);
+      } catch (err) {
+        console.error("Error al cargar empresas:", err);
+        Swal.fire("Error", "No se pudieron cargar las empresas", "error");
+      }
+    };
+    cargarEmpresas();
+  }, [apiEmpresasBase, token]);
+
+  /* ---------- OBTENER USUARIO DESDE TOKEN ---------- */
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -60,22 +111,24 @@ const CrearReporteSA: React.FC = () => {
     }
     setUsuario(u);
     setFormData((prev) => ({ ...prev, cargo: u.cargo || "" }));
+    // Selecciona por defecto la empresa del usuario (si existe)
+    if (u.id_empresa) setEmpresaSeleccionada(String(u.id_empresa));
   }, [navigate]);
 
+  /* ---------- CARGAR USUARIOS PARA EL MODAL (usa usuario.id_empresa como antes) ---------- */
   useEffect(() => {
     if (showModal && usuario) {
       const token = localStorage.getItem("token");
       if (!token) return;
 
-      const base = apiUsuariosBase.endsWith("/")
-        ? apiUsuariosBase
-        : `${apiUsuariosBase}/`;
+      const base = apiUsuariosBase?.endsWith("/") ? apiUsuariosBase : `${apiUsuariosBase}/`;
+      // Mantengo la lógica anterior que trae usuarios según la empresa del usuario que abrió el modal
       const url = `${base}${usuario.id_empresa}`;
 
       fetch(url, {
         method: "GET",
         headers: {
-          'ngrok-skip-browser-warning': 'true',
+          "ngrok-skip-browser-warning": "true",
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
@@ -100,17 +153,12 @@ const CrearReporteSA: React.FC = () => {
   }, [showModal, usuario, apiUsuariosBase]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const showToast = (
-    icon: "success" | "error" | "warning",
-    title: string
-  ) => {
+  const showToast = (icon: "success" | "error" | "warning", title: string) => {
     Swal.fire({
       toast: true,
       position: "top-end",
@@ -121,67 +169,73 @@ const CrearReporteSA: React.FC = () => {
     });
   };
 
-const handleSeleccionarUsuario = (u: any) => {
-  console.log("Usuario seleccionado:", u);
-  setUsuarioSeleccionado(u);
-  setFormData((prev) => ({
-    ...prev,
-    cargo: u.cargo || "",
-  }));
-  setShowModal(false);
-};
+  const handleSeleccionarUsuario = (u: any) => {
+    console.log("Usuario seleccionado:", u);
+    setUsuarioSeleccionado(u);
+    setFormData((prev) => ({
+      ...prev,
+      cargo: u.cargo || "",
+    }));
+    // Si quieres que al seleccionar un usuario se actualice también la empresa seleccionada:
+    if (u.id_empresa) setEmpresaSeleccionada(String(u.id_empresa));
+    setShowModal(false);
+  };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
- const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+    const userFinal = usuarioSeleccionado || usuario;
+    if (!userFinal) return showToast("error", "Usuario no autenticado");
 
-  const userFinal = usuarioSeleccionado || usuario;
-  if (!userFinal) return showToast("error", "Usuario no autenticado");
+    const token = localStorage.getItem("token");
+    if (!token) return showToast("error", "No hay token");
 
-  const token = localStorage.getItem("token");
-  if (!token) return showToast("error", "No hay token");
+    // Verificar que haya una empresa seleccionada (preferencia por lo que eligió el usuario en el select)
+    const empresaFinal = empresaSeleccionada || String(userFinal.id_empresa || "");
+    if (!empresaFinal) return showToast("error", "Debes seleccionar una empresa");
 
-  try {
-    const data = new FormData();
+    try {
+      const data = new FormData();
 
-    Object.entries(formData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        data.append(key, String(value).trim());
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          data.append(key, String(value).trim());
+        }
+      });
+
+      if (imagen) data.append("imagen", imagen);
+      if (archivos) data.append("archivos", archivos);
+
+      const cargoFinal =
+        typeof formData.cargo === "string" && formData.cargo.trim() !== ""
+          ? formData.cargo.trim()
+          : (userFinal.cargo || "").trim();
+
+      data.set("cargo", cargoFinal);
+
+      data.append("id_usuario", String(userFinal.id));
+      data.append("nombre_usuario", userFinal.nombre);
+      data.append("id_empresa", empresaFinal);
+
+      const res = await fetch(`${apiBase}/crearReporte`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: data,
+      });
+
+      if (!res.ok) {
+        let result;
+        try { result = await res.json(); } catch { result = { error: "Error al enviar reporte" }; }
+        return showToast("error", result.error || "Error al enviar reporte");
       }
-    });
 
-    if (imagen) data.append("imagen", imagen);
-    if (archivos) data.append("archivos", archivos);
-
-    const cargoFinal =
-      typeof formData.cargo === "string" && formData.cargo.trim() !== ""
-        ? formData.cargo.trim()
-        : (userFinal.cargo || "").trim();
-
-    data.set("cargo", cargoFinal);
-
-    data.append("id_usuario", String(userFinal.id));
-    data.append("nombre_usuario", userFinal.nombre);
-    data.append("id_empresa", String(userFinal.id_empresa));
-
-    const res = await fetch(`${apiBase}/crearReporte`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      body: data,
-    });
-
-    if (!res.ok) {
-      const result = await res.json();
-      return showToast("error", result.error || "Error al enviar reporte");
+      showToast("success", "Reporte creado correctamente");
+      navigate("/nav/reportesC");
+    } catch (error) {
+      console.error("Error al enviar reporte:", error);
+      showToast("error", "Ocurrió un error al enviar el reporte");
     }
-
-    showToast("success", "Reporte creado correctamente");
-    navigate("/nav/reportesC");
-  } catch (error) {
-    console.error("Error al enviar reporte:", error);
-    showToast("error", "Ocurrió un error al enviar el reporte");
-  }
-};
+  };
 
   return (
     <div
@@ -194,14 +248,13 @@ const handleSeleccionarUsuario = (u: any) => {
       }}
     >
       <div className="absolute inset-0 backdrop-blur-sm">
-         {/* 🔙 BOTÓN VOLVER */}
-                <button
-                  type="button"
-                  onClick={() => navigate(-1)} // ← Vuelve a la página anterior
-                  className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
-                >
-                  <FaArrowLeft /> Volver
-                </button>
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6"
+        >
+          <FaArrowLeft /> Volver
+        </button>
       </div>
 
       <form
@@ -210,9 +263,7 @@ const handleSeleccionarUsuario = (u: any) => {
       >
         <div className="flex items-center gap-3 mb-6">
           <FaHardHat className="text-blue-600 text-3xl" />
-          <h2 className="text-2xl font-bold text-gray-800">
-            Crear Reporte SST
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800">Crear Reporte SST</h2>
         </div>
 
         {/* Usuario seleccionado */}
@@ -221,9 +272,7 @@ const handleSeleccionarUsuario = (u: any) => {
             <p className="text-gray-700 font-semibold">
               Reporte por:{" "}
               <span className="text-blue-600">
-                {usuarioSeleccionado
-                  ? usuarioSeleccionado.nombre
-                  : usuario?.nombre}
+                {usuarioSeleccionado ? usuarioSeleccionado.nombre : usuario?.nombre}
               </span>
             </p>
           </div>
@@ -234,6 +283,26 @@ const handleSeleccionarUsuario = (u: any) => {
           >
             <FaUser /> Seleccionar Usuario
           </button>
+        </div>
+
+        {/* --- SELECT DE EMPRESA (nuevo) --- */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Empresa:</label>
+          <select
+            name="empresa"
+            value={empresaSeleccionada}
+            onChange={(e) => setEmpresaSeleccionada(e.target.value)}
+            required
+            className="border p-3 rounded-xl w-full mb-3"
+          >
+            <option value="">-- Selecciona una empresa --</option>
+            {empresas.map((emp) => (
+              // intento soportar diferentes keys de objeto
+              <option key={emp.id_empresa ?? emp.id ?? emp.idEmpresa} value={emp.id_empresa ?? emp.id ?? emp.idEmpresa}>
+                {emp.nombre ?? emp.razonSocial ?? emp.nombre_empresa}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Inputs */}
@@ -252,7 +321,6 @@ const handleSeleccionarUsuario = (u: any) => {
               </option>
             ))}
           </select>
-
 
           <input
             type="text"
@@ -300,11 +368,7 @@ const handleSeleccionarUsuario = (u: any) => {
 
         <div className="mt-4">
           <label className="font-semibold text-gray-700">Imagen:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setImagen(e.target.files?.[0] || null)}
-          />
+          <input type="file" accept="image/*" onChange={(e) => setImagen(e.target.files?.[0] || null)} />
         </div>
 
         <div className="mt-4">
@@ -328,9 +392,7 @@ const handleSeleccionarUsuario = (u: any) => {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-4xl shadow-2xl">
-            <h3 className="text-lg font-bold mb-3 text-gray-700">
-              Seleccionar Usuario
-            </h3>
+            <h3 className="text-lg font-bold mb-3 text-gray-700">Seleccionar Usuario</h3>
             <input
               type="text"
               placeholder="Buscar usuario..."
@@ -353,23 +415,15 @@ const handleSeleccionarUsuario = (u: any) => {
                 </thead>
                 <tbody>
                   {usuarios
-                    .filter((u) =>
-                      u.nombre.toLowerCase().includes(buscar.toLowerCase())
-                    )
+                    .filter((u) => u.nombre?.toLowerCase().includes(buscar.toLowerCase()))
                     .map((u) => (
                       <tr key={u.id} className="hover:bg-yellow-50">
                         <td className="border px-3 py-2">{u.nombre}</td>
                         <td className="border px-3 py-2">{u.apellido}</td>
                         <td className="border px-3 py-2">{u.cargo}</td>
-                        <td className="border px-3 py-2">
-                          {u.correoElectronico}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {u.area?.nombre || "Sin área"}
-                        </td>
-                        <td className="border px-3 py-2">
-                          {u.empresa?.nombre || "Sin empresa"}
-                        </td>
+                        <td className="border px-3 py-2">{u.correoElectronico}</td>
+                        <td className="border px-3 py-2">{u.area?.nombre || "Sin área"}</td>
+                        <td className="border px-3 py-2">{u.empresa?.nombre || "Sin empresa"}</td>
                         <td className="border px-3 py-2 text-center">
                           <button
                             onClick={() => handleSeleccionarUsuario(u)}
