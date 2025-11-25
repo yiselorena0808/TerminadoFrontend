@@ -34,13 +34,10 @@ const CrearReporteSA: React.FC = () => {
 
   const apiBase = import.meta.env.VITE_API_REGISTROREPORTE;
   const apiUsuariosBase = import.meta.env.VITE_API_LISTARUSUARIOS;
-  // La variable de entorno de empresas que mencionaste:
-  // VITE_API_LISTAREMPRESAS=https://unreproaching-rancorously-evelina.ngrok-free.dev/listarEmpresas
   const apiEmpresasBase = import.meta.env.VITE_API_LISTAREMPRESAS;
 
   const token = localStorage.getItem("token");
 
-  /* ---------- CARGAR CARGOS ---------- */
   useEffect(() => {
     if (!token) return;
     const listarCargos = async () => {
@@ -62,7 +59,6 @@ const CrearReporteSA: React.FC = () => {
     listarCargos();
   }, [token]);
 
-  /* ---------- CARGAR EMPRESAS (nuevo) ---------- */
   useEffect(() => {
     if (!token) return;
     const cargarEmpresas = async () => {
@@ -94,7 +90,6 @@ const CrearReporteSA: React.FC = () => {
     cargarEmpresas();
   }, [apiEmpresasBase, token]);
 
-  /* ---------- OBTENER USUARIO DESDE TOKEN ---------- */
   useEffect(() => {
     const u = getUsuarioFromToken();
     if (!u) {
@@ -230,7 +225,7 @@ const CrearReporteSA: React.FC = () => {
       }
 
       showToast("success", "Reporte creado correctamente");
-      navigate("/nav/reportesC");
+      navigate("/nav/ListaDeReportesGenerales");
     } catch (error) {
       console.error("Error al enviar reporte:", error);
       showToast("error", "Ocurrió un error al enviar el reporte");

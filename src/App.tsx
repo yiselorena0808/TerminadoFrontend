@@ -65,7 +65,7 @@ import CrearReporteSA from "./Super Admin/CrearReporte"
 import ListaCargos from "./Super Admin/ListaDeCargos";
 import ListaProductos from "./Super Admin/ListaEquiposDeProteccion";
 import CrearActividadLudicaSA from "./Super Admin/CrearEvidencia";
-
+import CrearListaChequeoSA from "./Super Admin/CrearListaChequeo";
 
 // --- Perfil ---
 import Perfil from "./perfil";
@@ -143,6 +143,7 @@ function App() {
           <Route path="ListaCargos" element={<ListaCargos></ListaCargos>}></Route>
           <Route path="ListaProductos" element={<ListaProductos></ListaProductos>}></Route>
           <Route path="CrearActividadLudicaSA" element={<CrearActividadLudicaSA></CrearActividadLudicaSA>}></Route>
+          <Route path="CrearListaChequeoSA" element={<CrearListaChequeoSA></CrearListaChequeoSA>}></Route>
           {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="inicio" />} />
         </Route>

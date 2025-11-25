@@ -170,7 +170,7 @@ const ListasChequeoGenerales: React.FC = () => {
     setEmpresaAbierta((prev) => (prev === id ? null : id));
   };
 
-  const irCrear = () => navigate("/nav/crearListasChequeo");
+  const irCrear = () => navigate("/nav/CrearListaChequeoSA");
 
   async function descargarExcel() {
   try {
@@ -204,7 +204,7 @@ const ListasChequeoGenerales: React.FC = () => {
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'reportes.xlsx' // nombre del archivo
+    a.download = 'chequeo.xlsx' // nombre del archivo
     document.body.appendChild(a)
     a.click()
     a.remove()
