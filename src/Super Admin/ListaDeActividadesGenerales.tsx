@@ -295,6 +295,12 @@ const ListaDeActividadesGenerales: React.FC = () => {
             </div>
           </div>
         </div>
+           <button
+                  onClick={descargarExcel}
+                  className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+                >
+                  📊 Excel
+                </button>
 
         {cargando ? (
           <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
@@ -347,12 +353,6 @@ const ListaDeActividadesGenerales: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                   <button
-                  onClick={descargarExcel}
-                  className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-                >
-                  📊 Excel
-                </button>
 
                   {/* ACTIVIDADES DE LA EMPRESA */}
                   {abierta && (

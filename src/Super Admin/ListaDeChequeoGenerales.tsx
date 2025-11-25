@@ -248,6 +248,13 @@ const ListasChequeoGenerales: React.FC = () => {
             </div>
           </div>
         </div>
+         <button
+      onClick={descargarExcel}
+      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+    >
+      📊 Excel
+    </button>
+
 
         {/* LISTADO POR EMPRESA */}
         {listas.length === 0 ? (
@@ -298,13 +305,6 @@ const ListasChequeoGenerales: React.FC = () => {
                       </div>
                     </div>
                   </div>
-                   <button
-      onClick={descargarExcel}
-      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-    >
-      📊 Excel
-    </button>
-
                   {/* LISTAS DE CHEQUEO DE LA EMPRESA */}
                   {abierta && (
                     <div className="p-6">
