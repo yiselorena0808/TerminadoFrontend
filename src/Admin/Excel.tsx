@@ -60,7 +60,7 @@ const UploadExcel: React.FC<UploadExcelProps> = ({ apiBulk, onUsuariosCreados })
     try {
       const res = await fetch(apiBulk, {
         method: "POST",
-        headers: {'ngrok-skip-browser-warning': 'true',
+        headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
