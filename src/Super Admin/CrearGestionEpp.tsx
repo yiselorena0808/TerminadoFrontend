@@ -49,10 +49,10 @@ const CrearGestionEppSA: React.FC = () => {
         const areaData = await areaRes.json();
         const prodData = await prodRes.json();
 
-        setEmpresas(empData.datos || []);
-        setCargos(cargoData || []);
-        setAreas(areaData || []);
-        setProductos(prodData || []);
+        setEmpresas(empData?.datos ?? []);
+        setCargos(cargoData ?? []);
+        setAreas(areaData ?? []);
+        setProductos(prodData ?? []);
       } catch (err) {
         console.error(err);
         Swal.fire("Error", "No se pudieron cargar los datos", "error");
@@ -81,48 +81,50 @@ const CrearGestionEppSA: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!usuario) return Swal.fire("Error", "Usuario no autenticado", "error");
-  if (!formData.idCargo || productosSeleccionados.length === 0)
-    return Swal.fire("Error", "Completa todos los campos obligatorios y selecciona productos", "error");
+    e.preventDefault();
+    if (!usuario) return Swal.fire("Error", "Usuario no autenticado", "error");
+    if (!formData.idCargo || productosSeleccionados.length === 0)
+      return Swal.fire("Error", "Completa todos los campos obligatorios y selecciona productos", "error");
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    const body: any = {
-      cedula: formData.cedula,
-      id_cargo: Number(formData.idCargo),
-      importancia: formData.importancia,
-      estado: formData.estado.toLowerCase() === "activo" ? "activo" : "inactivo",
-      cantidad: productosSeleccionados.reduce((acc, p) => acc + p.cantidad, 0),
-      productos: productosSeleccionados.map(p => p.idProducto),
-      id_usuario: usuario.id, // del token
-      id_empresa: formData.idEmpresa ? Number(formData.idEmpresa) : null, // si no hay, backend tomará del usuario
-      id_area: formData.idArea ? Number(formData.idArea) : null,
-    };
+      // 🔹 Tomar id_empresa del token si no se selecciona
+      const empresaId = formData.idEmpresa ? Number(formData.idEmpresa) : usuario.id_empresa;
 
-    const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
-      method: "POST",
-      headers: { 
-        'ngrok-skip-browser-warning': 'true', 
-        "Content-Type": "application/json", 
-        Authorization: `Bearer ${token}` 
-      },
-      body: JSON.stringify(body),
-    });
+      const body: any = {
+        cedula: formData.cedula,
+        id_cargo: Number(formData.idCargo),
+        importancia: formData.importancia,
+        estado: formData.estado.toLowerCase() === "activo" ? "activo" : "inactivo",
+        cantidad: productosSeleccionados.reduce((acc, p) => acc + p.cantidad, 0),
+        productos: productosSeleccionados.map(p => p.idProducto),
+        id_usuario: usuario.id,
+        id_empresa: empresaId,
+        id_area: formData.idArea ? Number(formData.idArea) : null,
+      };
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.mensaje || "Error al crear gestión");
+      const res = await fetch(import.meta.env.VITE_API_CREARGESTION, {
+        method: "POST",
+        headers: {
+          'ngrok-skip-browser-warning': 'true',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(body),
+      });
 
-    Swal.fire("Éxito", "Gestión creada correctamente", "success");
-    navigate("/gestionEpp");
-  } catch (error: any) {
-    Swal.fire("Error", error.message, "error");
-  } finally {
-    setLoading(false);
-  }
-};
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.mensaje || "Error al crear gestión");
 
+      Swal.fire("Éxito", "Gestión creada correctamente", "success");
+      navigate("/gestionEpp");
+    } catch (error: any) {
+      Swal.fire("Error", error.message, "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative">
@@ -133,16 +135,16 @@ const CrearGestionEppSA: React.FC = () => {
         </div>
 
         {/* Empresa */}
-       <select
-        name="idEmpresa"
-        value={formData.idEmpresa}
-        onChange={handleChange}
-        className="border p-3 rounded-xl w-full"
+        <select
+          name="idEmpresa"
+          value={formData.idEmpresa}
+          onChange={handleChange}
+          className="border p-3 rounded-xl w-full"
         >
-        <option value="">-- Selecciona una empresa (opcional) --</option>
-        {empresas.map(emp => (
+          <option value="">-- Selecciona una empresa (opcional) --</option>
+          {empresas.map(emp => (
             <option key={emp.idEmpresa} value={emp.idEmpresa}>{emp.nombre}</option>
-        ))}
+          ))}
         </select>
 
         {/* Cédula */}
@@ -208,4 +210,5 @@ const CrearGestionEppSA: React.FC = () => {
     </div>
   );
 };
+
 export default CrearGestionEppSA;

@@ -103,6 +103,20 @@ const SuperAdminDashboard: React.FC = () => {
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
 
+    const showToast = (icon: "success" | "error" | "warning", title: string) => {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon,
+        title,
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        background: '#ffffff',
+        color: '#1f2937',
+      });
+    };
+
   // Campos para crear usuario
   const [usuarioForm, setUsuarioForm] = useState({
     id_empresa: "",
@@ -136,7 +150,7 @@ const SuperAdminDashboard: React.FC = () => {
   const apiUsuarios = import.meta.env.VITE_API_LISTARTODOSLOSUSUARIOS;
   const apiCrearUsuario = import.meta.env.VITE_API_REGISTRARUSUARIOS;
   const apiActualizarUsuario = import.meta.env.VITE_API_ACTUALIZARUSUARIO;
-  const apiEliminarUsuario = import.meta.env.VITE_API_ELIMINARUSUARIO;
+  const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
   const apiBulkUsuarios = import.meta.env.VITE_API_BULK;
 
   const apiCrearEmp = import.meta.env.VITE_API_REGISTROEMPRESA;
@@ -386,52 +400,39 @@ const SuperAdminDashboard: React.FC = () => {
   // ELIMINAR USUARIO
   // ================================
   const eliminarUsuario = async (id: number) => {
-    const confirm = await Swal.fire({
-      title: "¿Eliminar usuario?",
-      text: "Esta acción no se puede deshacer.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    try {
-      const res = await fetch(`${apiEliminarUsuario}${id}`, {
-        method: "DELETE",
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        setUsuarios(prev => prev.filter(u => u.id !== id));
-        setUsuariosFiltrados(prev => prev.filter(u => u.id !== id));
-        
-        const Toast = Swal.mixin({
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 2500,
-          timerProgressBar: true,
-        });
-
-        Toast.fire({
-          icon: "success",
-          title: "Usuario eliminado correctamente",
-        });
-      } else {
-        Swal.fire("Error", "No se pudo eliminar el usuario", "error");
-      }
-    } catch (error) {
-      console.error("No se pudo eliminar el usuario:", error);
-      Swal.fire("Error", "No se pudo eliminar el usuario", "error");
-    }
-  };
+     const confirm = await Swal.fire({
+       title: "¿Estás seguro?",
+       text: "¡No podrás revertir esta acción!",
+       icon: "warning",
+       showCancelButton: true,
+       confirmButtonText: "Sí, eliminar",
+       cancelButtonText: "Cancelar",
+       confirmButtonColor: "#d33",
+       cancelButtonColor: "#3085d6",
+       background: "#ffffff",
+       color: "#1f2937",
+     });
+ 
+     if (!confirm.isConfirmed) return;
+ 
+     const token = localStorage.getItem("token");
+     if (!token) return;
+ 
+     try {
+       await fetch(`${apiEliminar}${id}`, {
+         method: "DELETE",
+         headers: { 
+           'ngrok-skip-browser-warning': 'true',
+           Authorization: `Bearer ${token}` 
+         },
+       });
+       setUsuarios((prev) => prev.filter((u) => u.id !== id));
+       showToast("success", "Usuario eliminado correctamente");
+     } catch (error) {
+       console.error("No se pudo eliminar el usuario:", error);
+       showToast("error", "No se pudo eliminar el usuario");
+     }
+   };
 
   // ================================
   // CARGA MASIVA EXCEL
