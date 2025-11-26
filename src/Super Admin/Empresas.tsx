@@ -103,19 +103,19 @@ const SuperAdminDashboard: React.FC = () => {
   const [esquema, setEsquema] = useState("");
   const [alias, setAlias] = useState("");
 
-    const showToast = (icon: "success" | "error" | "warning", title: string) => {
-      Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon,
-        title,
-        showConfirmButton: false,
-        timer: 2500,
-        timerProgressBar: true,
-        background: '#ffffff',
-        color: '#1f2937',
-      });
-    };
+  const showToast = (icon: "success" | "error" | "warning", title: string) => {
+    Swal.fire({
+      toast: true,
+      position: "top-end",
+      icon,
+      title,
+      showConfirmButton: false,
+      timer: 2500,
+      timerProgressBar: true,
+      background: '#ffffff',
+      color: '#1f2937',
+    });
+  };
 
   // Campos para crear usuario
   const [usuarioForm, setUsuarioForm] = useState({
@@ -208,14 +208,18 @@ const SuperAdminDashboard: React.FC = () => {
       
       const data = await res.json();
       
-      if (Array.isArray(data)) setUsuarios(data);
-      else if (Array.isArray(data.datos)) setUsuarios(data.datos);
-      else if (Array.isArray(data.data)) setUsuarios(data.data);
-      else setUsuarios([]);
+      let usuariosData: Usuario[] = [];
+      
+      if (Array.isArray(data)) usuariosData = data;
+      else if (Array.isArray(data.datos)) usuariosData = data.datos;
+      else if (Array.isArray(data.data)) usuariosData = data.data;
+      
+      setUsuarios(usuariosData);
       
     } catch (err) {
       console.error("Error listando usuarios:", err);
       Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
+      setUsuarios([]);
     }
   };
 
@@ -397,59 +401,70 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   // ================================
-  // ELIMINAR USUARIO
+  // ELIMINAR USUARIO - CORREGIDO
   // ================================
   const eliminarUsuario = async (id: number) => {
-     const confirm = await Swal.fire({
-       title: "¿Estás seguro?",
-       text: "¡No podrás revertir esta acción!",
-       icon: "warning",
-       showCancelButton: true,
-       confirmButtonText: "Sí, eliminar",
-       cancelButtonText: "Cancelar",
-       confirmButtonColor: "#d33",
-       cancelButtonColor: "#3085d6",
-       background: "#ffffff",
-       color: "#1f2937",
-     });
- 
-     if (!confirm.isConfirmed) return;
- 
-     const token = localStorage.getItem("token");
-     if (!token) return;
- 
-     try {
-       await fetch(`${apiEliminar}${id}`, {
-         method: "DELETE",
-         headers: { 
-           'ngrok-skip-browser-warning': 'true',
-           Authorization: `Bearer ${token}` 
-         },
-       });
-       setUsuarios((prev) => prev.filter((u) => u.id !== id));
-       showToast("success", "Usuario eliminado correctamente");
-     } catch (error) {
-       console.error("No se pudo eliminar el usuario:", error);
-       showToast("error", "No se pudo eliminar el usuario");
-     }
-   };
+    const confirm = await Swal.fire({
+      title: "¿Estás seguro?",
+      text: "¡No podrás revertir esta acción!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Sí, eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      background: "#ffffff",
+      color: "#1f2937",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await fetch(`${apiEliminar}${id}`, {
+        method: "DELETE",
+        headers: { 
+          'ngrok-skip-browser-warning': 'true',
+          Authorization: `Bearer ${token}` 
+        },
+      });
+
+      if (response.ok) {
+        // Actualizar ambos estados
+        setUsuarios(prev => prev.filter(u => u.id !== id));
+        
+        // Actualizar usuarios filtrados si estamos en el modal
+        if (empresaSeleccionada) {
+          setUsuariosFiltrados(prev => prev.filter(u => u.id !== id));
+        }
+        
+        showToast("success", "Usuario eliminado correctamente");
+      } else {
+        throw new Error("Error en la respuesta del servidor");
+      }
+    } catch (error) {
+      console.error("No se pudo eliminar el usuario:", error);
+      showToast("error", "No se pudo eliminar el usuario");
+    }
+  };
 
   // ================================
   // CARGA MASIVA EXCEL
   // ================================
- const abrirModalExcel = () => {
+  const abrirModalExcel = () => {
     setMostrarModalExcel(true);
   };
 
- // Esta función ya debería estar en tu código, pero por si acaso:
-const handleUsuariosCreados = () => {
-  listarUsuarios();
-  if (empresaSeleccionada) {
-    const usuariosEmpresa = usuarios.filter(u => u.idEmpresa === empresaSeleccionada.idEmpresa);
-    setUsuariosFiltrados(usuariosEmpresa);
-  }
-  setMostrarModalExcel(false);
-};
+  const handleUsuariosCreados = () => {
+    listarUsuarios();
+    if (empresaSeleccionada) {
+      const usuariosEmpresa = usuarios.filter(u => u.idEmpresa === empresaSeleccionada.idEmpresa);
+      setUsuariosFiltrados(usuariosEmpresa);
+    }
+    setMostrarModalExcel(false);
+  };
 
   // ================================
   // EMPRESAS Y ÁREAS
@@ -1145,38 +1160,38 @@ const handleUsuariosCreados = () => {
       )}
 
       {/* MODAL EXCEL - USANDO EL COMPONENTE UPLOADEXCEL */}
-{mostrarModalExcel && empresaSeleccionada && (
-  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl border-2 border-blue-100">
-      <div className="p-6 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-xl">
-              <FaFileExcel className="text-white text-lg" />
+      {mostrarModalExcel && empresaSeleccionada && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-2xl border-2 border-blue-100">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                  <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-xl">
+                    <FaFileExcel className="text-white text-lg" />
+                  </div>
+                  Cargar Usuarios desde Excel
+                </h2>
+                <button 
+                  onClick={() => setMostrarModalExcel(false)} 
+                  className="text-gray-600 hover:text-gray-800 text-2xl font-bold transition-colors duration-300"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+              <p className="text-gray-600 mt-2">
+                Empresa: <strong>{empresaSeleccionada.nombre}</strong>
+              </p>
             </div>
-            Cargar Usuarios desde Excel
-          </h2>
-          <button 
-            onClick={() => setMostrarModalExcel(false)} 
-            className="text-gray-600 hover:text-gray-800 text-2xl font-bold transition-colors duration-300"
-          >
-            <FaTimes />
-          </button>
-        </div>
-        <p className="text-gray-600 mt-2">
-          Empresa: <strong>{empresaSeleccionada.nombre}</strong>
-        </p>
-      </div>
 
-      <div className="p-6">
-        <UploadExcel 
-          apiBulk={apiBulkUsuarios}
-          onUsuariosCreados={handleUsuariosCreados}
-        />
-      </div>
-    </div>
-  </div>
-)}
+            <div className="p-6">
+              <UploadExcel 
+                apiBulk={apiBulkUsuarios}
+                onUsuariosCreados={handleUsuariosCreados}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MODAL EMPRESA */}
       {mostrarModal && tipoModal === "empresa" && (

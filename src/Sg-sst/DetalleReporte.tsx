@@ -1,7 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Fingerprint, CheckCircle, XCircle } from "lucide-react";
+import axios from "axios";
+import Swal from 'sweetalert2';
 import CajaComentarios from "../components/CajaComentarios";
+
+const API_BASE = "http://127.0.0.1:8000";
+const BACKEND_BASE = "https://unreproaching-rancorously-evelina.ngrok-free.dev";
 
 interface Reporte {
   id_reporte: number;
@@ -18,6 +23,14 @@ interface Reporte {
   comentario?: string;
 }
 
+interface HuellaResult {
+  resultado: string;
+  score: number;
+  calidad: number;
+  template?: string; // Base64 de la huella capturada
+  image?: string; // Imagen de la huella (si está disponible)
+}
+
 const DetalleReporte: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -27,10 +40,10 @@ const DetalleReporte: React.FC = () => {
     ...reporte,
     comentario: reporte?.comentario || "",
   });
+
   const [loading, setLoading] = useState(false);
-  const [huellaFile, setHuellaFile] = useState<File | null>(null);
-  const [huellaPreview, setHuellaPreview] = useState<string | null>(null);
-  const [huellaSGVA, setHuellaSGVA] = useState<string | null>(null);
+  const [resultadoVerificar, setResultadoVerificar] = useState<HuellaResult | null>(null);
+  const [huellaImage, setHuellaImage] = useState<string | null>(null);
 
   if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
 
@@ -39,170 +52,405 @@ const DetalleReporte: React.FC = () => {
     return d.toLocaleString("es-CO");
   };
 
-  const handleFileChange = (file: File) => {
-    setHuellaFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setHuellaPreview(reader.result as string);
-    reader.readAsDataURL(file);
-  };
-
-  // ---------- OBTENER HUELLA SGVA ----------
-  useEffect(() => {
-    const fetchHuellaSGVA = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("No hay token disponible");
-
-        const res = await fetch(
-          `https://backsst.onrender.com/huella/${form.id_usuario}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (!res.ok) {
-          const text = await res.text(); // si no es JSON, evitamos crash
-          console.error("Error obteniendo huella SGVA:", text);
-          return;
-        }
-
-        const data = await res.json();
-        setHuellaSGVA(data.huella);
-      } catch (err) {
-        console.error("Error obteniendo huella SGVA:", err);
-      }
-    };
-
-    fetchHuellaSGVA();
-  }, [form.id_usuario]);
-
-  // ---------- VERIFICAR HUELLA ----------
+  // ======================================================
+  //   VERIFICAR HUELLA CON SWEETALERTS
+  // ======================================================
   const verificarHuella = async () => {
-    if (!huellaFile) return alert("Seleccione un archivo de huella antes de verificar");
-    if (!huellaSGVA) return alert("No se pudo obtener la huella SGVA");
+    if (!form.id_usuario) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Usuario no encontrado',
+        text: 'No se encontró ID de usuario para verificar.',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
 
     setLoading(true);
+    setResultadoVerificar(null);
+    setHuellaImage(null);
+
+    // Mostrar alerta de carga
+    Swal.fire({
+      title: 'Verificando Huella',
+      text: 'Por favor coloque su dedo en el sensor...',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
     try {
-      const reader = new FileReader();
-      reader.onload = async () => {
-        const huellaBase64 = (reader.result as string).split(",")[1];
-        if (!huellaBase64) {
-          setLoading(false);
-          return alert("No se pudo leer la huella");
-        }
+      const res = await axios.post(`${API_BASE}/huella/verificar`, {
+        id_usuario: form.id_usuario,
+      });
 
-        try {
-          const res = await fetch(
-            `http://127.0.0.1:5000/compare`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                t1: huellaBase64,
-                t2: huellaSGVA,
-              }),
-            }
-          );
+      const resultado: HuellaResult = res.data;
+      setResultadoVerificar(resultado);
 
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({ error: "Error en servidor" }));
-            alert(`Error: ${data.error}`);
-            return;
+      // Simular imagen de huella (si tu backend no la envía, puedes generar una placeholder)
+      if (resultado.image) {
+        setHuellaImage(resultado.image);
+      } else {
+        // Crear una imagen placeholder de huella
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          // Fondo
+          ctx.fillStyle = '#f3f4f6';
+          ctx.fillRect(0, 0, 200, 200);
+          
+          // Patrón de huella simulado
+          ctx.strokeStyle = '#6b7280';
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 8; i++) {
+            ctx.beginPath();
+            ctx.arc(100, 100, 20 + i * 8, 0, Math.PI * 2);
+            ctx.stroke();
           }
-
-          const data = await res.json();
-          setForm(prev => ({ ...prev, estado: data.estado }));
-          alert(`Reporte ${data.estado} (score: ${data.score})`);
-        } catch (err) {
-          console.error("Error verificando huella:", err);
-          alert("Error verificando huella");
-        } finally {
-          setLoading(false);
+          
+          setHuellaImage(canvas.toDataURL());
         }
-      };
-      reader.readAsDataURL(huellaFile);
-    } catch (err) {
-      console.error(err);
-      alert("Error leyendo el archivo de huella");
-      setLoading(false);
+      }
+
+      // Cerrar alerta de carga
+      Swal.close();
+
+      if (resultado.resultado === "Coincide") {
+        // Mostrar resultado exitoso
+        await Swal.fire({
+          icon: 'success',
+          title: '¡Huella Verificada!',
+          html: `
+            <div class="text-center">
+              <div class="text-green-500 text-6xl mb-4">✓</div>
+              <p class="text-lg font-semibold mb-2">Coincidencia encontrada</p>
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="text-center">
+                  <p class="text-sm text-gray-600">Score</p>
+                  <p class="text-2xl font-bold text-green-600">${resultado.score}%</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-sm text-gray-600">Calidad</p>
+                  <p class="text-2xl font-bold ${resultado.calidad >= 60 ? 'text-green-600' : 'text-yellow-600'}">${resultado.calidad}%</p>
+                </div>
+              </div>
+            </div>
+          `,
+          showCancelButton: true,
+          confirmButtonText: 'Actualizar Estado',
+          cancelButtonText: 'Cerrar',
+          confirmButtonColor: '#10b981',
+          cancelButtonColor: '#6b7280'
+        }).then(async (result) => {
+          if (result.isConfirmed) {
+            await actualizarEstadoReporte();
+          }
+        });
+
+      } else {
+        // Mostrar resultado fallido
+        await Swal.fire({
+          icon: 'error',
+          title: 'Huella No Coincide',
+          html: `
+            <div class="text-center">
+              <div class="text-red-500 text-6xl mb-4">✗</div>
+              <p class="text-lg font-semibold mb-2">No se encontró coincidencia</p>
+              <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="text-center">
+                  <p class="text-sm text-gray-600">Score</p>
+                  <p class="text-2xl font-bold text-red-600">${resultado.score}%</p>
+                </div>
+                <div class="text-center">
+                  <p class="text-sm text-gray-600">Calidad</p>
+                  <p class="text-2xl font-bold ${resultado.calidad >= 60 ? 'text-green-600' : 'text-yellow-600'}">${resultado.calidad}%</p>
+                </div>
+              </div>
+            </div>
+          `,
+          confirmButtonColor: '#ef4444'
+        });
+      }
+
+    } catch (error: any) {
+      Swal.close();
+      
+      console.error("❌ Error verificando huella:", error);
+      
+      let errorMessage = "Error desconocido";
+      if (error.response) {
+        errorMessage = error.response.data?.error || error.message;
+      } else if (error.request) {
+        errorMessage = "No se pudo conectar al servidor de huellas";
+      }
+
+      await Swal.fire({
+        icon: 'error',
+        title: 'Error de Verificación',
+        text: errorMessage,
+        confirmButtonColor: '#ef4444'
+      });
+    }
+
+    setLoading(false);
+  };
+
+  // ======================================================
+  //   ACTUALIZAR ESTADO DEL REPORTE
+  // ======================================================
+  const actualizarEstadoReporte = async () => {
+    const token = localStorage.getItem("token");
+    
+    if (!token) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Sesión Expirada',
+        text: 'Por favor inicie sesión nuevamente',
+        confirmButtonColor: '#3b82f6'
+      });
+      return;
+    }
+
+    Swal.fire({
+      title: 'Actualizando Estado...',
+      text: 'Por favor espere',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    try {
+      const updateRes = await fetch(
+        `${BACKEND_BASE}/actualizarReporte/${form.id_reporte}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ 
+            estado: "Aprobado"
+          }),
+        }
+      );
+
+      if (updateRes.ok) {
+        const data = await updateRes.json();
+        setForm((prev) => ({ ...prev, estado: "Aprobado" }));
+        
+        Swal.fire({
+          icon: 'success',
+          title: '¡Estado Actualizado!',
+          text: 'El reporte ha sido aprobado exitosamente',
+          confirmButtonColor: '#10b981'
+        });
+      } else {
+        const errorData = await updateRes.json();
+        throw new Error(errorData.error || "Error actualizando estado");
+      }
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error al Actualizar',
+        text: error.message,
+        confirmButtonColor: '#ef4444'
+      });
     }
   };
 
+  const getColor = (valor: number | null) => {
+    if (!valor) return "text-gray-600";
+    if (valor >= 80) return "text-green-600";
+    if (valor >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getEstadoColor = (estado: string) => {
+    switch (estado) {
+      case 'Aprobado': return 'bg-green-100 text-green-800';
+      case 'Pendiente': return 'bg-yellow-100 text-yellow-800';
+      case 'Rechazado': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // ======================================================
   return (
     <div>
-      <div className="absolute inset-0 backdrop-blur-sm"></div>
+      <div className="absolute inset-0 backdrop-blur-sm bg-blue-50/30"></div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
         <button
           onClick={() => navigate(-1)}
-          className="mb-8 inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-800 bg-white/90 border border-gray-300 rounded-xl shadow hover:bg-white transition"
+          className="mb-8 inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-xl shadow-lg hover:bg-gray-50 transition-all duration-200"
         >
           <ArrowLeft className="w-4 h-4" /> Volver
         </button>
 
-        {/* Detalle del Reporte */}
-        <div className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
-          <div className="bg-blue-600 p-8 text-white">
-            <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
+        {/* DETALLE DEL REPORTE */}
+        <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-8 text-white">
+            <div className="flex items-center gap-3 mb-2">
+              <Fingerprint className="w-8 h-8" />
+              <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
+            </div>
             <p className="text-blue-100 text-lg">Usuario: {form.nombre_usuario}</p>
+            <div className="flex gap-4 mt-2 text-sm">
+              <span className="bg-blue-500 px-3 py-1 rounded-full">ID Reporte: {form.id_reporte}</span>
+              <span className="bg-blue-500 px-3 py-1 rounded-full">ID Usuario: {form.id_usuario}</span>
+            </div>
           </div>
 
-          <div className="p-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Información Usuario */}
-            <div className="space-y-4 bg-gray-50 rounded-xl p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Información del Usuario</h3>
-              <p><strong>Nombre:</strong> {form.nombre_usuario}</p>
-              <p><strong>Cargo:</strong> {form.cargo}</p>
-              <p><strong>Cédula:</strong> {form.cedula}</p>
-            </div>
-
-            {/* Detalles del Reporte */}
-            <div className="space-y-4 bg-gray-50 rounded-xl p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 border-b pb-2">Detalles del Reporte</h3>
-              <p><strong>Fecha:</strong> {formatFecha(form.fecha)}</p>
-              <p><strong>Lugar:</strong> {form.lugar}</p>
-              <p><strong>Estado actual:</strong> {form.estado}</p>
-
-              <div className="mt-2">
-                {form.imagen ? (
-                  <a href={form.imagen} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700">Ver Imagen</a>
-                ) : (<p className="text-gray-500 italic">No hay imagen adjunta</p>)}
-              </div>
-
-              <div className="mt-2">
-                {form.archivos ? (
-                  <a href={form.archivos} target="_blank" rel="noopener noreferrer" className="px-3 py-1 bg-green-600 text-white rounded-md shadow hover:bg-green-700">Ver Archivo</a>
-                ) : (<p className="text-gray-500 italic">No hay archivo adjunto</p>)}
+          <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 shadow-lg border">
+              <h3 className="text-xl font-bold border-b pb-3 text-gray-800">Información del Usuario</h3>
+              <div className="space-y-3 mt-4">
+                <p><strong className="text-gray-700">Nombre:</strong> <span className="text-gray-900">{form.nombre_usuario}</span></p>
+                <p><strong className="text-gray-700">Cargo:</strong> <span className="text-gray-900">{form.cargo}</span></p>
+                <p><strong className="text-gray-700">Cédula:</strong> <span className="text-gray-900">{form.cedula}</span></p>
               </div>
             </div>
 
-            {/* Descripción */}
-            <div className="md:col-span-2 bg-gray-50 rounded-xl p-6 shadow-sm">
-              <h3 className="text-xl font-bold text-gray-800 border-b pb-2 mb-2">Descripción</h3>
-              <p className="text-gray-700 whitespace-pre-line">{form.descripcion}</p>
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 shadow-lg border">
+              <h3 className="text-xl font-bold border-b pb-3 text-gray-800">Detalles del Reporte</h3>
+              <div className="space-y-3 mt-4">
+                <p><strong className="text-gray-700">Fecha:</strong> <span className="text-gray-900">{formatFecha(form.fecha)}</span></p>
+                <p><strong className="text-gray-700">Lugar:</strong> <span className="text-gray-900">{form.lugar}</span></p>
+                <p><strong className="text-gray-700">Estado:</strong> 
+                  <span className={`ml-2 px-3 py-1 rounded-full text-sm font-medium ${getEstadoColor(form.estado)}`}>
+                    {form.estado}
+                  </span>
+                </p>
+
+                <div className="flex gap-2 mt-4">
+                  {form.imagen && (
+                    <a href={form.imagen} target="_blank" rel="noopener noreferrer" 
+                       className="inline-flex items-center gap-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                      📷 Ver Imagen
+                    </a>
+                  )}
+                  {form.archivos && (
+                    <a href={form.archivos} target="_blank" rel="noopener noreferrer"
+                       className="inline-flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                      📄 Ver Archivo
+                    </a>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="md:col-span-2 bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 shadow-lg border">
+              <h3 className="text-xl font-bold border-b pb-3 text-gray-800">Descripción</h3>
+              <p className="text-gray-700 whitespace-pre-line mt-4 leading-relaxed">{form.descripcion}</p>
             </div>
           </div>
         </div>
 
-        {/* Verificar huella */}
-        <div className="mt-6 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">🔒 Verificar Huella SGVA</h3>
-          <input type="file" accept="image/*" disabled={loading} onChange={(e) => { const file = e.target.files?.[0]; if (file) handleFileChange(file); }} />
-          {huellaPreview && (
-            <div className="mt-4">
-              <p className="mb-2 font-medium">Vista previa:</p>
-              <img src={huellaPreview} alt="Huella Preview" className="w-40 h-40 object-contain border rounded-md" />
+        {/* VERIFICACIÓN DE HUELLA */}
+        <div className="mt-8 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+          <div className="flex items-center gap-3 mb-6">
+            <Fingerprint className="w-8 h-8 text-blue-600" />
+            <h3 className="text-2xl font-bold text-gray-800">Verificación Biométrica</h3>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8">
+            <div className="space-y-4">
+              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <h4 className="font-semibold text-blue-800 mb-2">Información de Verificación</h4>
+                <div className="space-y-2 text-sm">
+                  <p><strong>Reporte ID:</strong> {form.id_reporte}</p>
+                  <p><strong>Usuario ID:</strong> {form.id_usuario}</p>
+                  <p><strong>Servidor Huellas:</strong> {API_BASE}</p>
+                </div>
+              </div>
+
+              <button
+                onClick={verificarHuella}
+                disabled={loading}
+                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl shadow-lg hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 font-semibold"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <Fingerprint className="w-5 h-5" />
+                    Verificar Huella
+                  </>
+                )}
+              </button>
             </div>
-          )}
-          <button onClick={verificarHuella} disabled={loading || !huellaFile} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 disabled:bg-gray-400">
-            {loading ? "Verificando..." : "Verificar Huella"}
-          </button>
+
+            {/* VISUALIZACIÓN DE HUELLA */}
+            <div className="space-y-4">
+              {huellaImage && (
+                <div className="text-center">
+                  <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
+                  <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                    <img 
+                      src={huellaImage} 
+                      alt="Huella digital capturada"
+                      className="mx-auto max-w-full h-32 object-contain rounded-lg"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* RESULTADOS */}
+              {resultadoVerificar && (
+                <div className={`p-4 rounded-xl border-2 ${
+                  resultadoVerificar.resultado === "Coincide" 
+                    ? "bg-green-50 border-green-200" 
+                    : "bg-red-50 border-red-200"
+                }`}>
+                  <div className="flex items-center gap-3 mb-3">
+                    {resultadoVerificar.resultado === "Coincide" ? (
+                      <CheckCircle className="w-6 h-6 text-green-600" />
+                    ) : (
+                      <XCircle className="w-6 h-6 text-red-600" />
+                    )}
+                    <h4 className={`font-bold text-lg ${
+                      resultadoVerificar.resultado === "Coincide" ? "text-green-700" : "text-red-700"
+                    }`}>
+                      {resultadoVerificar.resultado === "Coincide" ? "✓ Coincide" : "✗ No Coincide"}
+                    </h4>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Score</p>
+                      <p className={`text-2xl font-bold ${
+                        resultadoVerificar.score >= 80 ? "text-green-600" : 
+                        resultadoVerificar.score >= 60 ? "text-yellow-600" : "text-red-600"
+                      }`}>
+                        {resultadoVerificar.score}%
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Calidad</p>
+                      <p className={`text-2xl font-bold ${
+                        resultadoVerificar.calidad >= 60 ? "text-green-600" : "text-yellow-600"
+                      }`}>
+                        {resultadoVerificar.calidad}%
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Comentarios */}
-        <div className="mt-8 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">💬 Comentarios del Administrador</h3>
-          <CajaComentarios idReporte={form.id_reporte} />
+        {/* COMENTARIOS */}
+        <div className="mt-8 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
+          <h3 className="text-2xl font-bold mb-6 text-gray-800">💬 Comentarios del Administrador</h3>
+          <CajaComentarios idReporte={form.id_reporte} backendBase={BACKEND_BASE} />
         </div>
       </div>
     </div>
