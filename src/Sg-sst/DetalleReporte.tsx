@@ -389,16 +389,16 @@ const DetalleReporte: React.FC = () => {
 
             {/* VISUALIZACIÓN DE HUELLA */}
             <div className="space-y-4">
-              {huellaImage && (
-                <div className="text-center">
-                  <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
-                  <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
-                    <img 
-                      src={huellaImage} 
-                      alt="Huella digital capturada"
-                      className="mx-auto max-w-full h-32 object-contain rounded-lg"
-                    />
-                  </div>
+               {huellaImage && (
+              <div className="text-center">
+                <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
+                <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                  <img
+                    src={huellaImage.startsWith("data:") ? huellaImage : `data:image/png;base64,${huellaImage}`}
+                    alt="Huella digital capturada"
+                    className="mx-auto max-w-full h-40 object-contain rounded-lg"
+                  />
+                </div>
                 </div>
               )}
 

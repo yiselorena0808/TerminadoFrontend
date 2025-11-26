@@ -9,9 +9,6 @@ import {
   FaPlus,
   FaChevronLeft,
   FaChevronRight,
-  FaFilter,
-  FaUser,
-  FaCalendarAlt,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
@@ -38,10 +35,9 @@ const LectorListaReportes: React.FC = () => {
   const [busqueda, setBusqueda] = useState("");
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
-  const [cargando, setCargando] = useState(true);
 
   const [paginaActual, setPaginaActual] = useState(1);
-  const ITEMS_POR_PAGINA = 6;
+  const reportesPorPagina = 9;
 
   const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
   const apiListarReportes = import.meta.env.VITE_API_MISREPORTES;
@@ -55,12 +51,8 @@ const LectorListaReportes: React.FC = () => {
     if (!usuario) return;
 
     const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Usuario no autenticado");
-      return;
-    }
+    if (!token) return alert("Usuario no autenticado");
 
-    setCargando(true);
     try {
       const params = new URLSearchParams();
       if (busqueda) params.append("q", busqueda);
@@ -77,12 +69,8 @@ const LectorListaReportes: React.FC = () => {
       if (!res.ok) throw new Error("Error al obtener reportes");
 
       const data = await res.json();
-      
-      // Manejar diferentes estructuras de respuesta
-      const reportesData = data.data || data.datos || [];
-      
-      if (Array.isArray(reportesData)) {
-        const reportes: Reporte[] = reportesData.map((r: any) => ({
+      if (data.data && Array.isArray(data.data)) {
+        const reportes: Reporte[] = data.data.map((r: any) => ({
           id_reporte: r.idReporte ?? r.id_reporte,
           id_usuario: r.idUsuario ?? r.id_usuario,
           nombre_usuario: r.nombreUsuario ?? r.nombre_usuario,
@@ -104,15 +92,11 @@ const LectorListaReportes: React.FC = () => {
     } catch (error) {
       console.error("Error al obtener reportes:", error);
       setListas([]);
-    } finally {
-      setCargando(false);
     }
   };
 
   useEffect(() => {
-    if (usuario) {
-      obtenerListas();
-    }
+    if (usuario) obtenerListas();
   }, [usuario, busqueda, estadoFiltro]);
 
   const abrirDetalle = (item: Reporte) => {
@@ -133,223 +117,144 @@ const LectorListaReportes: React.FC = () => {
 
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
-    
-    // Header con fondo azul
-    doc.setFillColor(37, 99, 235);
-    doc.rect(0, 0, 210, 30, "F");
-    
-    // Título
-    doc.setFont("helvetica", "bold");
-    doc.setTextColor(255, 255, 255);
     doc.setFontSize(18);
-    doc.text("INFORME DE REPORTE SST", 105, 18, { align: "center" });
-
-    // Contenido
-    doc.setFillColor(255, 255, 255);
-    doc.rect(0, 30, 210, 267, "F");
-    doc.setTextColor(0, 0, 0);
+    doc.text("Reporte de Incidente - SST", 20, 20);
     doc.setFontSize(12);
-    
-    let y = 45;
-    const agregarLinea = (titulo: string, valor: string | number) => {
-      doc.setFont("helvetica", "bold");
-      doc.text(`${titulo}:`, 20, y);
-      doc.setFont("helvetica", "normal");
-      doc.text(String(valor), 60, y);
-      y += 8;
-    };
-
-    agregarLinea("ID Reporte", reporte.id_reporte);
-    agregarLinea("Usuario", reporte.nombre_usuario);
-    agregarLinea("Cédula", reporte.cedula);
-    agregarLinea("Cargo", reporte.cargo);
-    agregarLinea("Fecha", formatearFecha(reporte.fecha));
-    agregarLinea("Lugar", reporte.lugar);
-    agregarLinea("Estado", reporte.estado);
-    
-    y += 5;
-    doc.setFont("helvetica", "bold");
-    doc.text("Descripción:", 20, y);
-    y += 8;
-    doc.setFont("helvetica", "normal");
-    const descripcionLines = doc.splitTextToSize(reporte.descripcion, 170);
-    doc.text(descripcionLines, 20, y);
-
-    // Footer
-    doc.setFontSize(10);
-    doc.setTextColor(100);
-    doc.text("Sistema de Gestión SST - Generado automáticamente", 20, 280);
-
-    doc.save(`Reporte_${reporte.nombre_usuario}_${reporte.id_reporte}.pdf`);
+    doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
+    doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
+    doc.text(`Cargo: ${reporte.cargo}`, 20, 60);
+    doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 70);
+    doc.text(`Lugar: ${reporte.lugar}`, 20, 80);
+    doc.text(`Descripción: ${reporte.descripcion}`, 20, 90);
+    doc.text(`Estado: ${reporte.estado}`, 20, 100);
+    doc.save(`reporte_${reporte.id_reporte}.pdf`);
   };
 
   const reportesFiltrados = listas.filter(
     (item) =>
       (estadoFiltro === "Todos" || item.estado === estadoFiltro) &&
-      `${item.nombre_usuario} ${item.cargo} ${item.lugar} ${item.descripcion}`
+      `${item.nombre_usuario} ${item.cargo} ${item.fecha}`
         .toLowerCase()
         .includes(busqueda.toLowerCase())
   );
 
-  // Paginación
-  const totalPaginas = Math.ceil(reportesFiltrados.length / ITEMS_POR_PAGINA);
-  const indiceInicial = (paginaActual - 1) * ITEMS_POR_PAGINA;
-  const indiceFinal = indiceInicial + ITEMS_POR_PAGINA;
+  // 🔹 PAGINACIÓN
+  const totalPaginas = Math.ceil(reportesFiltrados.length / reportesPorPagina);
+  const indiceInicial = (paginaActual - 1) * reportesPorPagina;
+  const indiceFinal = indiceInicial + reportesPorPagina;
   const reportesPaginados = reportesFiltrados.slice(indiceInicial, indiceFinal);
 
   const cambiarPagina = (nuevaPagina: number) => {
     if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) {
       setPaginaActual(nuevaPagina);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const getBadgeColor = (estado: string) => {
     switch (estado) {
       case "Pendiente":
-        return "bg-yellow-100 text-yellow-800 border border-yellow-300";
+        return "bg-yellow-100 text-yellow-800";
       case "Revisado":
-        return "bg-blue-100 text-blue-800 border border-blue-300";
+        return "bg-blue-100 text-blue-800";
       case "Finalizado":
-        return "bg-green-100 text-green-800 border border-green-300";
+        return "bg-green-100 text-green-800";
       default:
-        return "bg-gray-100 text-gray-600 border border-gray-300";
+        return "bg-gray-100 text-gray-600";
     }
   };
 
-  if (cargando) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando reportes...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      {/* HEADER PRINCIPAL */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl shadow-xl p-8 mb-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-white bg-opacity-20 p-3 rounded-xl">
-              <FaHardHat className="text-3xl" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold">SST - Reportes de Seguridad</h1>
-              <p className="text-blue-100">Prevención, control y seguimiento de incidentes</p>
-            </div>
-          </div>
-          
-          <div className="bg-white bg-opacity-20 px-6 py-3 rounded-xl backdrop-blur-sm">
-            <p className="text-sm font-semibold">
-              Total: <span className="text-2xl">{reportesFiltrados.length}</span> reportes
+    <div className="p-6">
+      {/* HEADER */}
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-6">
+          <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
+            <FaHardHat className="text-blue-700" /> 
+            Mis Reportes SST
+          </h1>
+
+          <div className="bg-blue-50 px-4 py-2 rounded-xl border-2 border-blue-200">
+            <p className="text-sm text-blue-800 font-semibold">
+              Total: <span className="text-blue-600">{reportesFiltrados.length}</span> reportes
             </p>
           </div>
+        </div>
+
+        <div className="flex gap-4">
+          <button
+            onClick={() => navigate("/nav/creaListRepo")}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
+          >
+            <FaPlus /> Nuevo Reporte
+          </button>
         </div>
       </div>
 
       {/* CONTENEDOR PRINCIPAL */}
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* BARRA DE HERRAMIENTAS */}
-        <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            {/* BUSCADOR */}
+      <div className="space-y-6">
+        {/* BUSCADOR Y FILTROS */}
+        <div className="bg-white rounded-2xl p-6 shadow-lg">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="relative">
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Buscar reporte por usuario, cargo o fecha..."
-                  className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
+                  placeholder="Buscar reporte..."
+                  className="w-full px-4 py-3 pl-12 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
                   value={busqueda}
                   onChange={(e) => setBusqueda(e.target.value)}
                 />
-                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-blue-400" />
               </div>
             </div>
             
-            {/* FILTRO POR ESTADO */}
-            <div className="relative">
-              <div className="relative">
-                <select
-                  value={estadoFiltro}
-                  onChange={(e) => setEstadoFiltro(e.target.value)}
-                  className="w-full px-4 py-3 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 appearance-none bg-white"
-                >
-                  {estados.map((estado) => (
-                    <option key={estado} value={estado}>
-                      {estado}
-                    </option>
-                  ))}
-                </select>
-                <FaFilter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* BOTÓN NUEVO REPORTE */}
-            <button
-              onClick={() => navigate("/nav/creaListRepo")}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl flex items-center justify-center gap-2 font-semibold transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+            <select
+              value={estadoFiltro}
+              onChange={(e) => setEstadoFiltro(e.target.value)}
+              className="px-4 py-3 border-2 border-blue-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300"
             >
-              <FaPlus className="text-sm" />
-              Crear Reporte
-            </button>
+              {estados.map((estado) => (
+                <option key={estado} value={estado}>
+                  {estado}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
         {/* LISTA DE REPORTES */}
         {reportesFiltrados.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-lg border border-gray-200">
+          <div className="bg-white rounded-2xl p-8 text-center shadow-lg">
             <FaExclamationTriangle className="text-6xl mx-auto mb-4 text-gray-300" />
-            <h3 className="text-2xl font-bold text-gray-600 mb-3">
+            <h3 className="text-xl font-bold text-gray-600 mb-2">
               {listas.length === 0 ? "No hay reportes registrados" : "No se encontraron reportes"}
             </h3>
-            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            <p className="text-gray-500">
               {listas.length === 0 
-                ? "Comienza creando el primer reporte de incidente usando el botón 'Crear Reporte'" 
-                : "Intenta ajustar los filtros o términos de búsqueda"}
+                ? "Crea el primer reporte usando el botón 'Nuevo Reporte'" 
+                : "Intenta con otros términos de búsqueda"}
             </p>
-            {listas.length === 0 && (
-              <button
-                onClick={() => navigate("/nav/creaListRepo")}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-colors duration-300"
-              >
-                Crear Primer Reporte
-              </button>
-            )}
           </div>
         ) : (
           <>
             {/* GRID DE REPORTES */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {reportesPaginados.map((item) => (
                 <div
                   key={item.id_reporte}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 border border-gray-200 hover:border-blue-200 overflow-hidden group"
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-500 border-2 border-transparent hover:border-blue-100 overflow-hidden group"
                 >
                   <div className="p-6">
                     {/* ENCABEZADO */}
                     <div className="flex justify-between items-start mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="bg-blue-100 p-2 rounded-lg">
-                          <FaUser className="text-blue-600 text-sm" />
-                        </div>
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300 line-clamp-1">
-                            {item.nombre_usuario}
-                          </h3>
-                          <p className="text-gray-600 text-sm">{item.cargo}</p>
-                        </div>
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300">
+                          {item.nombre_usuario}
+                        </h3>
+                        <p className="text-gray-600 text-sm">{item.cargo}</p>
                       </div>
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${getBadgeColor(
+                        className={`px-3 py-1 rounded-full text-sm font-semibold ${getBadgeColor(
                           item.estado
                         )}`}
                       >
@@ -358,35 +263,32 @@ const LectorListaReportes: React.FC = () => {
                     </div>
 
                     {/* FECHA */}
-                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-4">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span>{formatearFecha(item.fecha)}</span>
-                    </div>
+                    <p className="text-sm text-gray-500 mb-4">
+                      {formatearFecha(item.fecha)}
+                    </p>
 
                     {/* LUGAR */}
                     <div className="flex items-center gap-2 text-gray-600 mb-4">
-                      <FaMapMarkerAlt className="text-red-500 flex-shrink-0" />
-                      <span className="text-sm font-medium line-clamp-1">{item.lugar}</span>
+                      <FaMapMarkerAlt className="text-yellow-500" />
+                      <span className="text-sm font-medium">{item.lugar}</span>
                     </div>
 
                     {/* DESCRIPCIÓN */}
-                    <div className="mb-6">
-                      <p className="text-gray-700 text-sm line-clamp-3 leading-relaxed">
-                        {item.descripcion}
-                      </p>
-                    </div>
+                    <p className="text-gray-700 mb-6 line-clamp-3">
+                      {item.descripcion}
+                    </p>
 
                     {/* BOTONES DE ACCIÓN */}
                     <div className="flex justify-end gap-3">
                       <button
                         onClick={() => abrirDetalle(item)}
-                        className="bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow font-semibold text-sm flex items-center gap-2"
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg font-semibold text-sm"
                       >
-                        Abrir
+                        Ver Detalle
                       </button>
                       <button
                         onClick={() => descargarPDF(item)}
-                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow flex items-center gap-2 font-semibold text-sm"
+                        className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg flex items-center gap-2 font-semibold text-sm"
                       >
                         <FaFilePdf /> PDF
                       </button>
@@ -398,60 +300,37 @@ const LectorListaReportes: React.FC = () => {
 
             {/* PAGINACIÓN */}
             {totalPaginas > 1 && (
-              <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    Mostrando {indiceInicial + 1}-{Math.min(indiceFinal, reportesFiltrados.length)} de {reportesFiltrados.length} reportes
-                  </div>
+              <div className="bg-white rounded-2xl p-6 shadow-lg">
+                <div className="flex justify-center items-center gap-2">
+                  <button
+                    onClick={() => cambiarPagina(paginaActual - 1)}
+                    disabled={paginaActual === 1}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronLeft />
+                  </button>
                   
-                  <div className="flex items-center gap-2">
+                  {[...Array(totalPaginas)].map((_, i) => (
                     <button
-                      onClick={() => cambiarPagina(paginaActual - 1)}
-                      disabled={paginaActual === 1}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      key={i}
+                      onClick={() => cambiarPagina(i + 1)}
+                      className={`px-4 py-2 rounded-xl font-semibold transition-all duration-300 ${
+                        paginaActual === i + 1
+                          ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                     >
-                      <FaChevronLeft className="text-sm" />
-                      Anterior
+                      {i + 1}
                     </button>
-                    
-                    <div className="flex gap-1">
-                      {[...Array(totalPaginas)].map((_, i) => {
-                        const pagina = i + 1;
-                        // Mostrar páginas cercanas a la actual
-                        if (
-                          pagina === 1 ||
-                          pagina === totalPaginas ||
-                          (pagina >= paginaActual - 1 && pagina <= paginaActual + 1)
-                        ) {
-                          return (
-                            <button
-                              key={i}
-                              onClick={() => cambiarPagina(pagina)}
-                              className={`w-10 h-10 rounded-lg font-semibold transition-all duration-300 ${
-                                paginaActual === pagina
-                                  ? "bg-blue-600 text-white shadow-lg"
-                                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                              }`}
-                            >
-                              {pagina}
-                            </button>
-                          );
-                        } else if (pagina === paginaActual - 2 || pagina === paginaActual + 2) {
-                          return <span key={i} className="px-2 text-gray-500">...</span>;
-                        }
-                        return null;
-                      })}
-                    </div>
-                    
-                    <button
-                      onClick={() => cambiarPagina(paginaActual + 1)}
-                      disabled={paginaActual === totalPaginas}
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-3 rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                    >
-                      Siguiente
-                      <FaChevronRight className="text-sm" />
-                    </button>
-                  </div>
+                  ))}
+                  
+                  <button
+                    onClick={() => cambiarPagina(paginaActual + 1)}
+                    disabled={paginaActual === totalPaginas}
+                    className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-3 rounded-xl transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <FaChevronRight />
+                  </button>
                 </div>
               </div>
             )}

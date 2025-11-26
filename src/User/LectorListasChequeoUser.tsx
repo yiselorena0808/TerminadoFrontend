@@ -50,12 +50,13 @@ const LectorChequeo: React.FC = () => {
 
     const data = JSON.parse(texto);
 
-    if (data.datos && Array.isArray(data.datos)) {
-      setListas(data.datos);
-    } else {
-      console.warn("No se recibieron datos válidos de la API");
-      setListas([]);
-    }
+   if (data.data && Array.isArray(data.data)) {
+    setListas(data.data);
+  } else {
+    console.warn("No se recibieron datos válidos de la API");
+    setListas([]);
+  }
+
   } catch (error) {
     console.error("Error al obtener listas:", error);
     setListas([]);
