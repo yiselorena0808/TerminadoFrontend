@@ -158,7 +158,7 @@ const ListaDeGestionEppGeneral: React.FC = () => {
     return empresas.find((emp) => emp.idEmpresa === id)?.nombre || "Empresa desconocida";
   };
 
-  const irCrear = () => navigate("/nav/creargestionEpp");
+  const irCrear = () => navigate("/nav/CrearGestionEppSA");
 
   // Color para importancia
   const getImportanciaColor = (importancia: string) => {

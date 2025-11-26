@@ -16,7 +16,6 @@ const CrearReporteSA: React.FC = () => {
   const [buscar, setBuscar] = useState("");
   const [showModal, setShowModal] = useState(false);
 
-  // --- NUEVOS: empresas y empresaSeleccionada ---
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState<string>("");
 

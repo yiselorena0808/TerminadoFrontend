@@ -50,9 +50,6 @@ const CrearActividadLudicaSA: React.FC = () => {
 
       const data = await res.json();
 
-      console.log("📌 Respuesta listarEmpresas:", data);
-
-      // Tu API trae: { msj: "...", datos: [ ... ] }
       if (Array.isArray(data.datos)) {
         setEmpresas(data.datos);
       } else {
@@ -89,59 +86,60 @@ const CrearActividadLudicaSA: React.FC = () => {
   };
 
   // 🟦 Submit del formulario
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!usuario) return showToast("error", "Usuario no autenticado");
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!usuario) return showToast("error", "Usuario no autenticado");
 
-    if (!empresaSeleccionada)
-      return showToast("warning", "Selecciona una empresa");
+  if (!empresaSeleccionada)
+    return showToast("warning", "Selecciona una empresa");
 
-    const token = localStorage.getItem("token");
-    if (!token) return showToast("error", "No hay token en localStorage");
+  const token = localStorage.getItem("token");
+  if (!token) return showToast("error", "No hay token en localStorage");
 
-    try {
-      const data = new FormData();
+  try {
+    const data = new FormData();
 
-      // Datos textuales
-      Object.entries(formData).forEach(([key, value]) =>
-        data.append(key, value)
-      );
+    // Datos textuales
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) data.append(key, value);
+    });
 
-      // Archivos
-      if (imagenVideo) data.append("imagen_video", imagenVideo);
-      if (archivoAdjunto) data.append("archivo_adjunto", archivoAdjunto);
+    // Archivos
+    if (imagenVideo) data.append("imagen_video", imagenVideo);
+    if (archivoAdjunto) data.append("archivo_adjunto", archivoAdjunto);
 
-      // Usuario
-      data.append("id_usuario", usuario.id.toString());
-      data.append("nombre_usuario", usuario.nombre);
+    // Usuario
+    data.append("id_usuario", usuario.id.toString());
+    data.append("nombre_usuario", usuario.nombre);
 
-      // Empresa seleccionada
-      data.append("id_empresa", empresaSeleccionada);
+    // ✅ Empresa seleccionada
+    data.append("id_empresa", empresaSeleccionada.toString());
 
-      const res = await fetch(apiCrearActividad, {
-        method: "POST",
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-          Authorization: `Bearer ${token}`,
-        },
-        body: data,
-      });
+    const res = await fetch(apiCrearActividad, {
+      method: "POST",
+      headers: {
+        "ngrok-skip-browser-warning": "true",
+        Authorization: `Bearer ${token}`,
+      },
+      body: data,
+    });
 
-      const result = await res.json();
+    const result = await res.json();
 
-      if (!res.ok)
-        return showToast("error", result.error || "Error al crear actividad");
+    if (!res.ok)
+      return showToast("error", result.error || "Error al crear actividad");
 
-      showToast("success", "Actividad lúdica creada 🎉");
+    showToast("success", "Actividad lúdica creada 🎉");
 
-      setTimeout(() => {
-        navigate("/nav/ListaDeActividadesGenerales");
-      }, 1500);
-    } catch (error) {
-      console.error("Error al crear actividad:", error);
-      showToast("error", "Ocurrió un error al crear la actividad");
-    }
-  };
+    setTimeout(() => {
+      navigate("/nav/ListaDeActividadesGenerales");
+    }, 1500);
+  } catch (error) {
+    console.error("Error al crear actividad:", error);
+    showToast("error", "Ocurrió un error al crear la actividad");
+  }
+};
+
 
   return (
     <div
@@ -174,16 +172,14 @@ const CrearActividadLudicaSA: React.FC = () => {
           </h2>
         </div>
 
-        {/* 🟦 SELECT DE EMPRESA */}
+        {/* SELECT DE EMPRESA */}
         <select
           name="empresa"
           value={empresaSeleccionada}
           onChange={(e) => setEmpresaSeleccionada(e.target.value)}
-          required
           className="border p-3 rounded-xl w-full mb-4"
         >
-          <option value="">-- Selecciona una empresa --</option>
-
+          <option value="">-- Selecciona una empresa (opcional) --</option>
           {empresas.map((emp) => (
             <option key={emp.idEmpresa} value={emp.idEmpresa}>
               {emp.nombre}
@@ -199,6 +195,7 @@ const CrearActividadLudicaSA: React.FC = () => {
             value={formData.nombre_actividad}
             onChange={handleChange}
             className="border p-3 rounded-xl col-span-2 focus:ring-2 focus:ring-yellow-500"
+            required
           />
 
           <input
@@ -207,6 +204,7 @@ const CrearActividadLudicaSA: React.FC = () => {
             value={formData.fecha_actividad}
             onChange={handleChange}
             className="border p-3 rounded-xl col-span-2 focus:ring-2 focus:ring-yellow-500"
+            required
           />
         </div>
 
