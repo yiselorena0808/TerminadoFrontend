@@ -140,8 +140,6 @@ const SuperAdminDashboard: React.FC = () => {
     id_area: "",
   });
 
-  // Campos para Excel
-  const [archivoExcel, setArchivoExcel] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
 
   // APIs desde .env
@@ -150,7 +148,7 @@ const SuperAdminDashboard: React.FC = () => {
   const apiUsuarios = import.meta.env.VITE_API_LISTARTODOSLOSUSUARIOS;
   const apiCrearUsuario = import.meta.env.VITE_API_REGISTRARUSUARIOS;
   const apiActualizarUsuario = import.meta.env.VITE_API_ACTUALIZARUSUARIO;
-  const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
+  const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIOSGENERALES;
   const apiBulkUsuarios = import.meta.env.VITE_API_BULK;
 
   const apiCrearEmp = import.meta.env.VITE_API_REGISTROEMPRESA;
@@ -196,36 +194,40 @@ const SuperAdminDashboard: React.FC = () => {
   };
 
   const listarUsuarios = async () => {
-    try {
-      const res = await fetch(apiUsuarios, {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "ngrok-skip-browser-warning": "true",
-        },
-      });
-      
-      if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
-      
-      const data = await res.json();
-      
-      let usuariosData: Usuario[] = [];
-      
-      if (Array.isArray(data)) usuariosData = data;
-      else if (Array.isArray(data.datos)) usuariosData = data.datos;
-      else if (Array.isArray(data.data)) usuariosData = data.data;
-      
-      setUsuarios(usuariosData);
-      
-    } catch (err) {
-      console.error("Error listando usuarios:", err);
-      Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
-      setUsuarios([]);
-    }
-  };
+  try {
+    const res = await fetch(apiUsuarios, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "ngrok-skip-browser-warning": "true",
+      },
+    });
+    
+    if (!res.ok) throw new Error(`Error HTTP: ${res.status}`);
+    
+    const data = await res.json();
+    
+    let usuariosData: Usuario[] = [];
+    
+    if (Array.isArray(data)) usuariosData = data;
+    else if (Array.isArray(data.datos)) usuariosData = data.datos;
+    else if (Array.isArray(data.data)) usuariosData = data.data;
+    
+    // 🔍 VERIFICAR QUÉ USUARIOS EXISTEN
+    console.log("👥 USUARIOS DEL SERVIDOR:", usuariosData.map(u => ({ 
+      id: u.id, 
+      nombre: u.nombre, 
+      empresa: u.idEmpresa 
+    })));
+    
+    setUsuarios(usuariosData);
+    
+  } catch (err) {
+    console.error("Error listando usuarios:", err);
+    Swal.fire("Error", "No se pudieron cargar los usuarios", "error");
+    setUsuarios([]);
+  }
+};
 
-  // ================================
-  // MODAL VER USUARIOS
-  // ================================
   const abrirModalUsuarios = (empresa: Empresa) => {
     setEmpresaSeleccionada(empresa);
     setBusquedaUsuarios("");
@@ -400,55 +402,69 @@ const SuperAdminDashboard: React.FC = () => {
     }
   };
 
-  // ================================
-  // ELIMINAR USUARIO - CORREGIDO
-  // ================================
-  const eliminarUsuario = async (id: number) => {
-    const confirm = await Swal.fire({
-      title: "¿Estás seguro?",
-      text: "¡No podrás revertir esta acción!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      background: "#ffffff",
-      color: "#1f2937",
+const eliminarUsuario = async (id: number) => {
+  const confirm = await Swal.fire({
+    title: "¿Estás seguro?",
+    text: "¡No podrás revertir esta acción!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonText: "Sí, eliminar",
+    cancelButtonText: "Cancelar",
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  const token = localStorage.getItem("token");
+  if (!token) {
+    showToast("error", "Usuario no autenticado");
+    return;
+  }
+
+  try {
+    const url = `${apiEliminar}${id}`;
+    const response = await fetch(url, {
+      method: "DELETE",
+      headers: { 
+        "Content-Type": "application/json",
+        "ngrok-skip-browser-warning": "true",
+        "Authorization": `Bearer ${token}` 
+      },
     });
 
-    if (!confirm.isConfirmed) return;
+    const responseText = await response.text();
+    const responseData = responseText ? JSON.parse(responseText) : {};
 
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
-    try {
-      const response = await fetch(`${apiEliminar}${id}`, {
-        method: "DELETE",
-        headers: { 
-          'ngrok-skip-browser-warning': 'true',
-          Authorization: `Bearer ${token}` 
-        },
-      });
-
-      if (response.ok) {
-        // Actualizar ambos estados
-        setUsuarios(prev => prev.filter(u => u.id !== id));
-        
-        // Actualizar usuarios filtrados si estamos en el modal
-        if (empresaSeleccionada) {
-          setUsuariosFiltrados(prev => prev.filter(u => u.id !== id));
-        }
-        
-        showToast("success", "Usuario eliminado correctamente");
-      } else {
-        throw new Error("Error en la respuesta del servidor");
+    if (response.ok) {
+      // ✅ ÉXITO - Usuario eliminado del servidor
+      setUsuarios(prev => prev.filter(u => u.id !== id));
+      
+      if (empresaSeleccionada) {
+        setUsuariosFiltrados(prev => prev.filter(u => u.id !== id));
       }
-    } catch (error) {
-      console.error("No se pudo eliminar el usuario:", error);
-      showToast("error", "No se pudo eliminar el usuario");
+      
+      showToast("success", "Usuario eliminado correctamente");
+      
+      // Recargar lista para sincronizar
+      await listarUsuarios();
+      
+    } else if (response.status === 404) {
+      // ❌ Usuario no encontrado en el servidor
+      showToast("error", responseData.mensaje || "Usuario no encontrado");
+      
+      // Recargar lista para sincronizar con el servidor
+      await listarUsuarios();
+      
+    } else {
+      // ❌ Otro error
+      showToast("error", responseData.mensaje || "No se pudo eliminar el usuario");
     }
-  };
+  } catch (error) {
+    console.error("Error eliminando usuario:", error);
+    showToast("error", "Error de conexión");
+  }
+};
 
   // ================================
   // CARGA MASIVA EXCEL

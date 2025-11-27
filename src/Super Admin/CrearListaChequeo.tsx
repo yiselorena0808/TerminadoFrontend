@@ -17,11 +17,9 @@ const CrearListaChequeoSA: React.FC = () => {
 
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
 
-  // 🔵 Empresas
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [empresaSeleccionada, setEmpresaSeleccionada] = useState("");
 
-  // 🔵 Formulario
   const [fecha, setFecha] = useState("");
   const [hora, setHora] = useState("");
   const [modelo, setModelo] = useState("");
@@ -32,9 +30,6 @@ const CrearListaChequeoSA: React.FC = () => {
   const [placa, setPlaca] = useState("");
   const [observaciones, setObservaciones] = useState("");
 
-  /* ====================================================
-      1. OBTENER USUARIO DESDE TOKEN (NORMALIZADO)
-  ===================================================== */
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -54,7 +49,6 @@ const CrearListaChequeoSA: React.FC = () => {
 
       setUsuario(userData);
 
-      // ❗ No seleccionamos empresa automáticamente
       setEmpresaSeleccionada("");
 
     } catch (error) {
@@ -64,9 +58,6 @@ const CrearListaChequeoSA: React.FC = () => {
     }
   }, []);
 
-  /* ====================================================
-      2. CARGAR EMPRESAS DESDE LA API + NORMALIZACIÓN
-  ===================================================== */
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -88,7 +79,6 @@ const CrearListaChequeoSA: React.FC = () => {
         else if (Array.isArray(data.datos)) listado = data.datos;
         else if (Array.isArray(data.empresas)) listado = data.empresas;
 
-        // 🔵 Normalizar IDs de empresa
         const normalizadas = listado.map((emp) => {
           const id =
             emp.id_empresa ??
@@ -115,9 +105,6 @@ const CrearListaChequeoSA: React.FC = () => {
     cargarEmpresas();
   }, []);
 
-  /* ====================================================
-      TOAST
-  ===================================================== */
   const showToast = (icon: "success" | "error" | "warning", title: string) => {
     Swal.fire({
       toast: true,
@@ -132,9 +119,6 @@ const CrearListaChequeoSA: React.FC = () => {
     }
   };
 
-  /* ====================================================
-      SUBMIT (ENVÍA id_empresa CORRECTO)
-  ===================================================== */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("token");
@@ -197,9 +181,6 @@ const CrearListaChequeoSA: React.FC = () => {
     }
   };
 
-  /* ====================================================
-      UI
-  ===================================================== */
   return (
     <div
       className="min-h-screen flex items-center justify-center p-6 relative"

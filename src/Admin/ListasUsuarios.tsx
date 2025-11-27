@@ -14,7 +14,6 @@ import {
   FaIdBadge,
   FaChevronLeft,
   FaChevronRight,
-  FaSync
 } from "react-icons/fa";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
@@ -190,7 +189,7 @@ const AdmUsuariosCompleto: React.FC = () => {
         },
       });
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
-      showToast("success", "Usuario eliminado correctamente");
+       showToast("success", "Usuario eliminado correctamente");
     } catch (error) {
       console.error("No se pudo eliminar el usuario:", error);
       showToast("error", "No se pudo eliminar el usuario");

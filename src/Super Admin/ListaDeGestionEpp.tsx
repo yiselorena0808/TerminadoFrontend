@@ -7,7 +7,6 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaPlus,
-  FaExclamationTriangle,
   FaUser,
   FaCalendar,
   FaClipboardList

@@ -92,8 +92,8 @@ const CrearGestionEpp: React.FC = () => {
       setLoading(true);
 
       const body: any = {
-        nombre: usuario.nombre,          // 🔹 tomado del token
-        apellido: usuario.apellido,      // 🔹 tomado del token
+        nombre: usuario.nombre,
+        apellido: usuario.apellido,
         cedula: formData.cedula,
         id_cargo: Number(formData.idCargo),
         importancia: formData.importancia,
@@ -101,7 +101,7 @@ const CrearGestionEpp: React.FC = () => {
         cantidad: productosSeleccionados.reduce((acc, p) => acc + p.cantidad, 0),
         productos: productosSeleccionados.map(p => p.idProducto),
         id_usuario: usuario.id,
-        id_empresa: usuario.id_empresa,   // 🔹 tomado del token
+        id_empresa: usuario.id_empresa,
       };
 
       if (formData.idArea) body.id_area = Number(formData.idArea);
@@ -124,7 +124,7 @@ const CrearGestionEpp: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 relative"
-         style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
+    style={{ backgroundImage: "url('https://img.freepik.com/fotos-premium/equipos-proteccion-personal-para-la-seguridad-industrial_1033579-251259.jpg')", backgroundSize: "cover", backgroundPosition: "center" }}>
       <div className="absolute inset-0 backdrop-blur-sm">
         <button
           type="button"

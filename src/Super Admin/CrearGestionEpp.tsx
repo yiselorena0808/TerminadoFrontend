@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Swal from "sweetalert2";
 import { useNavigate } from "react-router-dom";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
-import { FaArrowLeft, FaHardHat, FaPaperPlane } from "react-icons/fa";
+import {FaHardHat, FaPaperPlane } from "react-icons/fa";
 
 interface Empresa { idEmpresa: number; nombre: string; }
 interface Cargo { idCargo: number; cargo: string; }
