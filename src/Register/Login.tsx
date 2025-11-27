@@ -124,7 +124,7 @@ const Login: React.FC = () => {
           {/* Recordar sesión y enlace */}
           <div className="flex justify-between text-sm text-gray-600">
             <span
-              onClick={() => navigate("/forgot")}
+              onClick={() => navigate("/forgot-password")}
               className="cursor-pointer hover:text-black underline"
             >
               ¿Olvidó su contraseña?
