@@ -4,7 +4,7 @@ import Swal from "sweetalert2";
 
 export default function ResetPasswordForm() {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get('token'); // ✅ Obtiene token de ?token=...
+  const token = searchParams.get('token');
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
