@@ -1,5 +1,5 @@
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase.config';
+import storage  from './firebase.config';
 
 export interface ExcelData {
   [key: string]: any;
