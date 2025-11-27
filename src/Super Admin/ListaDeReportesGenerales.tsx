@@ -15,6 +15,7 @@ import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import UploadExcel from "../Admin/Excel";
+import { useExcelFromAPI } from '../hooks/useExcelFromAPI';
 
 interface Reporte {
   id_reporte: number;
@@ -51,6 +52,7 @@ const ListaDeReportesGenerales: React.FC = () => {
   const apiListarEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
     const apiExcelReportes = import.meta.env.VITE_API_EXCEL_REPORTES;
   const token = localStorage.getItem("token");
+  const { descargarExcelDesdeAPI, loading: excelLoading } = useExcelFromAPI();
 
   useEffect(() => {
     const u = getUsuarioFromToken();
