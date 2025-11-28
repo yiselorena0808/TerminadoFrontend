@@ -221,18 +221,24 @@ const ListaDeActividadesGenerales: React.FC = () => {
 
   const irCrear = () => navigate("/nav/CrearActividadLudicaSA");
 
-  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
-  const descargarExcel = () => {
-    try {
-      setExcelLoading(true);
+const descargarExcel = () => {
+  try {
+    setExcelLoading(true);
 
-      if (actividades.length === 0) {
-        alert("No hay actividades para exportar");
-        return;
-      }
+    // Usar actividadesFiltradas en lugar de actividades
+    const datosParaExportar = actividadesFiltradas.length > 0 ? actividadesFiltradas : actividades;
+    
+    if (datosParaExportar.length === 0) {
+      alert("No hay actividades para exportar");
+      return;
+    }
 
-      // Preparar datos para Excel
-      const datosExcel = actividades.map(actividad => ({
+    // Preparar datos para Excel - CORREGIDO
+    const datosExcel = datosParaExportar.map(actividad => {
+      // Obtener el nombre de la empresa correctamente
+      const nombreEmpresa = obtenerNombreEmpresa(actividad.idEmpresa);
+      
+      return {
         "ID": actividad.id,
         "Nombre Actividad": actividad.nombreActividad,
         "Usuario": actividad.nombreUsuario,
@@ -240,45 +246,46 @@ const ListaDeActividadesGenerales: React.FC = () => {
           ? new Date(actividad.fechaActividad).toLocaleDateString("es-CO")
           : "Sin fecha",
         "Descripción": actividad.descripcion || "Sin descripción",
-        "Empresa": obtenerNombreEmpresa(actividad.idEmpresa),
+        "Empresa": nombreEmpresa, // ← ESTA ES LA CORRECCIÓN
         "Fecha Creación": new Date(actividad.createdAt).toLocaleDateString("es-CO"),
         "Fecha Actualización": new Date(actividad.updatedAt).toLocaleDateString("es-CO")
-      }));
+      };
+    });
 
-      // Crear workbook y worksheet
-      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Actividades Lúdicas");
+    // Crear workbook y worksheet
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Actividades Lúdicas");
 
-      // Ajustar el ancho de las columnas
-      const colWidths = [
-        { wch: 8 },  // ID
-        { wch: 25 }, // Nombre Actividad
-        { wch: 20 }, // Usuario
-        { wch: 15 }, // Fecha Actividad
-        { wch: 40 }, // Descripción
-        { wch: 25 }, // Empresa
-        { wch: 15 }, // Fecha Creación
-        { wch: 15 }  // Fecha Actualización
-      ];
-      worksheet['!cols'] = colWidths;
+    // Ajustar el ancho de las columnas
+    const colWidths = [
+      { wch: 8 },  // ID
+      { wch: 25 }, // Nombre Actividad
+      { wch: 20 }, // Usuario
+      { wch: 15 }, // Fecha Actividad
+      { wch: 40 }, // Descripción
+      { wch: 25 }, // Empresa
+      { wch: 15 }, // Fecha Creación
+      { wch: 15 }  // Fecha Actualización
+    ];
+    worksheet['!cols'] = colWidths;
 
-      // Generar nombre del archivo con fecha
-      const fecha = new Date().toISOString().split('T')[0];
-      const fileName = `actividades_ludicas_${fecha}.xlsx`;
+    // Generar nombre del archivo con fecha
+    const fecha = new Date().toISOString().split('T')[0];
+    const fileName = `actividades_ludicas_${fecha}.xlsx`;
 
-      // Descargar archivo
-      XLSX.writeFile(workbook, fileName);
+    // Descargar archivo
+    XLSX.writeFile(workbook, fileName);
 
-      console.log("Excel de actividades generado exitosamente");
+    console.log("Excel de actividades generado exitosamente");
 
-    } catch (error) {
-      console.error("Error generando Excel:", error);
-      alert("Error al generar el archivo Excel");
-    } finally {
-      setExcelLoading(false);
-    }
-  };
+  } catch (error) {
+    console.error("Error generando Excel:", error);
+    alert("Error al generar el archivo Excel");
+  } finally {
+    setExcelLoading(false);
+  }
+};
 
   return (
     <div className="p-6">

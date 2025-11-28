@@ -23,11 +23,6 @@ interface Empresa {
   nit: string;
 }
 
-interface Producto {
-  nombre: string;
-  descripcion: string;
-}
-
 interface EPP {
   id: number;
   idEmpresa: number;
@@ -40,7 +35,7 @@ interface EPP {
   estado: boolean;
   fecha: string;
   empresa: Empresa;
-  productos: Producto[];
+  productos: string[]; // ← CAMBIADO: Ahora es array de strings
 }
 
 const ListaDeGestionEppGeneral: React.FC = () => {
@@ -89,21 +84,31 @@ const ListaDeGestionEppGeneral: React.FC = () => {
     const data = await res.json();
     let lista = Array.isArray(data) ? data : data.datos;
 
-    const mapped = lista.map((item: any) => ({
-      id: item.id,
-      idEmpresa: item.idEmpresa,
-      idUsuario: item.idUsuario,
-      nombre: item.nombre,
-      apellido: item.apellido,
-      cedula: item.cedula,
-      cantidad: item.cantidad,
-      importancia: item.importancia,
-      estado: item.estado,
-      fecha: item.createdAt,
-      productos: item.productos || [],
-      empresa: item.empresa,
-    }));
+    console.log("📊 Datos del API:", lista);
 
+    const mapped = lista.map((item: any) => {
+      // Extraer los nombres de los productos del array de objetos
+      const nombresProductos = item.productos && Array.isArray(item.productos) 
+        ? item.productos.map((producto: any) => producto.nombre).filter((nombre: string) => nombre)
+        : [];
+
+      return {
+        id: item.id,
+        idEmpresa: item.idEmpresa,
+        idUsuario: item.idUsuario,
+        nombre: item.nombre,
+        apellido: item.apellido,
+        cedula: item.cedula,
+        cantidad: item.cantidad,
+        importancia: item.importancia,
+        estado: item.estado,
+        fecha: item.createdAt,
+        productos: nombresProductos, // ← AHORA ES ARRAY DE STRINGS
+        empresa: item.empresa,
+      };
+    });
+
+    console.log("📦 Datos mapeados:", mapped);
     setEpps(mapped);
   };
 
@@ -175,70 +180,81 @@ const ListaDeGestionEppGeneral: React.FC = () => {
     }
   };
 
-  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
-  const descargarExcel = () => {
-    try {
-      setExcelLoading(true);
+ const descargarExcel = () => {
+  try {
+    setExcelLoading(true);
 
-      if (epps.length === 0) {
-        alert("No hay gestiones EPP para exportar");
-        return;
+    if (epps.length === 0) {
+      console.log("No hay gestiones EPP para exportar");
+      return;
+    }
+
+    console.log("🔄 Iniciando generación de Excel...");
+    console.log("📋 Total de gestiones:", epps.length);
+
+    const datosExcel = epps.map((gestion, index) => {
+      let productosTexto = "Sin productos";
+
+      if (gestion.productos && Array.isArray(gestion.productos)) {
+        if (gestion.productos.length > 0) {
+          if (typeof gestion.productos[0] === "string") {
+            productosTexto = gestion.productos.join(", ");
+          } else if (
+            typeof gestion.productos[0] === "object" &&
+            gestion.productos[0] !== null
+          ) {
+            productosTexto = gestion.productos
+              .map((p) => p.nombre || p.Nombre || p.name || "Sin nombre")
+              .filter(Boolean)
+              .join(", ");
+          }
+        }
       }
 
-      // Preparar datos para Excel
-      const datosExcel = epps.map(gestion => ({
+      return {
+        "N°": index + 1,
         "ID": gestion.id,
-        "Nombre": gestion.nombre,
-        "Apellido": gestion.apellido,
-        "Cédula": gestion.cedula,
-        "Cantidad": gestion.cantidad,
-        "Importancia": gestion.importancia,
+        "Nombre": gestion.nombre || "No especificado",
+        "Cédula": gestion.cedula || "No especificada",
+        "Cantidad": gestion.cantidad || 0,
+        "Importancia": gestion.importancia || "No especificada",
         "Estado": gestion.estado ? "Activo" : "Inactivo",
         "Fecha Registro": formatearFecha(gestion.fecha),
-        "Empresa": gestion.empresa?.nombre || obtenerNombreEmpresa(gestion.idEmpresa),
-        "Productos": gestion.productos.map(p => p.nombre).join(", "),
-        "Dirección Empresa": gestion.empresa?.direccion || "No especificada",
-        "NIT Empresa": gestion.empresa?.nit || "No especificado"
-      }));
+        "Empresa":
+          gestion.empresa?.nombre || obtenerNombreEmpresa(gestion.idEmpresa),
+        "Productos": productosTexto,
+      };
+    });
 
-      // Crear workbook y worksheet
-      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Gestión EPP");
+    const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Gestión EPP");
 
-      // Ajustar el ancho de las columnas
-      const colWidths = [
-        { wch: 8 },   // ID
-        { wch: 15 },  // Nombre
-        { wch: 15 },  // Apellido
-        { wch: 12 },  // Cédula
-        { wch: 10 },  // Cantidad
-        { wch: 12 },  // Importancia
-        { wch: 10 },  // Estado
-        { wch: 15 },  // Fecha Registro
-        { wch: 20 },  // Empresa
-        { wch: 30 },  // Productos
-        { wch: 25 },  // Dirección Empresa
-        { wch: 15 }   // NIT Empresa
-      ];
-      worksheet['!cols'] = colWidths;
+    worksheet["!cols"] = [
+      { wch: 5 },
+      { wch: 8 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 20 },
+      { wch: 40 },
+    ];
 
-      // Generar nombre del archivo con fecha
-      const fecha = new Date().toISOString().split('T')[0];
-      const fileName = `gestion_epp_${fecha}.xlsx`;
+    const fecha = new Date().toISOString().split("T")[0];
+    const fileName = `gestion_epp_${fecha}.xlsx`;
 
-      // Descargar archivo
-      XLSX.writeFile(workbook, fileName);
+    XLSX.writeFile(workbook, fileName);
+    console.log("✅ Excel generado exitosamente");
+  } catch (error) {
+    console.error("❌ Error generando Excel:", error);
+  } finally {
+    setExcelLoading(false);
+  }
+};
 
-      console.log("Excel de gestión EPP generado exitosamente");
-
-    } catch (error) {
-      console.error("Error generando Excel:", error);
-      alert("Error al generar el archivo Excel");
-    } finally {
-      setExcelLoading(false);
-    }
-  };
 
   return (
     <div className="p-6">
@@ -378,7 +394,7 @@ const ListaDeGestionEppGeneral: React.FC = () => {
                               </div>
                             </div>
 
-                            {/* Productos */}
+                            {/* Productos - CORREGIDO */}
                             {gestion.productos.length > 0 && (
                               <div className="mb-4">
                                 <p className="text-sm font-semibold text-gray-700 mb-1">Productos:</p>
@@ -388,7 +404,7 @@ const ListaDeGestionEppGeneral: React.FC = () => {
                                       key={index}
                                       className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs"
                                     >
-                                      {producto.nombre}
+                                      {producto} {/* ← CORREGIDO: Ahora producto es string */}
                                     </span>
                                   ))}
                                   {gestion.productos.length > 3 && (

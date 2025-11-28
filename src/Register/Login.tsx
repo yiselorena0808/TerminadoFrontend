@@ -354,7 +354,7 @@ const handleFaceLogin = async () => {
           <button
             type="button"
             onClick={() => setShowCamera(true)}
-            className="w-full bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded-lg font-semibold shadow-md transition flex items-center justify-center"
+            className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-lg font-semibold shadow-md transition flex items-center justify-center"
           >
             <FaCamera className="mr-2" />
             Iniciar con Rostro
