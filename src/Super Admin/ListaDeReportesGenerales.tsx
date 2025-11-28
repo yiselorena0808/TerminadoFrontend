@@ -9,13 +9,13 @@ import {
   FaPlus,
   FaBuilding,
   FaChevronDown,
-  FaChevronUp
+  FaChevronUp,
+  FaFileExcel
 } from "react-icons/fa";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
-import UploadExcel from "../Admin/Excel";
-import { useExcelFromAPI } from '../hooks/useExcelFromAPI';
+import * as XLSX from 'xlsx';
 
 interface Reporte {
   id_reporte: number;
@@ -47,12 +47,11 @@ const ListaDeReportesGenerales: React.FC = () => {
   const [empresaAbierta, setEmpresaAbierta] = useState<number | null>(null);
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   const [busqueda, setBusqueda] = useState("");
+  const [excelLoading, setExcelLoading] = useState(false);
 
   const apiListarReportes = import.meta.env.VITE_API_REPORTESGENERALES;
   const apiListarEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
-    const apiExcelReportes = import.meta.env.VITE_API_EXCEL_REPORTES;
   const token = localStorage.getItem("token");
-  const { descargarExcelDesdeAPI, loading: excelLoading } = useExcelFromAPI();
 
   useEffect(() => {
     const u = getUsuarioFromToken();
@@ -144,6 +143,11 @@ const ListaDeReportesGenerales: React.FC = () => {
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
     doc.text("REPORTE SST", 20, 20);
+    doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
+    doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 50);
+    doc.text(`Lugar: ${reporte.lugar}`, 20, 60);
+    doc.text(`Estado: ${reporte.estado}`, 20, 70);
+    doc.text(`Descripción: ${reporte.descripcion}`, 20, 80, { maxWidth: 170 });
     doc.save(`Reporte_${reporte.id_reporte}.pdf`);
   };
 
@@ -188,52 +192,70 @@ const ListaDeReportesGenerales: React.FC = () => {
   const empresasFiltradas = empresasConReportes.filter((e) =>
     e.nombre.toLowerCase().includes(busqueda.toLowerCase())
   );
-async function descargarExcel() {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Usuario no autenticado')
-      return
+
+  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
+  const descargarExcel = () => {
+    try {
+      setExcelLoading(true);
+
+      if (listas.length === 0) {
+        alert("No hay reportes para exportar");
+        return;
+      }
+
+      // Preparar datos para Excel
+      const datosExcel = listas.map(reporte => ({
+        "ID Reporte": reporte.id_reporte,
+        "Usuario": reporte.nombre_usuario,
+        "Cargo": reporte.cargo || "No especificado",
+        "Cédula": reporte.cedula || "No especificada",
+        "Fecha": formatearFecha(reporte.fecha),
+        "Lugar": reporte.lugar,
+        "Estado": reporte.estado,
+        "Descripción": reporte.descripcion || "Sin descripción",
+        "Empresa": getNombreEmpresa(reporte.id_empresa)
+      }));
+
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Reportes SST");
+
+      // Ajustar el ancho de las columnas
+      const colWidths = [
+        { wch: 10 },  // ID Reporte
+        { wch: 20 },  // Usuario
+        { wch: 15 },  // Cargo
+        { wch: 12 },  // Cédula
+        { wch: 20 },  // Fecha
+        { wch: 15 },  // Lugar
+        { wch: 12 },  // Estado
+        { wch: 40 },  // Descripción
+        { wch: 25 }   // Empresa
+      ];
+      worksheet['!cols'] = colWidths;
+
+      // Generar nombre del archivo con fecha
+      const fecha = new Date().toISOString().split('T')[0];
+      const fileName = `reportes_sst_${fecha}.xlsx`;
+
+      // Descargar archivo
+      XLSX.writeFile(workbook, fileName);
+
+      console.log("Excel de reportes generado exitosamente");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error al generar el archivo Excel");
+    } finally {
+      setExcelLoading(false);
     }
-
-    const res = await fetch(apiExcelReportes, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
-      },
-    })
-
-    // Esto te ayuda a depurar si NO viene realmente un Excel
-    console.log('Status:', res.status)
-    console.log('Content-Type:', res.headers.get('Content-Type'))
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Respuesta de error:', errorText)
-      throw new Error(`Error HTTP ${res.status}`)
-    }
-
-    // 👇 Aquí está la clave: mantenerlo como BLOB, sin tocarlo
-    const blob = await res.blob()
-
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'reportes.xlsx' // nombre del archivo
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Error descargando Excel:', err)
-  }
-}
+  };
 
   return (
     <div className="p-6">
       {/* HEADER */}
-      <div className="flex justify-between items-center mb-6 ">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
           <FaHardHat className="text-blue-700" /> 
           Reportes por Empresa
@@ -263,12 +285,24 @@ async function descargarExcel() {
             </div>
           </div>
         </div>
-         <button
-      onClick={descargarExcel}
-      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-    >
-      📊 Excel
-    </button>
+
+        {/* BOTÓN EXCEL MEJORADO */}
+        <button
+          onClick={descargarExcel}
+          disabled={excelLoading || listas.length === 0}
+          className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+        >
+          {excelLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <FaFileExcel /> Descargar Excel
+            </>
+          )}
+        </button>
 
         {/* LISTA DE EMPRESAS CON REPORTES */}
         {listas.length === 0 ? (

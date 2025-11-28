@@ -9,12 +9,14 @@ import {
   FaSearch,
   FaChevronDown,
   FaChevronUp,
-  FaExclamationTriangle
+  FaExclamationTriangle,
+  FaFileExcel
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
+import * as XLSX from 'xlsx';
 
 // ----------- TIPOS -------------
 interface ActividadLudica {
@@ -48,10 +50,10 @@ const ListaDeActividadesGenerales: React.FC = () => {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [empresaAbierta, setEmpresaAbierta] = useState<number | null>(null);
+  const [excelLoading, setExcelLoading] = useState(false);
 
   const apiListarAct = import.meta.env.VITE_API_ACTIVIDADESGENERALES;
   const apiListarEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
-  const apiExcel= import.meta.env.VITE_API_ACTIVIDADEXCEL;
 
   // -------------------------------------------
   // 🔵 CARGAR DATOS: actividades + empresas
@@ -219,48 +221,64 @@ const ListaDeActividadesGenerales: React.FC = () => {
 
   const irCrear = () => navigate("/nav/CrearActividadLudicaSA");
 
-  async function descargarExcel() {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Usuario no autenticado')
-      return
+  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
+  const descargarExcel = () => {
+    try {
+      setExcelLoading(true);
+
+      if (actividades.length === 0) {
+        alert("No hay actividades para exportar");
+        return;
+      }
+
+      // Preparar datos para Excel
+      const datosExcel = actividades.map(actividad => ({
+        "ID": actividad.id,
+        "Nombre Actividad": actividad.nombreActividad,
+        "Usuario": actividad.nombreUsuario,
+        "Fecha Actividad": actividad.fechaActividad 
+          ? new Date(actividad.fechaActividad).toLocaleDateString("es-CO")
+          : "Sin fecha",
+        "Descripción": actividad.descripcion || "Sin descripción",
+        "Empresa": obtenerNombreEmpresa(actividad.idEmpresa),
+        "Fecha Creación": new Date(actividad.createdAt).toLocaleDateString("es-CO"),
+        "Fecha Actualización": new Date(actividad.updatedAt).toLocaleDateString("es-CO")
+      }));
+
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Actividades Lúdicas");
+
+      // Ajustar el ancho de las columnas
+      const colWidths = [
+        { wch: 8 },  // ID
+        { wch: 25 }, // Nombre Actividad
+        { wch: 20 }, // Usuario
+        { wch: 15 }, // Fecha Actividad
+        { wch: 40 }, // Descripción
+        { wch: 25 }, // Empresa
+        { wch: 15 }, // Fecha Creación
+        { wch: 15 }  // Fecha Actualización
+      ];
+      worksheet['!cols'] = colWidths;
+
+      // Generar nombre del archivo con fecha
+      const fecha = new Date().toISOString().split('T')[0];
+      const fileName = `actividades_ludicas_${fecha}.xlsx`;
+
+      // Descargar archivo
+      XLSX.writeFile(workbook, fileName);
+
+      console.log("Excel de actividades generado exitosamente");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error al generar el archivo Excel");
+    } finally {
+      setExcelLoading(false);
     }
-
-    const res = await fetch(apiExcel, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
-      },
-    })
-
-    // Esto te ayuda a depurar si NO viene realmente un Excel
-    console.log('Status:', res.status)
-    console.log('Content-Type:', res.headers.get('Content-Type'))
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Respuesta de error:', errorText)
-      throw new Error(`Error HTTP ${res.status}`)
-    }
-
-    // 👇 Aquí está la clave: mantenerlo como BLOB, sin tocarlo
-    const blob = await res.blob()
-
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'reportes.xlsx' // nombre del archivo
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Error descargando Excel:', err)
-  }
-}
-
+  };
 
   return (
     <div className="p-6">
@@ -295,12 +313,24 @@ const ListaDeActividadesGenerales: React.FC = () => {
             </div>
           </div>
         </div>
-           <button
-                  onClick={descargarExcel}
-                  className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-                >
-                  📊 Excel
-                </button>
+
+        {/* BOTÓN EXCEL MEJORADO */}
+        <button
+          onClick={descargarExcel}
+          disabled={excelLoading || actividades.length === 0}
+          className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+        >
+          {excelLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <FaFileExcel /> Descargar Excel
+            </>
+          )}
+        </button>
 
         {cargando ? (
           <div className="bg-white rounded-2xl p-8 text-center shadow-lg">

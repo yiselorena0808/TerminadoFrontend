@@ -9,9 +9,11 @@ import {
   FaPlus,
   FaUser,
   FaCalendar,
-  FaClipboardList
+  FaClipboardList,
+  FaFileExcel
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import * as XLSX from 'xlsx';
 
 // Interfaces
 interface Empresa {
@@ -48,10 +50,10 @@ const ListaDeGestionEppGeneral: React.FC = () => {
   const [epps, setEpps] = useState<EPP[]>([]);
   const [busqueda, setBusqueda] = useState("");
   const [empresaAbierta, setEmpresaAbierta] = useState<number | null>(null);
+  const [excelLoading, setExcelLoading] = useState(false);
 
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
   const apiGestiones = import.meta.env.VITE_API_LISTARGESTIONES_GENERAL;
-  const apiExcel= import.meta.env.VITE_API_EXCELGESTION;
   
   useEffect(() => {
     cargarEmpresas();
@@ -172,47 +174,71 @@ const ListaDeGestionEppGeneral: React.FC = () => {
         return "bg-gray-100 text-gray-800";
     }
   };
-  async function descargarExcel() {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Usuario no autenticado')
-      return
+
+  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
+  const descargarExcel = () => {
+    try {
+      setExcelLoading(true);
+
+      if (epps.length === 0) {
+        alert("No hay gestiones EPP para exportar");
+        return;
+      }
+
+      // Preparar datos para Excel
+      const datosExcel = epps.map(gestion => ({
+        "ID": gestion.id,
+        "Nombre": gestion.nombre,
+        "Apellido": gestion.apellido,
+        "Cédula": gestion.cedula,
+        "Cantidad": gestion.cantidad,
+        "Importancia": gestion.importancia,
+        "Estado": gestion.estado ? "Activo" : "Inactivo",
+        "Fecha Registro": formatearFecha(gestion.fecha),
+        "Empresa": gestion.empresa?.nombre || obtenerNombreEmpresa(gestion.idEmpresa),
+        "Productos": gestion.productos.map(p => p.nombre).join(", "),
+        "Dirección Empresa": gestion.empresa?.direccion || "No especificada",
+        "NIT Empresa": gestion.empresa?.nit || "No especificado"
+      }));
+
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Gestión EPP");
+
+      // Ajustar el ancho de las columnas
+      const colWidths = [
+        { wch: 8 },   // ID
+        { wch: 15 },  // Nombre
+        { wch: 15 },  // Apellido
+        { wch: 12 },  // Cédula
+        { wch: 10 },  // Cantidad
+        { wch: 12 },  // Importancia
+        { wch: 10 },  // Estado
+        { wch: 15 },  // Fecha Registro
+        { wch: 20 },  // Empresa
+        { wch: 30 },  // Productos
+        { wch: 25 },  // Dirección Empresa
+        { wch: 15 }   // NIT Empresa
+      ];
+      worksheet['!cols'] = colWidths;
+
+      // Generar nombre del archivo con fecha
+      const fecha = new Date().toISOString().split('T')[0];
+      const fileName = `gestion_epp_${fecha}.xlsx`;
+
+      // Descargar archivo
+      XLSX.writeFile(workbook, fileName);
+
+      console.log("Excel de gestión EPP generado exitosamente");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error al generar el archivo Excel");
+    } finally {
+      setExcelLoading(false);
     }
-
-    const res = await fetch(apiExcel, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
-      },
-    })
-
-    // Esto te ayuda a depurar si NO viene realmente un Excel
-    console.log('Status:', res.status)
-    console.log('Content-Type:', res.headers.get('Content-Type'))
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Respuesta de error:', errorText)
-      throw new Error(`Error HTTP ${res.status}`)
-    }
-
-    // 👇 Aquí está la clave: mantenerlo como BLOB, sin tocarlo
-    const blob = await res.blob()
-
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'reportes.xlsx' // nombre del archivo
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Error descargando Excel:', err)
-  }
-}
+  };
 
   return (
     <div className="p-6">
@@ -247,12 +273,24 @@ const ListaDeGestionEppGeneral: React.FC = () => {
             </div>
           </div>
         </div>
-         <button
-      onClick={descargarExcel}
-      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-    >
-      📊 Excel
-    </button>
+
+        {/* BOTÓN EXCEL MEJORADO */}
+        <button
+          onClick={descargarExcel}
+          disabled={excelLoading || epps.length === 0}
+          className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+        >
+          {excelLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <FaFileExcel /> Descargar Excel
+            </>
+          )}
+        </button>
 
         {/* LISTADO POR EMPRESA */}
         {epps.length === 0 ? (
