@@ -171,7 +171,7 @@ const ListarReportes: React.FC = () => {
   <div className="flex items-center gap-6">
     <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
       <FaHardHat className="text-blue-700" /> 
-      Mis Reportes SST
+      Reportes
     </h1>
 
     <div className="bg-blue-50 px-4 py-2 rounded-xl border-2 border-blue-200">
