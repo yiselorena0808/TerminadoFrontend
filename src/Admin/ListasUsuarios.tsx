@@ -13,8 +13,7 @@ import {
   FaEnvelope,
   FaIdBadge,
   FaChevronLeft,
-  FaChevronRight,
-  FaSync
+  FaChevronRight
 } from "react-icons/fa";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
 import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
@@ -55,6 +54,7 @@ const AdmUsuariosCompleto: React.FC = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const usuariosPorPagina = 5;
   const [refreshing, setRefreshing] = useState(false);
+  
 
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
