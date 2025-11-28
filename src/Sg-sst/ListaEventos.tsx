@@ -9,7 +9,6 @@ import {
   FaSearch, 
   FaCalendar, 
   FaUser, 
-  FaBuilding, 
   FaFilePdf,
   FaMusic,
   FaHashtag,
@@ -87,7 +86,6 @@ const ListaEventos: React.FC = () => {
 
     const fetchEventos = async () => {
       try {
-        // CORREGIDO: Cambiado a VITE_API_lISTARBLOG (con "l" minúscula)
         const res = await fetch(
           `${import.meta.env.VITE_API_lISTARBLOG}${usuario.id_empresa}`,
           {

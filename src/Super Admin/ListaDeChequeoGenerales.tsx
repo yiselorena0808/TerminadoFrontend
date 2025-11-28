@@ -1,22 +1,22 @@
 import React, { useEffect, useState } from "react";
 import {
   FaFilePdf,
-  FaHardHat,
   FaCarSide,
   FaSearch,
   FaPlus,
   FaBuilding,
   FaChevronDown,
   FaChevronUp,
-  FaExclamationTriangle,
   FaUser,
   FaCalendar,
-  FaTachometerAlt
+  FaTachometerAlt,
+  FaFileExcel
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
+import * as XLSX from 'xlsx';
 
 interface ListaChequeo {
   id: number;
@@ -50,10 +50,10 @@ const ListasChequeoGenerales: React.FC = () => {
   const [empresaAbierta, setEmpresaAbierta] = useState<number | null>(null);
   const [busqueda, setBusqueda] = useState("");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
+  const [excelLoading, setExcelLoading] = useState(false);
 
   const apiListar = import.meta.env.VITE_API_CHEQUEOGENERALES;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
-  const apiExcel= import.meta.env.VITE_API_EXCELCHEQUEO;
   const token = localStorage.getItem("token");
 
   // ✔ Cargar usuario desde token
@@ -172,48 +172,52 @@ const ListasChequeoGenerales: React.FC = () => {
 
   const irCrear = () => navigate("/nav/CrearListaChequeoSA");
 
-  async function descargarExcel() {
-  try {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      alert('Usuario no autenticado')
-      return
+  // ✅ NUEVA FUNCIÓN CON SHEETJS - SIN CORS
+  const descargarExcel = () => {
+    try {
+      setExcelLoading(true);
+
+      if (listas.length === 0) {
+        alert("No hay datos para exportar");
+        return;
+      }
+
+      // Preparar datos para Excel
+      const datosExcel = listas.map(item => ({
+        "ID": item.id,
+        "Usuario": item.usuario_nombre,
+        "Fecha": formatearFecha(item.fecha),
+        "Hora": item.hora,
+        "Vehículo": `${item.marca} ${item.modelo}`,
+        "Placa": item.placa,
+        "Kilometraje": `${item.kilometraje} km`,
+        "Técnico": item.tecnico,
+        "SOAT": item.soat,
+        "Observaciones": item.observaciones || "Sin observaciones",
+        "Empresa": getNombreEmpresa(item.id_empresa)
+      }));
+
+      // Crear workbook y worksheet
+      const worksheet = XLSX.utils.json_to_sheet(datosExcel);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Listas de Chequeo");
+
+      // Generar nombre del archivo con fecha
+      const fecha = new Date().toISOString().split('T')[0];
+      const fileName = `listas_chequeo_${fecha}.xlsx`;
+
+      // Descargar archivo
+      XLSX.writeFile(workbook, fileName);
+
+      console.log("Excel generado exitosamente");
+
+    } catch (error) {
+      console.error("Error generando Excel:", error);
+      alert("Error al generar el archivo Excel");
+    } finally {
+      setExcelLoading(false);
     }
-
-    const res = await fetch(apiExcel, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'ngrok-skip-browser-warning': 'true',
-      },
-    })
-
-    // Esto te ayuda a depurar si NO viene realmente un Excel
-    console.log('Status:', res.status)
-    console.log('Content-Type:', res.headers.get('Content-Type'))
-
-    if (!res.ok) {
-      const errorText = await res.text()
-      console.error('Respuesta de error:', errorText)
-      throw new Error(`Error HTTP ${res.status}`)
-    }
-
-    // 👇 Aquí está la clave: mantenerlo como BLOB, sin tocarlo
-    const blob = await res.blob()
-
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = 'chequeo.xlsx' // nombre del archivo
-    document.body.appendChild(a)
-    a.click()
-    a.remove()
-    window.URL.revokeObjectURL(url)
-  } catch (err) {
-    console.error('Error descargando Excel:', err)
-  }
-}
-
+  };
 
   return (
     <div className="p-6">
@@ -248,13 +252,24 @@ const ListasChequeoGenerales: React.FC = () => {
             </div>
           </div>
         </div>
-         <button
-      onClick={descargarExcel}
-      className="bg-blue-300 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
-    >
-      📊 Excel
-    </button>
 
+        {/* BOTÓN EXCEL MEJORADO */}
+        <button
+          onClick={descargarExcel}
+          disabled={excelLoading || listas.length === 0}
+          className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg"
+        >
+          {excelLoading ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              Generando...
+            </>
+          ) : (
+            <>
+              <FaFileExcel /> Descargar Excel
+            </>
+          )}
+        </button>
 
         {/* LISTADO POR EMPRESA */}
         {listas.length === 0 ? (
@@ -305,6 +320,7 @@ const ListasChequeoGenerales: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  
                   {/* LISTAS DE CHEQUEO DE LA EMPRESA */}
                   {abierta && (
                     <div className="p-6">

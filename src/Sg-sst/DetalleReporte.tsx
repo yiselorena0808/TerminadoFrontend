@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState} from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Fingerprint, CheckCircle, XCircle } from "lucide-react";
 import axios from "axios";
@@ -27,8 +27,8 @@ interface HuellaResult {
   resultado: string;
   score: number;
   calidad: number;
-  template?: string; // Base64 de la huella capturada
-  image?: string; // Imagen de la huella (si está disponible)
+  template?: string;
+  image?: string; 
 }
 
 const DetalleReporte: React.FC = () => {
@@ -52,9 +52,6 @@ const DetalleReporte: React.FC = () => {
     return d.toLocaleString("es-CO");
   };
 
-  // ======================================================
-  //   VERIFICAR HUELLA CON SWEETALERTS
-  // ======================================================
   const verificarHuella = async () => {
     if (!form.id_usuario) {
       Swal.fire({
@@ -88,7 +85,6 @@ const DetalleReporte: React.FC = () => {
       const resultado: HuellaResult = res.data;
       setResultadoVerificar(resultado);
 
-      // Simular imagen de huella (si tu backend no la envía, puedes generar una placeholder)
       if (resultado.image) {
         setHuellaImage(resultado.image);
       } else {
@@ -198,9 +194,6 @@ const DetalleReporte: React.FC = () => {
     setLoading(false);
   };
 
-  // ======================================================
-  //   ACTUALIZAR ESTADO DEL REPORTE
-  // ======================================================
   const actualizarEstadoReporte = async () => {
     const token = localStorage.getItem("token");
     
@@ -262,13 +255,6 @@ const DetalleReporte: React.FC = () => {
     }
   };
 
-  const getColor = (valor: number | null) => {
-    if (!valor) return "text-gray-600";
-    if (valor >= 80) return "text-green-600";
-    if (valor >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'Aprobado': return 'bg-green-100 text-green-800';
@@ -278,7 +264,6 @@ const DetalleReporte: React.FC = () => {
     }
   };
 
-  // ======================================================
   return (
     <div>
       <div className="absolute inset-0 backdrop-blur-sm bg-blue-50/30"></div>
@@ -329,13 +314,13 @@ const DetalleReporte: React.FC = () => {
                 <div className="flex gap-2 mt-4">
                   {form.imagen && (
                     <a href={form.imagen} target="_blank" rel="noopener noreferrer" 
-                       className="inline-flex items-center gap-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
                       📷 Ver Imagen
                     </a>
                   )}
                   {form.archivos && (
                     <a href={form.archivos} target="_blank" rel="noopener noreferrer"
-                       className="inline-flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
+                        className="inline-flex items-center gap-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                       📄 Ver Archivo
                     </a>
                   )}
@@ -389,16 +374,16 @@ const DetalleReporte: React.FC = () => {
 
             {/* VISUALIZACIÓN DE HUELLA */}
             <div className="space-y-4">
-              {huellaImage && (
-                <div className="text-center">
-                  <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
-                  <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
-                    <img 
-                      src={huellaImage} 
-                      alt="Huella digital capturada"
-                      className="mx-auto max-w-full h-32 object-contain rounded-lg"
-                    />
-                  </div>
+              | {huellaImage && (
+              <div className="text-center">
+                <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
+                <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
+                  <img
+                    src={huellaImage.startsWith("data:") ? huellaImage : `data:image/png;base64,${huellaImage}`}
+                    alt="Huella digital capturada"
+                    className="mx-auto max-w-full h-40 object-contain rounded-lg"
+                  />
+                </div>
                 </div>
               )}
 

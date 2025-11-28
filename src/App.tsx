@@ -5,8 +5,8 @@ import Login from "./Register/Login";
 import Registro from "./Register/Registro";
 import RegistroArea from "./Register/RegistroArea";
 import RegistroEmpresa from "./Register/RegistroEmpresa";
-import Correo from "./Register/Correo";
-import ResetPasswordForm from "./Register/Recuperar";
+import ForgotPassword from "./Register/ForgotPassword";
+import ResetPasswordForm from "./Register/ResetPasswordForm";
 import Inicio from "./Welcome.tsx/Inicio"
 // --- Navbar principal ---
 import Navbar from "./Navbar";
@@ -83,8 +83,8 @@ function App() {
         <Route path="/registro" element={<Registro />} />
         <Route path="/registroArea" element={<RegistroArea />} />
         <Route path="/registroEmpresa" element={<RegistroEmpresa />} />
-        <Route path="/forgot" element={<Correo />} />
-        <Route path="/reset" element={<ResetPasswordForm />} />
+        <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>} />
+        <Route path="/reset-password" element={<ResetPasswordForm />} />
 
         {/* PANEL PRINCIPAL con Navbar */}
         <Route path="/nav" element={<Navbar />}>

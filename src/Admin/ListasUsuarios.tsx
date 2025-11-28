@@ -1,45 +1,28 @@
-import React, { useEffect, useState } from "react";
-import Swal from "sweetalert2";
-import {
-  FaUsers,
-  FaPlus,
-  FaSearch,
-  FaFileExcel,
-  FaEdit,
-  FaTrash,
-  FaHashtag,
-  FaBuilding,
-  FaUserTie,
-  FaEnvelope,
-  FaIdBadge,
-  FaChevronLeft,
-  FaChevronRight
-} from "react-icons/fa";
-import { getUsuarioFromToken, type UsuarioToken } from "../utils/auth";
-import ActualizarUsuarioModal from "../Admin/Actualizarusuarios";
-import UploadExcel from "../Admin/Excel";
-import RegistrarUsuario from "./CrearUsuario";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import ActualizarUsuarioModal from "./Actualizarusuarios";
+const API_BASE = "http://127.0.0.1:8000";
+
 interface Empresa {
-  idEmpresa: number;
+  id_empresa: number;
   nombre: string;
+  direccion: string;
 }
 
 interface Area {
-  idArea: number;
+  id_area: number;
+  nombre_area: string;
   descripcion: string;
 }
 
-export interface Usuario {
+interface Usuario {
   id: number;
-  idEmpresa: number;
   idArea: number;
   nombre: string;
   apellido: string;
   nombreUsuario: string;
   correoElectronico: string;
   cargo: string;
-  createdAt: string;
-  updatedAt: string;
   empresa?: Empresa;
   area?: Area;
 }
@@ -54,7 +37,6 @@ const AdmUsuariosCompleto: React.FC = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const usuariosPorPagina = 5;
   const [refreshing, setRefreshing] = useState(false);
-  
 
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
@@ -124,455 +106,302 @@ const AdmUsuariosCompleto: React.FC = () => {
         showToast("success", "Lista actualizada");
       }
     } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      setUsuarios([]);
-      if (showLoading) {
-        showToast("error", "Error cargando usuarios");
-      }
+      console.error(error);
+      alert("Error guardando la huella: " + error.response?.data?.detail || error.message);
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   };
 
-  // 🔹 AUTORECARGA CADA 30 SEGUNDOS
-  useEffect(() => {
-    if (!usuarioLogueado) return;
-
-    obtenerUsuarios(usuarioLogueado.id_empresa);
-
-    // Configurar intervalo de autorecarga
-    const interval = setInterval(() => {
-      obtenerUsuarios(usuarioLogueado.id_empresa, false);
-    }, 30000); // 30 segundos
-
-    // Limpiar intervalo al desmontar
-    return () => clearInterval(interval);
-  }, [usuarioLogueado]);
-
-  // 🔹 RECARGAR MANUALMENTE
-  const recargarManual = () => {
-    obtenerUsuarios(usuarioLogueado?.id_empresa, false);
-  };
-
-  useEffect(() => {
-    const u = getUsuarioFromToken();
-    if (u) {
-      setUsuarioLogueado(u);
-    }
-  }, []);
-
-  const eliminarUsuario = async (id: number) => {
-    const confirm = await Swal.fire({
-      title: "¿Estás seguro?",
-      text: "¡No podrás revertir esta acción!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Sí, eliminar",
-      cancelButtonText: "Cancelar",
-      confirmButtonColor: "#d33",
-      cancelButtonColor: "#3085d6",
-      background: "#ffffff",
-      color: "#1f2937",
-    });
-
-    if (!confirm.isConfirmed) return;
-
-    const token = localStorage.getItem("token");
-    if (!token) return;
-
+  const handleVerificar = async () => {
+    if (!idUsuario) return alert("Ingresa el ID del usuario");
+    setLoading(true);
+    setMensajeGuardar("");
+    setResultadoVerificar("");
     try {
-      await fetch(`${apiEliminar}${id}`, {
-        method: "DELETE",
-        headers: { 
-          'ngrok-skip-browser-warning': 'true',
-          Authorization: `Bearer ${token}` 
-        },
-      });
-      setUsuarios((prev) => prev.filter((u) => u.id !== id));
-      showToast("success", "Usuario eliminado correctamente");
+      const res = await axios.post(`${API_BASE}/huella/verificar`, { id_usuario: idUsuario });
+      setResultadoVerificar(res.data.resultado);
+      setScore(res.data.score);
+      setCalidad(res.data.calidad);
     } catch (error) {
-      console.error("No se pudo eliminar el usuario:", error);
-      showToast("error", "No se pudo eliminar el usuario");
+      console.error(error);
+      alert("Error verificando la huella: " + error.response?.data?.detail || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const actualizarUsuario = (usuarioActualizado: Usuario) => {
-    setUsuarios((prev) =>
-      prev.map((u) => (u.id === usuarioActualizado.id ? usuarioActualizado : u))
+  const getScoreColor = (score) => {
+    if (!score) return "text-gray-600";
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getCalidadColor = (calidad) => {
+    if (!calidad) return "text-gray-600";
+    if (calidad >= 80) return "text-green-600";
+    if (calidad >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  // 🔹 VERIFICAR SI EL USUARIO ES SG-SST
+  const esSGSST = () => {
+    return usuario?.cargo === "SG-SST";
+  };
+
+  if (!usuario) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando información del usuario...</p>
+        </div>
+      </div>
     );
-    setUsuarioAEditar(null);
-    showToast("success", "Usuario actualizado correctamente");
-  };
-
-  // 🔹 AGREGAR NUEVO USUARIO SIN RECARGAR
-  const agregarNuevoUsuario = (nuevoUsuario: Usuario) => {
-    setUsuarios((prev) => [nuevoUsuario, ...prev]);
-    setMostrarModalCrear(false);
-    showToast("success", "Usuario creado correctamente");
-  };
-
-  // 🔹 FILTRAR USUARIOS SOLO DE LA MISMA EMPRESA Y APLICAR BÚSQUEDA
-  const usuariosFiltrados = usuarios
-    .filter(usuario => 
-      Number(usuario.idEmpresa) === Number(usuarioLogueado?.id_empresa)
-    )
-    .filter((u) =>
-      u.nombre.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.apellido.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.nombreUsuario.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.correoElectronico.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.cargo.toLowerCase().includes(filtro.toLowerCase()) ||
-      u.id.toString().includes(filtro)
-    );
-
-  // 🔹 PAGINACIÓN
-  const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
-  const indiceInicial = (paginaActual - 1) * usuariosPorPagina;
-  const indiceFinal = indiceInicial + usuariosPorPagina;
-  const usuariosPaginados = usuariosFiltrados.slice(indiceInicial, indiceFinal);
-
-  const cambiarPagina = (nuevaPagina: number) => {
-    if (nuevaPagina > 0 && nuevaPagina <= totalPaginas) {
-      setPaginaActual(nuevaPagina);
-    }
-  };
-
-  // Formatear fecha
-  const formatearFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "short",
-      day: "numeric"
-    });
-  };
+  }
 
   return (
-    <div className="p-6">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-6">
-        <div className="flex items-center gap-4">
-          <h1 className="text-4xl font-bold text-blue-700 flex items-center gap-3">
-            <div className="bg-blue-600 p-3 rounded-2xl">
-              <FaUsers className="text-white text-2xl" />
+    <div>
+      <div className="max-w-4xl mx-auto space-y-8">
+        
+        {/* Tarjeta de Perfil del Usuario */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white relative">
+            <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
+              <img
+                src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                className="w-32 h-32 rounded-full border-4 border-white shadow-2xl bg-white"
+                alt="Avatar"
+              />
             </div>
-            Administración de Usuarios
-          </h1>
-        </div>
-        <button
-          onClick={() => setMostrarModalCrear(true)}
-          className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-semibold transition-all duration-300 shadow-lg hover:shadow-xl"
-        >
-          <FaPlus className="text-lg" /> Nuevo Usuario
-        </button>
-      </div>
-
-      {/* BUSCADOR */}
-      <div className="bg-white rounded-2xl p-6 shadow-lg mb-6">
-        <div className="relative">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Buscar usuarios por nombre, apellido, usuario, correo, cargo o ID..."
-              className="w-full px-4 py-4 pl-14 border-2 border-blue-200 rounded-2xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-lg"
-              value={filtro}
-              onChange={(e) => setFiltro(e.target.value)}
-            />
-            <FaSearch className="absolute left-5 top-1/2 transform -translate-y-1/2 text-blue-400 text-xl" />
+            <h2 className="text-3xl font-bold text-center">Perfil de Usuario</h2>
+            <p className="text-blue-100 text-center mt-2">Sistema de Gestión Biométrica</p>
           </div>
-        </div>
-      </div>
 
-      {/* CONTADOR Y CARGA MASIVA - MÁS COMPACTO */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
-        {/* CONTADOR MÁS PEQUEÑO */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl p-4 text-white shadow-lg">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-bold">{usuariosFiltrados.length}</h3>
-              <p className="text-blue-100 text-sm">Usuarios</p>
-            </div>
-            <div className="bg-white/20 p-2 rounded-lg">
-              <FaHashtag className="text-lg" />
-            </div>
-          </div>
-        </div>
-
-        {/* CARGA MASIVA */}
-        <div className="lg:col-span-3 bg-white rounded-xl p-4 shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-green-500 to-green-600 p-2 rounded-lg">
-              <FaFileExcel className="text-white" />
-            </div>
-            <div className="flex-1">
-              <h2 className="text-lg font-bold text-gray-900">
-                Carga Masiva desde Excel
-              </h2>
-              <p className="text-gray-600 text-xs">
-                Registra múltiples usuarios a la vez mediante un archivo Excel
-              </p>
-            </div>
-            <UploadExcel
-              apiBulk={apiBulk}
-              onUsuariosCreados={() => obtenerUsuarios(usuarioLogueado?.id_empresa, false)}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* TABLA DE USUARIOS */}
-      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-        {loading ? (
-          <div className="p-12 text-center">
-            <div className="animate-pulse">
-              <div className="bg-gradient-to-r from-gray-100 to-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-                <FaUsers className="text-4xl text-gray-400" />
+          {/* Información del Usuario */}
+          <div className="mt-20 px-6 pb-6">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-gray-800">{usuario.nombre} {usuario.apellido}</h2>
+              <p className="text-gray-500 text-lg">@{usuario.nombreUsuario}</p>
+              <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2 ${
+                esSGSST() 
+                  ? "bg-green-100 text-green-800 border border-green-200" 
+                  : "bg-blue-100 text-blue-800 border border-blue-200"
+              }`}>
+                {usuario.cargo}
               </div>
-              <h3 className="text-2xl font-bold text-gray-600 mb-3">
-                Cargando usuarios...
-              </h3>
-            </div>
-          </div>
-        ) : usuariosFiltrados.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="bg-gradient-to-r from-gray-100 to-gray-200 w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-6">
-              <FaUsers className="text-4xl text-gray-400" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-600 mb-3">
-              No hay usuarios
-            </h3>
-            <p className="text-gray-500 text-lg mb-6">
-              {usuarios.length === 0 
-                ? "Comienza registrando el primer usuario de tu empresa" 
-                : "No se encontraron usuarios con los criterios de búsqueda"}
-            </p>
-            <button
-              onClick={() => setMostrarModalCrear(true)}
-              className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 shadow-lg"
-            >
-              Crear Primer Usuario
-            </button>
-          </div>
-        ) : (
-          <>
-            {/* TABLA */}
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="bg-gradient-to-r from-blue-600 to-blue-700 text-white">
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      <div className="flex items-center gap-2">
-                        <FaIdBadge />
-                        ID
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      <div className="flex items-center gap-2">
-                        <FaUserTie />
-                        Información Personal
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      <div className="flex items-center gap-2">
-                        <FaEnvelope />
-                        Contacto
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      <div className="flex items-center gap-2">
-                        <FaBuilding />
-                        Empresa y Área
-                      </div>
-                    </th>
-                    <th className="px-4 py-3 text-left font-semibold text-sm">
-                      Fecha Registro
-                    </th>
-                    <th className="px-4 py-3 text-center font-semibold text-sm">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {usuariosPaginados.map((usuario, index) => (
-                    <tr 
-                      key={usuario.id} 
-                      className={`hover:bg-blue-50 transition-colors duration-300 ${
-                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
-                      }`}
-                    >
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-bold text-sm">
-                            #{usuario.id}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div>
-                          <div className="font-semibold text-gray-900">
-                            {usuario.nombre} {usuario.apellido}
-                          </div>
-                          <div className="text-gray-600 mt-1">
-                            <span className="bg-gray-100 px-2 py-1 rounded-md text-xs">
-                              {usuario.cargo}
-                            </span>
-                          </div>
-                          <div className="text-gray-500 text-xs mt-1">
-                            @{usuario.nombreUsuario}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-gray-700 text-sm">
-                          <div className="flex items-center gap-2">
-                            <FaEnvelope className="text-purple-500 text-xs" />
-                            {usuario.correoElectronico}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <FaBuilding className="text-blue-500 text-xs" />
-                            <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded-md text-xs">
-                              {usuario.empresa?.nombre || "Mi Empresa"}
-                            </span>
-                          </div>
-                          {usuario.area && (
-                            <div className="bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs inline-block">
-                              {usuario.area.descripcion}
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="text-gray-600 text-xs">
-                          <div className="font-medium">Creado:</div>
-                          <div>{formatearFecha(usuario.createdAt)}</div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-center gap-2">
-                          <button
-                            onClick={() => setUsuarioAEditar(usuario)}
-                            className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white p-2 rounded-lg transition-all duration-300 shadow hover:shadow-md"
-                            title="Editar usuario"
-                          >
-                            <FaEdit size={14} />
-                          </button>
-                          <button
-                            onClick={() => eliminarUsuario(usuario.id)}
-                            className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-2 rounded-lg transition-all duration-300 shadow hover:shadow-md"
-                            title="Eliminar usuario"
-                          >
-                            <FaTrash size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
 
-            {/* PAGINACIÓN */}
-            {totalPaginas > 1 && (
-              <div className="bg-gray-50 px-4 py-3 border-t border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="text-gray-600 text-xs">
-                    Mostrando {indiceInicial + 1}-{Math.min(indiceFinal, usuariosFiltrados.length)} de {usuariosFiltrados.length} usuarios
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div className="space-y-4">
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <label className="block text-gray-600 font-semibold mb-2">Información Personal</label>
+                  <div className="space-y-2">
+                    <p><span className="font-medium text-gray-700">Correo:</span> {usuario.correoElectronico}</p>
+                    <p><span className="font-medium text-gray-700">Cargo:</span> {usuario.cargo}</p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => cambiarPagina(paginaActual - 1)}
-                      disabled={paginaActual === 1}
-                      className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-2 rounded-lg transition-all duration-300 shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <FaChevronLeft size={12} />
-                    </button>
-                    
-                    {[...Array(totalPaginas)].map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => cambiarPagina(i + 1)}
-                        className={`px-3 py-1 rounded-lg font-semibold transition-all duration-300 text-xs ${
-                          paginaActual === i + 1
-                            ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                        }`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                    
-                    <button
-                      onClick={() => cambiarPagina(paginaActual + 1)}
-                      disabled={paginaActual === totalPaginas}
-                      className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white p-2 rounded-lg transition-all duration-300 shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <FaChevronRight size={12} />
-                    </button>
+                </div>
+                
+                <div className="bg-gray-50 p-4 rounded-xl">
+                  <label className="block text-gray-600 font-semibold mb-2">Información Laboral</label>
+                  <div className="space-y-2">
+                    <p><span className="font-medium text-gray-700">Empresa:</span> {usuario.empresa?.nombre || "No asignada"}</p>
+                    <p><span className="font-medium text-gray-700">Área:</span> {usuario.area?.nombre_area || "No asignada"}</p>
+                    <p><span className="font-medium text-gray-700">ID Usuario:</span> {usuario.id}</p>
                   </div>
                 </div>
               </div>
+
+              {/* 🔹 GESTIÓN DE HUELLAS - SOLO PARA SG-SST */}
+              {esSGSST() ? (
+                <div className="bg-gray-50 p-6 rounded-xl">
+                  <label className="block text-gray-600 font-semibold mb-4 text-lg">Gestión de Huellas Digitales</label>
+                  
+                  <div className="space-y-4">
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                        </svg>
+                      </div>
+                      <input
+                        type="number"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        placeholder="ID del usuario"
+                        value={idUsuario}
+                        onChange={(e) => setIdUsuario(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                      <button
+                        onClick={handleGuardar}
+                        disabled={loading}
+                        className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {loading ? (
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                          </svg>
+                        )}
+                        {loading ? "Procesando..." : "Guardar Huella"}
+                      </button>
+                      
+                      <button
+                        onClick={handleVerificar}
+                        disabled={loading}
+                        className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white py-3 px-4 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                      >
+                        {loading ? (
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        ) : (
+                          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                        )}
+                        {loading ? "Verificando..." : "Verificar Huella"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // 🔹 CONTENIDO ALTERNATIVO PARA USUARIOS QUE NO SON SG-SST
+                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-dashed border-blue-200">
+                  <div className="text-center">
+                    <div className="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Perfil de Usuario</h3>
+                    <p className="text-gray-500 text-sm mb-4">
+                      Tu perfil está completo. Para gestionar huellas digitales, contacta al área de SG-SST.
+                    </p>
+                    <div className="bg-white rounded-lg p-3 border border-blue-100">
+                      <p className="text-blue-700 text-xs font-medium">
+                        <strong>Tu rol:</strong> {usuario.cargo}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 🔹 RESULTADOS DE HUELLAS - SOLO PARA SG-SST */}
+            {esSGSST() && (
+              <div className="space-y-4 mb-6">
+                {/* Resultado Guardar */}
+                {mensajeGuardar && (
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-blue-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <div>
+                        <strong className="text-blue-800 block mb-1">{mensajeGuardar}</strong>
+                        {urlHuella && (
+                          <div className="mt-2">
+                            <span className="text-blue-700 text-sm">URL de la huella:</span>
+                            <a 
+                              href={urlHuella} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block text-blue-600 hover:text-blue-800 underline text-sm break-all mt-1"
+                            >
+                              {urlHuella}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Resultado Verificar */}
+                {resultadoVerificar && (
+                  <div className="bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg">
+                    <div className="flex items-start">
+                      <svg className="w-5 h-5 text-green-500 mt-0.5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div className="w-full">
+                        <strong className="text-green-800 block mb-2">Resultado de Verificación</strong>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                          <div className="bg-white p-3 rounded-lg shadow-sm">
+                            <div className="text-gray-600 font-medium">Estado</div>
+                            <div className={`font-semibold ${resultadoVerificar === "Coincide" ? "text-green-600" : "text-red-600"}`}>
+                              {resultadoVerificar}
+                            </div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg shadow-sm">
+                            <div className="text-gray-600 font-medium">Score</div>
+                            <div className={`font-semibold ${getScoreColor(score)}`}>
+                              {score !== null ? `${score}%` : "N/A"}
+                            </div>
+                          </div>
+                          <div className="bg-white p-3 rounded-lg shadow-sm">
+                            <div className="text-gray-600 font-medium">Calidad</div>
+                            <div className={`font-semibold ${getCalidadColor(calidad)}`}>
+                              {calidad !== null ? `${calidad}%` : "N/A"}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </>
-        )}
+
+            {/* 🔹 LOADING INDICATOR - SOLO PARA SG-SST */}
+            {esSGSST() && loading && (
+              <div className="text-center">
+                <div className="inline-flex items-center px-4 py-2 bg-gray-100 rounded-full">
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span className="text-gray-700 font-medium">Procesando huella digital...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Botón Editar Perfil */}
+            <div className="text-center">
+              <button
+                onClick={() => setModalAbierto(true)}
+                className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white py-3 px-8 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all duration-200 inline-flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Editar Perfil
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* MODALES */}
-      {usuarioAEditar && (
+      {/* Modal de Actualización */}
+      {modalAbierto && (
         <ActualizarUsuarioModal
-          usuario={usuarioAEditar}
-          onClose={() => setUsuarioAEditar(null)}
-          onUpdate={actualizarUsuario}
-        />
-      )}
-
-      {mostrarModalCrear && usuarioLogueado && (
-        <RegistrarUsuario
-          empresaSeleccionada={{
-            idEmpresa: usuarioLogueado.id_empresa,
-            nombre: "Mi Empresa" // Puedes obtener el nombre real de la empresa si lo tienes
-          }}
-          areasFiltradas={[]} // Puedes cargar las áreas si las necesitas
-          loading={false}
-          onClose={() => setMostrarModalCrear(false)}
-          onSubmit={async (e: React.FormEvent) => {
-            e.preventDefault();
-            // Aquí manejarías el envío del formulario
-            // Por ahora simulamos la creación exitosa
-            const nuevoUsuario: Usuario = {
-              id: Math.max(...usuarios.map(u => u.id), 0) + 1,
-              idEmpresa: usuarioLogueado.id_empresa,
-              idArea: 1,
-              nombre: "Nuevo",
-              apellido: "Usuario",
-              nombreUsuario: "nuevo.usuario",
-              correoElectronico: "nuevo@empresa.com",
-              cargo: "Nuevo Cargo",
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              empresa: { idEmpresa: usuarioLogueado.id_empresa, nombre: "Mi Empresa" }
-            };
-            agregarNuevoUsuario(nuevoUsuario);
-          }}
-          usuarioForm={{
-            id_empresa: usuarioLogueado.id_empresa.toString(),
-            id_area: "",
-            nombre: "",
-            apellido: "",
-            nombre_usuario: "",
-            correo_electronico: "",
-            cargo: "",
-            contrasena: "",
-            confirmacion: ""
-          }}
-          onFormChange={() => {}}
+          usuario={usuario}
+          onClose={() => setModalAbierto(false)}
+          onUpdate={handleActualizar}
         />
       )}
     </div>
   );
 };
 
-export default AdmUsuariosCompleto;
+export default Perfil;
