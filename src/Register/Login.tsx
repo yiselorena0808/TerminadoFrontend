@@ -1,15 +1,141 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { FaEnvelope, FaLock } from "react-icons/fa";
+import { FaEnvelope, FaLock, FaCamera } from "react-icons/fa";
+import Webcam from "react-webcam";
 import logo from "../assets/logosst.jpg";
 
 const Login: React.FC = () => {
   const [correo_electronico, setCorreo] = useState("");
   const [contrasena, setContrasena] = useState("");
+  const [showCamera, setShowCamera] = useState(false);
+  const [loadingFace, setLoadingFace] = useState(false);
   const navigate = useNavigate();
   const apiLogin = import.meta.env.VITE_API_LOGIN;
+  
+  // 🔹 NUEVO: API para Face ID
+  const API_BASE = "http://127.0.0.1:8000";
 
+  // 🔹 NUEVO: Referencia para la cámara
+  const webcamRef = useRef<Webcam>(null);
+
+  // 🔹 NUEVO: Configuración de la cámara
+  const videoConstraints = {
+    width: 300,
+    height: 300,
+    facingMode: "user",
+  };
+
+  // 🔹 NUEVA FUNCIÓN: Capturar imagen de la cámara
+  const captureFaceImage = (): string | null => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    return imageSrc || null;
+  };
+
+ // 🔹 NUEVA FUNCIÓN: Login con reconocimiento facial
+const handleFaceLogin = async () => {
+  const imageSrc = captureFaceImage();
+  if (!imageSrc) {
+    Swal.fire({ icon: "error", title: "Error", text: "No se pudo capturar la imagen" });
+    return;
+  }
+
+  setLoadingFace(true);
+  try {
+    console.log("📸 Imagen capturada, convirtiendo a Blob...");
+    
+    const base64Response = await fetch(imageSrc);
+    const blob = await base64Response.blob();
+    
+    const formData = new FormData();
+    formData.append('file', blob, "face-login.jpg");
+
+    console.log('📤 Enviando verificación facial a FastAPI...');
+    
+    // 1. Primero verificar el rostro con FastAPI (LOCAL)
+    const API_FACE = "http://127.0.0.1:8000"; // Tu microservicio FastAPI
+    const faceResponse = await fetch(`${API_FACE}/face/login`, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!faceResponse.ok) {
+      const errorText = await faceResponse.text();
+      throw new Error(`Error en reconocimiento: ${errorText}`);
+    }
+
+    const faceData = await faceResponse.json();
+    console.log('🔑 Respuesta de reconocimiento facial:', faceData);
+
+    if (faceData.authenticated && faceData.id_usuario) {
+      console.log('✅ Rostro reconocido, ID usuario:', faceData.id_usuario);
+      
+      // 2. Ahora obtener el token JWT válido de Adonis (NGROK)
+      console.log('🔐 Obteniendo token JWT de Adonis...');
+      
+      // 🔹 CORREGIDO: Usar la variable de entorno para AdonisJS
+      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/face-login`, { 
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true"
+        },
+        body: JSON.stringify({ 
+          usuario_id: faceData.id_usuario 
+        }),
+      });
+
+      console.log('📡 Respuesta login facial Adonis:', loginResponse.status);
+
+      if (!loginResponse.ok) {
+        const errorText = await loginResponse.text();
+        throw new Error(`Error en login: ${errorText}`);
+      }
+
+      const loginData = await loginResponse.json();
+      console.log('🎉 Login facial exitoso:', loginData);
+
+      // 🔥 GUARDAR TOKEN JWT VÁLIDO
+      localStorage.setItem("token", loginData.token);
+      localStorage.setItem("usuario", JSON.stringify(loginData.user));
+      localStorage.setItem("auth", "true");
+      
+      if (loginData.user?.id_empresa) {
+        localStorage.setItem("idEmpresa", loginData.user.id_empresa.toString());
+      }
+
+      Swal.fire({
+        icon: "success",
+        title: "Login Facial Exitoso",
+        text: `Bienvenido ${loginData.user.nombre} ${loginData.user.apellido || ''}`,
+        timer: 1800,
+        showConfirmButton: false,
+      }).then(() => {
+        const rutaInicial = obtenerRutaSegunRol(loginData.user.cargo);
+        navigate(rutaInicial, { replace: true });
+      });
+
+    } else {
+      Swal.fire({ 
+        icon: "error", 
+        title: "Rostro no reconocido", 
+        text: faceData.message || "No se pudo identificar tu rostro." 
+      });
+    }
+  } catch (error: any) {
+    console.error('❌ Error en login facial:', error);
+    Swal.fire({ 
+      icon: "error", 
+      title: "Error", 
+      text: error.message || "Error en el reconocimiento facial" 
+    });
+  } finally {
+    setLoadingFace(false);
+    setShowCamera(false);
+  }
+};
+
+  // 🔹 FUNCIÓN ORIGINAL: Login tradicional (sin cambios)
   const Enviar = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -32,33 +158,32 @@ const Login: React.FC = () => {
       localStorage.setItem("usuario", JSON.stringify(data.user));
       localStorage.setItem("auth", "true");
       if (data.user?.idEmpresa) {
-  localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
-}
-    const obtenerRutaSegunRol = (cargo: string) => {
-      if (["superadmin", "SuperAdmin"].includes(cargo)) {
-        return "/nav/admEmpresas";
+        localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
       }
-      if (["administrador", "Administrador"].includes(cargo)) {
-        return "/nav/Admusuarios";
-      }
-      if (["SG-SST", "sg-sst"].includes(cargo)) {
-        return "/nav/inicio";
-      }
-      return "/nav/inicioUser";
-    };
 
+      const obtenerRutaSegunRol = (cargo: string) => {
+        if (["superadmin", "SuperAdmin"].includes(cargo)) {
+          return "/nav/admEmpresas";
+        }
+        if (["administrador", "Administrador"].includes(cargo)) {
+          return "/nav/Admusuarios";
+        }
+        if (["SG-SST", "sg-sst"].includes(cargo)) {
+          return "/nav/inicio";
+        }
+        return "/nav/inicioUser";
+      };
 
-
-     Swal.fire({
-      icon: "success",
-      title: "Inicio de sesión exitoso",
-      text: "Bienvenido al Sistema SST",
-      timer: 1800,
-      showConfirmButton: false,
-    }).then(() => {
-      const rutaInicial = obtenerRutaSegunRol(data.user.cargo);
-      navigate(rutaInicial, { replace: true });
-    });
+      Swal.fire({
+        icon: "success",
+        title: "Inicio de sesión exitoso",
+        text: "Bienvenido al Sistema SST",
+        timer: 1800,
+        showConfirmButton: false,
+      }).then(() => {
+        const rutaInicial = obtenerRutaSegunRol(data.user.cargo);
+        navigate(rutaInicial, { replace: true });
+      });
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -69,10 +194,85 @@ const Login: React.FC = () => {
     }
   };
 
+  // 🔹 NUEVA FUNCIÓN: Obtener ruta según rol (extraída para reutilizar)
+  const obtenerRutaSegunRol = (cargo: string) => {
+    if (["superadmin", "SuperAdmin"].includes(cargo)) {
+      return "/nav/admEmpresas";
+    }
+    if (["administrador", "Administrador"].includes(cargo)) {
+      return "/nav/Admusuarios";
+    }
+    if (["SG-SST", "sg-sst"].includes(cargo)) {
+      return "/nav/inicio";
+    }
+    return "/nav/inicioUser";
+  };
+
   return (
-    <div
-      className="w-screen h-screen flex items-center justify-center to-white"
-    >
+    <div className="w-screen h-screen flex items-center justify-center to-white">
+      
+      {/* 🔹 NUEVO: Modal de Cámara para Face ID */}
+      {showCamera && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Iniciar Sesión con Rostro
+              </h3>
+              <button
+                onClick={() => setShowCamera(false)}
+                className="text-gray-500 hover:text-gray-700"
+                disabled={loadingFace}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <Webcam
+              audio={false}
+              height={300}
+              screenshotFormat="image/jpeg"
+              width={300}
+              ref={webcamRef}
+              videoConstraints={videoConstraints}
+              className="rounded-lg w-full"
+            />
+            
+            <div className="flex gap-3 mt-4">
+              <button
+                onClick={handleFaceLogin}
+                disabled={loadingFace}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center"
+              >
+                {loadingFace ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Verificando...
+                  </>
+                ) : (
+                  <>
+                    <FaCamera className="mr-2" />
+                    Iniciar Sesión
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => setShowCamera(false)}
+                disabled={loadingFace}
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg font-semibold disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tarjeta de login */}
       <div
         className="bg-white/80 backdrop-blur-md border border-gray-200 
@@ -135,12 +335,29 @@ const Login: React.FC = () => {
             </div>
           </div>
 
-          {/* Botón */}
+          {/* Botón Login Tradicional */}
           <button
             type="submit"
             className="w-full bg-blue-600 hover:bg-blue-400 text-white py-2.5 rounded-lg font-semibold shadow-md transition"
           >
             Iniciar Sesión
+          </button>
+
+          {/* 🔹 NUEVO: Separador */}
+          <div className="relative flex items-center my-4">
+            <div className="flex-grow border-t border-gray-300"></div>
+            <span className="flex-shrink mx-4 text-gray-500 text-sm">o</span>
+            <div className="flex-grow border-t border-gray-300"></div>
+          </div>
+
+          {/* 🔹 NUEVO: Botón Login Facial */}
+          <button
+            type="button"
+            onClick={() => setShowCamera(true)}
+            className="w-full bg-purple-600 hover:bg-purple-500 text-white py-2.5 rounded-lg font-semibold shadow-md transition flex items-center justify-center"
+          >
+            <FaCamera className="mr-2" />
+            Iniciar con Rostro
           </button>
 
           {/* Registro */}
@@ -163,4 +380,3 @@ const Login: React.FC = () => {
 };
 
 export default Login;
-
