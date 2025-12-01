@@ -46,7 +46,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     useState<UsuarioToken | null>(null);
   const [mostrarModalCrear, setMostrarModalCrear] = useState(false);
 
-  // ✅ Tus APIs sin cambios
   const apiListar = import.meta.env.VITE_API_LISTARUSUARIOS;
   const apiEliminar = import.meta.env.VITE_API_ELIMINARUSUARIO;
   const apiEmpresas = import.meta.env.VITE_API_LISTAREMPRESAS;
@@ -54,26 +53,50 @@ const AdmUsuariosCompleto: React.FC = () => {
   const apiRegister = import.meta.env.VITE_API_REGISTRARUSUARIOS;
   const apiBulk = import.meta.env.VITE_API_BULK;
 
-  const obtenerUsuarios = async (id_empresa?: number) => {
-    const empresaId = id_empresa || usuarioLogueado?.id_empresa;
-    if (!empresaId)
-      return Swal.fire("Error", "No se encontró la empresa del usuario", "error");
+ const obtenerUsuarios = async (id_empresa?: number) => {
+  const empresaId = id_empresa || usuarioLogueado?.id_empresa;
+  if (!empresaId)
+    return Swal.fire("Error", "No se encontró la empresa del usuario", "error");
 
-    const token = localStorage.getItem("token");
-    if (!token) return Swal.fire("Error", "Usuario no autenticado", "error");
+  const token = localStorage.getItem("token");
+  if (!token) return Swal.fire("Error", "Usuario no autenticado", "error");
 
-    try {
-      const base = apiListar.endsWith("/") ? apiListar : `${apiListar}/`;
-      const res = await fetch(`${base}${empresaId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      setUsuarios(Array.isArray(data.datos) ? data.datos : []);
-    } catch (error) {
-      console.error("Error al cargar usuarios:", error);
-      setUsuarios([]);
+  try {
+    const base = apiListar.endsWith("/") ? apiListar : `${apiListar}/`;
+    const url = `${base}${empresaId}`;
+
+    const res = await fetch(url, {
+      headers: {   'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` },
+    });
+    const text = await res.text();
+
+    console.log("🔍 Respuesta bruta del servidor:", text);
+
+    if (!res.ok) {
+      Swal.fire("Error", `Error del servidor: ${res.status}`, "error");
+      return;
     }
-  };
+
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch (e) {
+      console.error("❌ El backend devolvió HTML, no JSON.");
+      Swal.fire(
+        "Error",
+        "El servidor devolvió HTML en vez de JSON. Revisa la URL del API",
+        "error"
+      );
+      return;
+    }
+
+    setUsuarios(Array.isArray(data.datos) ? data.datos : []);
+  } catch (error) {
+    console.error("Error al cargar usuarios:", error);
+    setUsuarios([]);
+  }
+};
+
 
   useEffect(() => {
     const u = getUsuarioFromToken();
@@ -83,7 +106,6 @@ const AdmUsuariosCompleto: React.FC = () => {
     }
   }, []);
 
-  // ✅ Confirmación con Toast y SweetAlert2
   const eliminarUsuario = async (id: number) => {
     const confirm = await Swal.fire({
       title: "¿Eliminar usuario?",
@@ -104,11 +126,10 @@ const AdmUsuariosCompleto: React.FC = () => {
     try {
       await fetch(`${apiEliminar}${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+        headers: {  'ngrok-skip-browser-warning': 'true', Authorization: `Bearer ${token}` },
       });
       setUsuarios((prev) => prev.filter((u) => u.id !== id));
 
-      // ✅ ToastAlert (sin bloqueos)
       const Toast = Swal.mixin({
         toast: true,
         position: "top-end",

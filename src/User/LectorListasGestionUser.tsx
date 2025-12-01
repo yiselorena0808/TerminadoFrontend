@@ -27,6 +27,11 @@ interface Area {
   codigo?: string;
   descripcion?: string;
 }
+interface Producto {
+  idProducto: number;
+  nombre: string;
+  descripcion: string;
+}
 
 interface Gestion {
   id: number;
@@ -37,6 +42,7 @@ interface Gestion {
   cantidad: number;
   importancia: string;
   estado: boolean;
+  productos?: Producto[];
   idCargo?: number;
   idEmpresa?: number;
   idArea?: number;
@@ -263,7 +269,10 @@ const LectorMisGestiones: React.FC = () => {
                     {/* BOTONES DE ACCIÓN */}
                     <div className="flex justify-end gap-3">
                       <button
-                        onClick={() => navigate("/nav/Migestionepp", { state: item })}
+                        onClick={() => navigate("/nav/Migestionepp", { state: {
+                          ...item,
+                          productos: item.productos ?? [],
+                        }})}
                         className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 rounded-xl transition-all duration-300 shadow-lg font-semibold text-sm flex items-center gap-2"
                       >
                         <FaFolderOpen /> Ver Detalle

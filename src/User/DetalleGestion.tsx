@@ -7,9 +7,8 @@ import {
   Briefcase,
   Clipboard,
   Save,
-  Building,
-  Layers,
   Package,
+  Layers,
 } from "lucide-react";
 
 interface Empresa {
@@ -63,7 +62,11 @@ const DetalleGestionEPPUser: React.FC = () => {
   const [mensaje, setMensaje] = useState("");
 
   if (!gestion) {
-    return <p className="p-4 text-white text-center">No hay datos para mostrar.</p>;
+    return (
+      <p className="p-4 text-white text-center">
+        No hay datos para mostrar.
+      </p>
+    );
   }
 
   const formatearFecha = (fecha: string | null | undefined) => {
@@ -84,9 +87,13 @@ const DetalleGestionEPPUser: React.FC = () => {
       const apiUpdate = import.meta.env.VITE_API_ACTUALIZARGESTION;
       const response = await fetch(`${apiUpdate}/${gestion.id}`, {
         method: "PUT",
-        headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ estado, observacion }),
       });
+
       const data = await response.json();
       setMensaje(data.mensaje || "Gestión actualizada correctamente");
     } catch (error) {
@@ -125,39 +132,58 @@ const DetalleGestionEPPUser: React.FC = () => {
               <h3 className="text-xl font-bold text-gray-800 border-b pb-2">
                 👤 Información del Usuario
               </h3>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <User className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900">Nombre:</span>{" "}
                 {gestion.nombre} {gestion.apellido ?? ""}
               </p>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <FileText className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900">Cédula:</span>{" "}
                 {gestion.cedula}
               </p>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <Briefcase className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900">Cargo ID:</span>{" "}
                 {gestion.idCargo}
               </p>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <Clipboard className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900">Importancia:</span>{" "}
                 {gestion.importancia}
               </p>
+
+              {/* 👉 CANTIDAD QUE PIDIO */}
+              <p className="flex items-center gap-2 text-gray-700">
+                <Layers className="w-5 h-5 text-blue-600" />
+                <span className="font-semibold text-gray-900">
+                  Cantidad solicitada:
+                </span>{" "}
+                {gestion.cantidad}
+              </p>
+
               <p className="flex items-center gap-2 text-gray-700">
                 <Calendar className="w-5 h-5 text-blue-600" />
                 <span className="font-semibold text-gray-900">Fecha:</span>{" "}
-                {formatearFecha(gestion.createdAt || gestion.fechaCreacion || gestion.updatedAt)}
+                {formatearFecha(
+                  gestion.createdAt ||
+                    gestion.fechaCreacion ||
+                    gestion.updatedAt
+                )}
               </p>
             </div>
-            </div>
+          </div>
 
           {/* Productos */}
           <div className="border-t border-gray-200 p-8 bg-gray-50">
             <h3 className="text-2xl font-bold text-gray-800 mb-4">
               📦 Productos Asignados
             </h3>
+
             {gestion.productos && gestion.productos.length > 0 ? (
               <ul className="grid md:grid-cols-2 gap-4">
                 {gestion.productos.map((p) => (
@@ -169,7 +195,15 @@ const DetalleGestionEPPUser: React.FC = () => {
                       <Package className="w-5 h-5 text-blue-600" />
                       {p.nombre}
                     </p>
-                    <p className="text-gray-700 text-sm mt-1">{p.descripcion}</p>
+
+                    <p className="text-gray-700 text-sm mt-1">
+                      {p.descripcion}
+                    </p>
+
+                    {/* 👉 CANTIDAD DEL PRODUCTO */}
+                    <p className="text-gray-900 font-semibold mt-2">
+                      Cantidad solicitada: {gestion.cantidad}
+                    </p>
                   </li>
                 ))}
               </ul>
