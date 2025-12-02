@@ -277,7 +277,7 @@ const AdmUsuariosCompleto: React.FC = () => {
         />
       )}
 
-      {mostrarModalCrear && (
+            {mostrarModalCrear && (
         <RegistrarUsuario
           onClose={() => setMostrarModalCrear(false)}
           onUsuarioCreado={() => obtenerUsuarios(usuarioLogueado?.id_empresa)}
@@ -287,6 +287,7 @@ const AdmUsuariosCompleto: React.FC = () => {
           mostrarComoModal={true}
         />
       )}
+
     </div>
   );
 };
