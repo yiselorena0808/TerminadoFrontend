@@ -100,15 +100,23 @@ const DetalleReporte: React.FC = () => {
     });
 
     try {
-      // Usar el ID del usuario logueado, no del usuario que hizo el reporte
-      const res = await axios.post(`${API_BASE}/huella/verificar`, {
-        id_usuario: usuarioLogueado.id,
+        const res = await fetch(`${API_BASE}/huella/verificar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          id_usuario: usuarioLogueado.id
+        })
       });
+  if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Error en el servidor de huellas");
+      }
 
-      const resultado: HuellaResult = res.data;
+      const resultado: HuellaResult = await res.json();
       setResultadoVerificar(resultado);
 
-      // Cerrar alerta de carga
       Swal.close();
 
       if (resultado.resultado === "Coincide") {

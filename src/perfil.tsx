@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
 import Webcam from "react-webcam";
 import Swal from "sweetalert2";
 import ActualizarUsuarioModal from "./Admin/Actualizarusuarios";
 
 const API_BASE = "http://127.0.0.1:8000";
-
-const ApiHuella= "https://noncultured-unconsentient-talon.ngrok-free.dev"
+const API_HUELLA = "https://noncultured-unconsentient-talon.ngrok-free.dev";
 
 interface Empresa {
   id_empresa: number;
@@ -97,26 +95,41 @@ const Perfil: React.FC = () => {
     setLoading(true);
     setMensajeGuardar("");
     setResultadoVerificar("");
+    
     try {
-      const res = await axios.post(`${ApiHuella}/huella/guardar`, { id_usuario: idUsuario });
-      setMensajeGuardar(res.data.mensaje);
-      setUrlHuella(res.data.url);
+      const response = await fetch(`${API_HUELLA}/huella/guardar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id_usuario: idUsuario }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.error || "Error en la solicitud");
+      }
+
+      const data = await response.json();
+      setMensajeGuardar(data.mensaje);
+      setUrlHuella(data.url);
       
       // SweetAlert para éxito en guardado
       Swal.fire({
         title: "¡Huella guardada!",
-        text: res.data.mensaje,
+        text: data.mensaje,
         icon: "success",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Aceptar"
       });
+      
     } catch (error: any) {
       console.error(error);
       
       // SweetAlert para error
       Swal.fire({
         title: "Error al guardar huella",
-        text: error.response?.data?.detail || error.message,
+        text: error.message || "Error desconocido",
         icon: "error",
         confirmButtonColor: "#d33",
         confirmButtonText: "Aceptar"
@@ -141,21 +154,35 @@ const Perfil: React.FC = () => {
     setLoading(true);
     setMensajeGuardar("");
     setResultadoVerificar("");
+    
     try {
-      const res = await axios.post(`${ApiHuella}/huella/verificar`, { id_usuario: idUsuario });
-      setResultadoVerificar(res.data.resultado);
-      setScore(res.data.score);
-      setCalidad(res.data.calidad);
+      const response = await fetch(`${API_HUELLA}/huella/verificar`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id_usuario: idUsuario }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.error || "Error en la solicitud");
+      }
+
+      const data = await response.json();
+      setResultadoVerificar(data.resultado);
+      setScore(data.score);
+      setCalidad(data.calidad);
       
       // SweetAlert para resultado de verificación
-      if (res.data.resultado === "Coincide") {
+      if (data.resultado === "Coincide") {
         Swal.fire({
           title: "¡Huella verificada!",
           html: `
             <div style="text-align: left;">
-              <p><strong>Estado:</strong> <span style="color: #28a745;">${res.data.resultado}</span></p>
-              <p><strong>Score:</strong> ${res.data.score}%</p>
-              <p><strong>Calidad:</strong> ${res.data.calidad}%</p>
+              <p><strong>Estado:</strong> <span style="color: #28a745;">${data.resultado}</span></p>
+              <p><strong>Score:</strong> ${data.score}%</p>
+              <p><strong>Calidad:</strong> ${data.calidad}%</p>
             </div>
           `,
           icon: "success",
@@ -167,9 +194,9 @@ const Perfil: React.FC = () => {
           title: "Huella no coincide",
           html: `
             <div style="text-align: left;">
-              <p><strong>Estado:</strong> <span style="color: #dc3545;">${res.data.resultado}</span></p>
-              <p><strong>Score:</strong> ${res.data.score}%</p>
-              <p><strong>Calidad:</strong> ${res.data.calidad}%</p>
+              <p><strong>Estado:</strong> <span style="color: #dc3545;">${data.resultado}</span></p>
+              <p><strong>Score:</strong> ${data.score}%</p>
+              <p><strong>Calidad:</strong> ${data.calidad}%</p>
             </div>
           `,
           icon: "warning",
@@ -177,13 +204,14 @@ const Perfil: React.FC = () => {
           confirmButtonText: "Aceptar"
         });
       }
+      
     } catch (error: any) {
       console.error(error);
       
       // SweetAlert para error
       Swal.fire({
         title: "Error al verificar huella",
-        text: error.response?.data?.detail || error.message,
+        text: error.message || "Error desconocido",
         icon: "error",
         confirmButtonColor: "#d33",
         confirmButtonText: "Aceptar"
@@ -225,7 +253,6 @@ const Perfil: React.FC = () => {
 
     setLoadingFace(true);
     try {
-      // 🔹 ELIMINAR la conversión a Blob y usar base64 directamente
       const base64Data = imageSrc.split(',')[1]; 
       
       const formData = new FormData();
@@ -234,18 +261,23 @@ const Perfil: React.FC = () => {
 
       const API_FACE = "http://127.0.0.1:8000";
       
-      const res = await axios.post(`${API_FACE}/face/register`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      const response = await fetch(`${API_FACE}/face/register`, {
+        method: "POST",
+        body: formData,
       });
-      
-      setMensajeFace(res.data.message || "Rostro registrado correctamente");
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.error || "Error en el registro facial");
+      }
+
+      const data = await response.json();
+      setMensajeFace(data.message || "Rostro registrado correctamente");
       
       // SweetAlert para éxito en registro facial
       Swal.fire({
         title: "¡Rostro registrado!",
-        text: res.data.message || "Rostro registrado correctamente",
+        text: data.message || "Rostro registrado correctamente",
         icon: "success",
         confirmButtonColor: "#3085d6",
         confirmButtonText: "Aceptar"
@@ -253,12 +285,12 @@ const Perfil: React.FC = () => {
       
     } catch (error: any) {
       console.error('❌ Error:', error);
-      setMensajeFace("Error: " + (error.response?.data?.detail || error.message));
+      setMensajeFace("Error: " + (error.message || "Error desconocido"));
       
       // SweetAlert para error en registro facial
       Swal.fire({
         title: "Error al registrar rostro",
-        text: error.response?.data?.detail || error.message,
+        text: error.message || "Error desconocido",
         icon: "error",
         confirmButtonColor: "#d33",
         confirmButtonText: "Aceptar"
@@ -290,20 +322,26 @@ const Perfil: React.FC = () => {
       formData.append('image', base64Data);
 
       const API_FACE = "http://127.0.0.1:8000";
-      const res = await axios.post(`${API_FACE}/face/verify`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
+      const response = await fetch(`${API_FACE}/face/verify`, {
+        method: "POST",
+        body: formData,
       });
 
-      if (res.data.verified) {
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.error || "Error en la verificación facial");
+      }
+
+      const data = await response.json();
+
+      if (data.verified) {
         Swal.fire({
           title: "¡Rostro verificado!",
           html: `
             <div style="text-align: left;">
-              <p><strong>Usuario:</strong> ${res.data.user_name}</p>
-              <p><strong>Confianza:</strong> ${(res.data.confidence * 100).toFixed(2)}%</p>
-              <p><strong>Mensaje:</strong> ${res.data.message}</p>
+              <p><strong>Usuario:</strong> ${data.user_name}</p>
+              <p><strong>Confianza:</strong> ${(data.confidence * 100).toFixed(2)}%</p>
+              <p><strong>Mensaje:</strong> ${data.message}</p>
             </div>
           `,
           icon: "success",
@@ -313,7 +351,7 @@ const Perfil: React.FC = () => {
       } else {
         Swal.fire({
           title: "Rostro no reconocido",
-          text: res.data.message || "No se pudo verificar el rostro",
+          text: data.message || "No se pudo verificar el rostro",
           icon: "warning",
           confirmButtonColor: "#dc3545",
           confirmButtonText: "Aceptar"
@@ -322,7 +360,7 @@ const Perfil: React.FC = () => {
     } catch (error: any) {
       Swal.fire({
         title: "Error al verificar rostro",
-        text: error.response?.data?.detail || error.message,
+        text: error.message || "Error desconocido",
         icon: "error",
         confirmButtonColor: "#d33",
         confirmButtonText: "Aceptar"
