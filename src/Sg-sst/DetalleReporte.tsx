@@ -1,11 +1,11 @@
-import React, { useState} from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Fingerprint, CheckCircle, XCircle } from "lucide-react";
 import axios from "axios";
 import Swal from 'sweetalert2';
 import CajaComentarios from "../components/CajaComentarios";
 
-const API_BASE = "http://127.0.0.1:8000";
+const API_BASE = "https://noncultured-unconsentient-talon.ngrok-free.dev";
 const BACKEND_BASE = "https://unreproaching-rancorously-evelina.ngrok-free.dev";
 
 interface Reporte {
@@ -23,12 +23,17 @@ interface Reporte {
   comentario?: string;
 }
 
+interface UsuarioLogueado {
+  id: number;
+  nombre: string;
+  cargo: string;
+  nombreUsuario: string;
+}
+
 interface HuellaResult {
   resultado: string;
   score: number;
   calidad: number;
-  template?: string;
-  image?: string; 
 }
 
 const DetalleReporte: React.FC = () => {
@@ -41,9 +46,27 @@ const DetalleReporte: React.FC = () => {
     comentario: reporte?.comentario || "",
   });
 
+  const [usuarioLogueado, setUsuarioLogueado] = useState<UsuarioLogueado | null>(null);
   const [loading, setLoading] = useState(false);
   const [resultadoVerificar, setResultadoVerificar] = useState<HuellaResult | null>(null);
-  const [huellaImage, setHuellaImage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Obtener usuario logueado desde localStorage
+    const datosUsuario = localStorage.getItem("usuario");
+    if (datosUsuario) {
+      try {
+        const usuarioData = JSON.parse(datosUsuario);
+        setUsuarioLogueado({
+          id: usuarioData.id,
+          nombre: usuarioData.nombre,
+          cargo: usuarioData.cargo,
+          nombreUsuario: usuarioData.nombreUsuario
+        });
+      } catch (error) {
+        console.error("Error al parsear usuario del localStorage:", error);
+      }
+    }
+  }, []);
 
   if (!reporte) return <p className="p-4">No hay datos para mostrar.</p>;
 
@@ -53,11 +76,11 @@ const DetalleReporte: React.FC = () => {
   };
 
   const verificarHuella = async () => {
-    if (!form.id_usuario) {
+    if (!usuarioLogueado?.id) {
       Swal.fire({
         icon: 'warning',
         title: 'Usuario no encontrado',
-        text: 'No se encontró ID de usuario para verificar.',
+        text: 'No se encontró información del usuario logueado. Por favor, inicie sesión nuevamente.',
         confirmButtonColor: '#3b82f6'
       });
       return;
@@ -65,7 +88,6 @@ const DetalleReporte: React.FC = () => {
 
     setLoading(true);
     setResultadoVerificar(null);
-    setHuellaImage(null);
 
     // Mostrar alerta de carga
     Swal.fire({
@@ -78,38 +100,13 @@ const DetalleReporte: React.FC = () => {
     });
 
     try {
+      // Usar el ID del usuario logueado, no del usuario que hizo el reporte
       const res = await axios.post(`${API_BASE}/huella/verificar`, {
-        id_usuario: form.id_usuario,
+        id_usuario: usuarioLogueado.id,
       });
 
       const resultado: HuellaResult = res.data;
       setResultadoVerificar(resultado);
-
-      if (resultado.image) {
-        setHuellaImage(resultado.image);
-      } else {
-        // Crear una imagen placeholder de huella
-        const canvas = document.createElement('canvas');
-        canvas.width = 200;
-        canvas.height = 200;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          // Fondo
-          ctx.fillStyle = '#f3f4f6';
-          ctx.fillRect(0, 0, 200, 200);
-          
-          // Patrón de huella simulado
-          ctx.strokeStyle = '#6b7280';
-          ctx.lineWidth = 2;
-          for (let i = 0; i < 8; i++) {
-            ctx.beginPath();
-            ctx.arc(100, 100, 20 + i * 8, 0, Math.PI * 2);
-            ctx.stroke();
-          }
-          
-          setHuellaImage(canvas.toDataURL());
-        }
-      }
 
       // Cerrar alerta de carga
       Swal.close();
@@ -123,6 +120,7 @@ const DetalleReporte: React.FC = () => {
             <div class="text-center">
               <div class="text-green-500 text-6xl mb-4">✓</div>
               <p class="text-lg font-semibold mb-2">Coincidencia encontrada</p>
+              <p class="text-sm text-gray-600 mb-4">Usuario verificado: <strong>${usuarioLogueado.nombre}</strong></p>
               <div class="grid grid-cols-2 gap-4 mt-4">
                 <div class="text-center">
                   <p class="text-sm text-gray-600">Score</p>
@@ -136,7 +134,7 @@ const DetalleReporte: React.FC = () => {
             </div>
           `,
           showCancelButton: true,
-          confirmButtonText: 'Actualizar Estado',
+          confirmButtonText: 'Aprobar Reporte',
           cancelButtonText: 'Cerrar',
           confirmButtonColor: '#10b981',
           cancelButtonColor: '#6b7280'
@@ -155,6 +153,7 @@ const DetalleReporte: React.FC = () => {
             <div class="text-center">
               <div class="text-red-500 text-6xl mb-4">✗</div>
               <p class="text-lg font-semibold mb-2">No se encontró coincidencia</p>
+              <p class="text-sm text-gray-600 mb-4">Usuario intentado: <strong>${usuarioLogueado.nombre}</strong></p>
               <div class="grid grid-cols-2 gap-4 mt-4">
                 <div class="text-center">
                   <p class="text-sm text-gray-600">Score</p>
@@ -165,6 +164,10 @@ const DetalleReporte: React.FC = () => {
                   <p class="text-2xl font-bold ${resultado.calidad >= 60 ? 'text-green-600' : 'text-yellow-600'}">${resultado.calidad}%</p>
                 </div>
               </div>
+              <p class="text-sm text-gray-500 mt-4">
+                Está verificando su propia huella como administrador. 
+                Asegúrese de usar el mismo dedo registrado en su perfil.
+              </p>
             </div>
           `,
           confirmButtonColor: '#ef4444'
@@ -178,7 +181,7 @@ const DetalleReporte: React.FC = () => {
       
       let errorMessage = "Error desconocido";
       if (error.response) {
-        errorMessage = error.response.data?.error || error.message;
+        errorMessage = error.response.data?.detail || error.response.data?.error || error.message;
       } else if (error.request) {
         errorMessage = "No se pudo conectar al servidor de huellas";
       }
@@ -264,6 +267,18 @@ const DetalleReporte: React.FC = () => {
     }
   };
 
+  const getScoreColor = (score: number) => {
+    if (score >= 80) return "text-green-600";
+    if (score >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
+  const getCalidadColor = (calidad: number) => {
+    if (calidad >= 80) return "text-green-600";
+    if (calidad >= 60) return "text-yellow-600";
+    return "text-red-600";
+  };
+
   return (
     <div>
       <div className="absolute inset-0 backdrop-blur-sm bg-blue-50/30"></div>
@@ -283,20 +298,24 @@ const DetalleReporte: React.FC = () => {
               <Fingerprint className="w-8 h-8" />
               <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
             </div>
-            <p className="text-blue-100 text-lg">Usuario: {form.nombre_usuario}</p>
+            <p className="text-blue-100 text-lg">Reportante: {form.nombre_usuario}</p>
             <div className="flex gap-4 mt-2 text-sm">
               <span className="bg-blue-500 px-3 py-1 rounded-full">ID Reporte: {form.id_reporte}</span>
-              <span className="bg-blue-500 px-3 py-1 rounded-full">ID Usuario: {form.id_usuario}</span>
+              <span className="bg-blue-500 px-3 py-1 rounded-full">ID Usuario Reportante: {form.id_usuario}</span>
+              {usuarioLogueado && (
+                <span className="bg-purple-500 px-3 py-1 rounded-full">Administrador: {usuarioLogueado.nombre}</span>
+              )}
             </div>
           </div>
 
           <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-gradient-to-br from-gray-50 to-white rounded-xl p-6 shadow-lg border">
-              <h3 className="text-xl font-bold border-b pb-3 text-gray-800">Información del Usuario</h3>
+              <h3 className="text-xl font-bold border-b pb-3 text-gray-800">Información del Reportante</h3>
               <div className="space-y-3 mt-4">
                 <p><strong className="text-gray-700">Nombre:</strong> <span className="text-gray-900">{form.nombre_usuario}</span></p>
                 <p><strong className="text-gray-700">Cargo:</strong> <span className="text-gray-900">{form.cargo}</span></p>
                 <p><strong className="text-gray-700">Cédula:</strong> <span className="text-gray-900">{form.cedula}</span></p>
+                <p><strong className="text-gray-700">ID Usuario:</strong> <span className="text-gray-900">{form.id_usuario}</span></p>
               </div>
             </div>
 
@@ -339,96 +358,146 @@ const DetalleReporte: React.FC = () => {
         <div className="mt-8 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
           <div className="flex items-center gap-3 mb-6">
             <Fingerprint className="w-8 h-8 text-blue-600" />
-            <h3 className="text-2xl font-bold text-gray-800">Verificación Biométrica</h3>
+            <h3 className="text-2xl font-bold text-gray-800">Verificación Biométrica del Administrador</h3>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            <div className="space-y-4">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h4 className="font-semibold text-blue-800 mb-2">Información de Verificación</h4>
-                <div className="space-y-2 text-sm">
-                  <p><strong>Reporte ID:</strong> {form.id_reporte}</p>
-                  <p><strong>Usuario ID:</strong> {form.id_usuario}</p>
-                  <p><strong>Servidor Huellas:</strong> {API_BASE}</p>
+          <div className="space-y-6">
+            {/* Información de Verificación */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+              <h4 className="font-semibold text-blue-800 mb-3 text-lg">Información de Verificación</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Reporte ID</p>
+                  <p className="font-semibold text-gray-800">{form.id_reporte}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Reportante</p>
+                  <p className="font-semibold text-gray-800">{form.nombre_usuario} (ID: {form.id_usuario})</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Administrador Verificador</p>
+                  <p className="font-semibold text-gray-800">
+                    {usuarioLogueado ? `${usuarioLogueado.nombre} (ID: ${usuarioLogueado.id})` : 'No identificado'}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-gray-600">Servidor Huellas</p>
+                  <p className="font-semibold text-gray-800 truncate text-xs">{API_BASE}</p>
                 </div>
               </div>
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  <strong>Nota:</strong> Se verificará la huella del <strong>administrador</strong> ({usuarioLogueado?.nombre}) 
+                  para autorizar la aprobación del reporte, no la huella del reportante.
+                </p>
+              </div>
+            </div>
 
+            {/* Botón de Verificación */}
+            <div className="text-center">
               <button
                 onClick={verificarHuella}
-                disabled={loading}
-                className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl shadow-lg hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 font-semibold"
+                disabled={loading || !usuarioLogueado}
+                className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl shadow-lg hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 font-semibold text-lg"
               >
                 {loading ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    Verificando...
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Verificando Huella...
                   </>
                 ) : (
                   <>
-                    <Fingerprint className="w-5 h-5" />
-                    Verificar Huella
+                    <Fingerprint className="w-6 h-6" />
+                    {usuarioLogueado ? `Verificar Mi Huella (${usuarioLogueado.nombre})` : 'Cargando usuario...'}
                   </>
                 )}
               </button>
+              <p className="text-sm text-gray-500 mt-2">
+                Verifique su huella digital como administrador para autorizar la aprobación de este reporte
+              </p>
             </div>
 
-            {/* VISUALIZACIÓN DE HUELLA */}
-            <div className="space-y-4">
-              | {huellaImage && (
-              <div className="text-center">
-                <h4 className="font-semibold text-gray-700 mb-3">Huella Capturada</h4>
-                <div className="bg-gray-100 rounded-xl p-4 border-2 border-dashed border-gray-300">
-                  <img
-                    src={huellaImage.startsWith("data:") ? huellaImage : `data:image/png;base64,${huellaImage}`}
-                    alt="Huella digital capturada"
-                    className="mx-auto max-w-full h-40 object-contain rounded-lg"
-                  />
+            {/* Resultados */}
+            {resultadoVerificar && (
+              <div className={`p-6 rounded-xl border-2 ${
+                resultadoVerificar.resultado === "Coincide" 
+                  ? "bg-gradient-to-r from-green-50 to-green-100 border-green-300" 
+                  : "bg-gradient-to-r from-red-50 to-red-100 border-red-300"
+              }`}>
+                <div className="flex items-center gap-4 mb-6">
+                  {resultadoVerificar.resultado === "Coincide" ? (
+                    <>
+                      <CheckCircle className="w-10 h-10 text-green-600" />
+                      <div>
+                        <h4 className="text-2xl font-bold text-green-700">✓ Huella Verificada</h4>
+                        <p className="text-green-600">Administrador verificado: <strong>{usuarioLogueado?.nombre}</strong></p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <XCircle className="w-10 h-10 text-red-600" />
+                      <div>
+                        <h4 className="text-2xl font-bold text-red-700">✗ Huella No Coincide</h4>
+                        <p className="text-red-600">Administrador no verificado: <strong>{usuarioLogueado?.nombre}</strong></p>
+                      </div>
+                    </>
+                  )}
                 </div>
-                </div>
-              )}
-
-              {/* RESULTADOS */}
-              {resultadoVerificar && (
-                <div className={`p-4 rounded-xl border-2 ${
-                  resultadoVerificar.resultado === "Coincide" 
-                    ? "bg-green-50 border-green-200" 
-                    : "bg-red-50 border-red-200"
-                }`}>
-                  <div className="flex items-center gap-3 mb-3">
-                    {resultadoVerificar.resultado === "Coincide" ? (
-                      <CheckCircle className="w-6 h-6 text-green-600" />
-                    ) : (
-                      <XCircle className="w-6 h-6 text-red-600" />
-                    )}
-                    <h4 className={`font-bold text-lg ${
-                      resultadoVerificar.resultado === "Coincide" ? "text-green-700" : "text-red-700"
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="text-center bg-white p-4 rounded-lg shadow-sm">
+                    <p className="text-sm text-gray-600 mb-1">Estado</p>
+                    <p className={`text-2xl font-bold ${
+                      resultadoVerificar.resultado === "Coincide" ? "text-green-600" : "text-red-600"
                     }`}>
-                      {resultadoVerificar.resultado === "Coincide" ? "✓ Coincide" : "✗ No Coincide"}
-                    </h4>
+                      {resultadoVerificar.resultado}
+                    </p>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600">Score</p>
-                      <p className={`text-2xl font-bold ${
-                        resultadoVerificar.score >= 80 ? "text-green-600" : 
-                        resultadoVerificar.score >= 60 ? "text-yellow-600" : "text-red-600"
-                      }`}>
-                        {resultadoVerificar.score}%
-                      </p>
+                  <div className="text-center bg-white p-4 rounded-lg shadow-sm">
+                    <p className="text-sm text-gray-600 mb-1">Score de Similitud</p>
+                    <p className={`text-3xl font-bold ${getScoreColor(resultadoVerificar.score)}`}>
+                      {resultadoVerificar.score}%
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className={`h-2 rounded-full ${getScoreColor(resultadoVerificar.score).replace('text-', 'bg-')}`}
+                        style={{ width: `${resultadoVerificar.score}%` }}
+                      ></div>
                     </div>
-                    <div className="text-center">
-                      <p className="text-sm text-gray-600">Calidad</p>
-                      <p className={`text-2xl font-bold ${
-                        resultadoVerificar.calidad >= 60 ? "text-green-600" : "text-yellow-600"
-                      }`}>
-                        {resultadoVerificar.calidad}%
-                      </p>
+                  </div>
+                  
+                  <div className="text-center bg-white p-4 rounded-lg shadow-sm">
+                    <p className="text-sm text-gray-600 mb-1">Calidad de Captura</p>
+                    <p className={`text-3xl font-bold ${getCalidadColor(resultadoVerificar.calidad)}`}>
+                      {resultadoVerificar.calidad}%
+                    </p>
+                    <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                      <div 
+                        className={`h-2 rounded-full ${getCalidadColor(resultadoVerificar.calidad).replace('text-', 'bg-')}`}
+                        style={{ width: `${resultadoVerificar.calidad}%` }}
+                      ></div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+
+                {/* Mensaje de Acción */}
+                {resultadoVerificar.resultado === "Coincide" && (
+                  <div className="mt-6 text-center">
+                    <p className="text-green-700 font-semibold mb-3">
+                      ✓ La huella del administrador coincide. Puede proceder a aprobar el reporte.
+                    </p>
+                    <button
+                      onClick={actualizarEstadoReporte}
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold transition-colors"
+                    >
+                      <CheckCircle className="w-5 h-5" />
+                      Aprobar Reporte
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

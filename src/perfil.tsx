@@ -6,6 +6,8 @@ import ActualizarUsuarioModal from "./Admin/Actualizarusuarios";
 
 const API_BASE = "http://127.0.0.1:8000";
 
+const ApiHuella= "https://noncultured-unconsentient-talon.ngrok-free.dev"
+
 interface Empresa {
   id_empresa: number;
   nombre: string;
@@ -96,7 +98,7 @@ const Perfil: React.FC = () => {
     setMensajeGuardar("");
     setResultadoVerificar("");
     try {
-      const res = await axios.post(`${API_BASE}/huella/guardar`, { id_usuario: idUsuario });
+      const res = await axios.post(`${ApiHuella}/huella/guardar`, { id_usuario: idUsuario });
       setMensajeGuardar(res.data.mensaje);
       setUrlHuella(res.data.url);
       
@@ -140,7 +142,7 @@ const Perfil: React.FC = () => {
     setMensajeGuardar("");
     setResultadoVerificar("");
     try {
-      const res = await axios.post(`${API_BASE}/huella/verificar`, { id_usuario: idUsuario });
+      const res = await axios.post(`${ApiHuella}/huella/verificar`, { id_usuario: idUsuario });
       setResultadoVerificar(res.data.resultado);
       setScore(res.data.score);
       setCalidad(res.data.calidad);
