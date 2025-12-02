@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-
+import ProtectedRoute from "./ProtectedRoute";
 // --- Login y Registro ---
 import Login from "./Register/Login";
 import Registro from "./Register/Registro";
@@ -86,6 +86,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword></ForgotPassword>} />
         <Route path="/reset-password" element={<ResetPasswordForm />} />
 
+        <Route element={<ProtectedRoute />}>
         {/* PANEL PRINCIPAL con Navbar */}
         <Route path="/nav" element={<Navbar />}>
           {/* --- SGVA --- */}
@@ -148,6 +149,7 @@ function App() {
           <Route path="CrearGestionEppSA" element={<CrearGestionEppSA></CrearGestionEppSA>}></Route>
           {/* Redirección por defecto */}
           <Route path="*" element={<Navigate to="inicio" />} />
+        </Route>
         </Route>
       </Routes>
     </Router>
