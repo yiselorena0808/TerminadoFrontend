@@ -39,7 +39,7 @@ const LectorListaReportes: React.FC = () => {
   const [paginaActual, setPaginaActual] = useState(1);
   const reportesPorPagina = 9;
 
-  const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
+  const estados = ["Todos", "Pendiente", "Revisado", "Aprobado"];
   const apiListarReportes = import.meta.env.VITE_API_MISREPORTES;
 
   useEffect(() => {

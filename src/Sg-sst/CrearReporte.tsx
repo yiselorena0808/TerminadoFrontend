@@ -287,7 +287,7 @@ const handleSeleccionarUsuario = (u: any) => {
           >
             <option value="Pendiente">Pendiente</option>
             <option value="Revisado">Revisado</option>
-            <option value="Finalizado">Finalizado</option>
+            <option value="Finalizado">Aprobado</option>
           </select>
         </div>
 

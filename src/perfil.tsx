@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import Webcam from "react-webcam";
+import Swal from "sweetalert2";
 import ActualizarUsuarioModal from "./Admin/Actualizarusuarios";
 
 const API_BASE = "http://127.0.0.1:8000";
-
 
 interface Empresa {
   id_empresa: number;
@@ -43,8 +43,8 @@ const Perfil: React.FC = () => {
   const [mensajeGuardar, setMensajeGuardar] = useState("");
   const [urlHuella, setUrlHuella] = useState("");
   const [resultadoVerificar, setResultadoVerificar] = useState("");
-  const [score, setScore] = useState(null);
-  const [calidad, setCalidad] = useState(null);
+  const [score, setScore] = useState<number | null>(null);
+  const [calidad, setCalidad] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   
   // NUEVOS ESTADOS PARA FACE ID
@@ -69,10 +69,29 @@ const Perfil: React.FC = () => {
     const nuevoUsuario = { ...usuario, ...usuarioActualizado };
     setUsuario(nuevoUsuario);
     localStorage.setItem("usuario", JSON.stringify(nuevoUsuario));
+    
+    // SweetAlert para éxito en actualización
+    Swal.fire({
+      title: "¡Perfil actualizado!",
+      text: "Los cambios se han guardado correctamente.",
+      icon: "success",
+      confirmButtonColor: "#3085d6",
+      confirmButtonText: "Aceptar"
+    });
   };
 
   const handleGuardar = async () => {
-    if (!idUsuario) return alert("Ingresa el ID del usuario");
+    if (!idUsuario) {
+      Swal.fire({
+        title: "Campo requerido",
+        text: "Por favor ingresa el ID del usuario",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
+    
     setLoading(true);
     setMensajeGuardar("");
     setResultadoVerificar("");
@@ -80,16 +99,43 @@ const Perfil: React.FC = () => {
       const res = await axios.post(`${API_BASE}/huella/guardar`, { id_usuario: idUsuario });
       setMensajeGuardar(res.data.mensaje);
       setUrlHuella(res.data.url);
-    } catch (error) {
+      
+      // SweetAlert para éxito en guardado
+      Swal.fire({
+        title: "¡Huella guardada!",
+        text: res.data.mensaje,
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar"
+      });
+    } catch (error: any) {
       console.error(error);
-      alert("Error guardando la huella: " + error.response?.data?.detail || error.message);
+      
+      // SweetAlert para error
+      Swal.fire({
+        title: "Error al guardar huella",
+        text: error.response?.data?.detail || error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const handleVerificar = async () => {
-    if (!idUsuario) return alert("Ingresa el ID del usuario");
+    if (!idUsuario) {
+      Swal.fire({
+        title: "Campo requerido",
+        text: "Por favor ingresa el ID del usuario",
+        icon: "warning",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
+    
     setLoading(true);
     setMensajeGuardar("");
     setResultadoVerificar("");
@@ -98,9 +144,48 @@ const Perfil: React.FC = () => {
       setResultadoVerificar(res.data.resultado);
       setScore(res.data.score);
       setCalidad(res.data.calidad);
-    } catch (error) {
+      
+      // SweetAlert para resultado de verificación
+      if (res.data.resultado === "Coincide") {
+        Swal.fire({
+          title: "¡Huella verificada!",
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Estado:</strong> <span style="color: #28a745;">${res.data.resultado}</span></p>
+              <p><strong>Score:</strong> ${res.data.score}%</p>
+              <p><strong>Calidad:</strong> ${res.data.calidad}%</p>
+            </div>
+          `,
+          icon: "success",
+          confirmButtonColor: "#28a745",
+          confirmButtonText: "Aceptar"
+        });
+      } else {
+        Swal.fire({
+          title: "Huella no coincide",
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Estado:</strong> <span style="color: #dc3545;">${res.data.resultado}</span></p>
+              <p><strong>Score:</strong> ${res.data.score}%</p>
+              <p><strong>Calidad:</strong> ${res.data.calidad}%</p>
+            </div>
+          `,
+          icon: "warning",
+          confirmButtonColor: "#dc3545",
+          confirmButtonText: "Aceptar"
+        });
+      }
+    } catch (error: any) {
       console.error(error);
-      alert("Error verificando la huella: " + error.response?.data?.detail || error.message);
+      
+      // SweetAlert para error
+      Swal.fire({
+        title: "Error al verificar huella",
+        text: error.response?.data?.detail || error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
     } finally {
       setLoading(false);
     }
@@ -124,45 +209,136 @@ const Perfil: React.FC = () => {
   };
 
   const handleCaptureFace = async () => {
-  const imageSrc = captureFaceImage(); 
-  if (!imageSrc) return;
+    const imageSrc = captureFaceImage(); 
+    if (!imageSrc) {
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo capturar la imagen",
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
 
-  setLoadingFace(true);
-  try {
-    // 🔹 ELIMINAR la conversión a Blob y usar base64 directamente
-    const base64Data = imageSrc.split(',')[1]; 
-    
-    const formData = new FormData();
-    formData.append('id_usuario', usuario.id.toString());
-    formData.append('image', base64Data); 
+    setLoadingFace(true);
+    try {
+      // 🔹 ELIMINAR la conversión a Blob y usar base64 directamente
+      const base64Data = imageSrc.split(',')[1]; 
+      
+      const formData = new FormData();
+      formData.append('id_usuario', usuario!.id.toString());
+      formData.append('image', base64Data); 
 
-    const API_FACE = "http://127.0.0.1:8000";
-    
-    const res = await axios.post(`${API_FACE}/face/register`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
+      const API_FACE = "http://127.0.0.1:8000";
+      
+      const res = await axios.post(`${API_FACE}/face/register`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      
+      setMensajeFace(res.data.message || "Rostro registrado correctamente");
+      
+      // SweetAlert para éxito en registro facial
+      Swal.fire({
+        title: "¡Rostro registrado!",
+        text: res.data.message || "Rostro registrado correctamente",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        confirmButtonText: "Aceptar"
+      });
+      
+    } catch (error: any) {
+      console.error('❌ Error:', error);
+      setMensajeFace("Error: " + (error.response?.data?.detail || error.message));
+      
+      // SweetAlert para error en registro facial
+      Swal.fire({
+        title: "Error al registrar rostro",
+        text: error.response?.data?.detail || error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
+    } finally {
+      setLoadingFace(false);
+      setShowCamera(false);
+    }
+  };
+
+  // Función para verificar rostro
+  const handleVerifyFace = async () => {
+    const imageSrc = captureFaceImage();
+    if (!imageSrc) {
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo capturar la imagen",
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
+      return;
+    }
+
+    setLoadingFace(true);
+    try {
+      const base64Data = imageSrc.split(',')[1];
+      const formData = new FormData();
+      formData.append('image', base64Data);
+
+      const API_FACE = "http://127.0.0.1:8000";
+      const res = await axios.post(`${API_FACE}/face/verify`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+
+      if (res.data.verified) {
+        Swal.fire({
+          title: "¡Rostro verificado!",
+          html: `
+            <div style="text-align: left;">
+              <p><strong>Usuario:</strong> ${res.data.user_name}</p>
+              <p><strong>Confianza:</strong> ${(res.data.confidence * 100).toFixed(2)}%</p>
+              <p><strong>Mensaje:</strong> ${res.data.message}</p>
+            </div>
+          `,
+          icon: "success",
+          confirmButtonColor: "#28a745",
+          confirmButtonText: "Aceptar"
+        });
+      } else {
+        Swal.fire({
+          title: "Rostro no reconocido",
+          text: res.data.message || "No se pudo verificar el rostro",
+          icon: "warning",
+          confirmButtonColor: "#dc3545",
+          confirmButtonText: "Aceptar"
+        });
       }
-    });
-    
-    setMensajeFace(res.data.message || "Rostro registrado correctamente");
-    
-  } catch (error: any) {
-    console.error('❌ Error:', error);
-    setMensajeFace("Error: " + (error.response?.data?.detail || error.message));
-  } finally {
-    setLoadingFace(false);
-    setShowCamera(false);
-  }
-};
+    } catch (error: any) {
+      Swal.fire({
+        title: "Error al verificar rostro",
+        text: error.response?.data?.detail || error.message,
+        icon: "error",
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Aceptar"
+      });
+    } finally {
+      setLoadingFace(false);
+      setShowCamera(false);
+    }
+  };
 
-  const getScoreColor = (score) => {
+  const getScoreColor = (score: number | null) => {
     if (!score) return "text-gray-600";
     if (score >= 80) return "text-green-600";
     if (score >= 60) return "text-yellow-600";
     return "text-red-600";
   };
 
-  const getCalidadColor = (calidad) => {
+  const getCalidadColor = (calidad: number | null) => {
     if (!calidad) return "text-gray-600";
     if (calidad >= 80) return "text-green-600";
     if (calidad >= 60) return "text-yellow-600";
@@ -218,7 +394,7 @@ const Perfil: React.FC = () => {
             
             <div className="flex gap-3 mt-4">
               <button
-                onClick={handleCaptureFace}
+                onClick={cameraMode === "register" ? handleCaptureFace : handleVerifyFace}
                 disabled={loadingFace}
                 className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold disabled:opacity-50 flex items-center justify-center"
               >
@@ -228,7 +404,7 @@ const Perfil: React.FC = () => {
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
                 ) : null}
-                {loadingFace ? "Procesando..." : "Capturar"}
+                {loadingFace ? "Procesando..." : cameraMode === "register" ? "Registrar Rostro" : "Verificar Rostro"}
               </button>
               <button
                 onClick={handleCloseCamera}
