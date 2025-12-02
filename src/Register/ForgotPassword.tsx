@@ -29,12 +29,13 @@ export default function ForgotPassword() {
       if (res.ok) {
         Swal.fire({
           icon: "success",
-          title: "Enlace enviado",
-          text: "Si el correo existe, se ha enviado un enlace para restablecer tu contraseña",
+          title: "Código enviado",
+          text: "Si el correo existe, se ha enviado un código de 6 dígitos a tu correo",
           timer: 3000,
           showConfirmButton: false,
         }).then(() => {
-          navigate("/login");
+          // Redirigir a la pantalla de verificación de código
+          navigate(`/verify-code?email=${encodeURIComponent(email)}`);
         });
       } else {
         Swal.fire({
@@ -56,13 +57,11 @@ export default function ForgotPassword() {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center to-white">
-      {/* Tarjeta de recuperación */}
       <div
         className="bg-white/80 backdrop-blur-md border border-gray-200 
         rounded-3xl shadow-2xl w-full max-w-md p-10 flex flex-col items-center relative"
       >
         
-        {/* Botón de volver - posición mejorada */}
         <button
           onClick={() => navigate("/login")}
           className="absolute top-6 left-6 text-gray-500 hover:text-black transition flex items-center gap-2 text-sm"
@@ -71,7 +70,6 @@ export default function ForgotPassword() {
           Volver
         </button>
 
-        {/* Logo */}
         <div className="flex justify-center mb-6 mt-4">
           <img
             src={logo}
@@ -80,15 +78,13 @@ export default function ForgotPassword() {
           />
         </div>
 
-        {/* Título */}
         <h2 className="text-3xl font-bold text-blue-600 mb-2 text-center">
           Recuperar Contraseña
         </h2>
         <p className="text-gray-500 text-sm mb-8 text-center max-w-xs">
-          Ingresa tu correo electrónico para recibir el enlace de recuperación
+          Ingresa tu correo electrónico para recibir un código de 6 dígitos
         </p>
 
-        {/* Formulario */}
         <form onSubmit={handleSubmit} className="w-full space-y-5">
           <div className="relative">
             <FaEnvelope className="absolute left-3 top-3 text-gray-500 text-lg" />
@@ -102,7 +98,6 @@ export default function ForgotPassword() {
             />
           </div>
 
-          {/* Botón */}
           <button
             type="submit"
             disabled={loading}
@@ -111,15 +106,14 @@ export default function ForgotPassword() {
             {loading ? (
               <>
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                Enviando...
+                Enviando código...
               </>
             ) : (
-              "Enviar enlace de recuperación"
+              "Enviar código de verificación"
             )}
           </button>
         </form>
 
-        {/* Enlace de volver al login - más discreto */}
         <div className="text-center mt-6">
           <span 
             onClick={() => navigate("/login")}
@@ -129,7 +123,6 @@ export default function ForgotPassword() {
           </span>
         </div>
 
-        {/* Versión */}
         <p className="text-xs text-gray-400 mt-8">v1.0.0</p>
       </div>
     </div>
