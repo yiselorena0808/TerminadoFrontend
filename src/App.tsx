@@ -13,6 +13,7 @@ import Inicio from "./Welcome.tsx/Inicio"
 import Navbar from "./Navbar";
 
 // --- SGVA ---
+import GestionNotificaciones from "./Sg-sst/GestionNotificaciones"
 import ListarGestiones from "./Sg-sst/ListasGestionEPP";
 import ListasChequeoRecibidas from "./Sg-sst/ListasChequeo";
 import ListasReportes from "./Sg-sst/ListasReportes";
@@ -92,6 +93,7 @@ function App() {
         {/* PANEL PRINCIPAL con Navbar */}
         <Route path="/nav" element={<Navbar />}>
           {/* --- SGVA --- */}
+          <Route path="GestionNotificaciones" element={<GestionNotificaciones></GestionNotificaciones>}></Route>
           <Route path="inicio" element={<DashboardReportes />} />
           <Route path="gestionEpp" element={<ListarGestiones />} />
           <Route path="detalleGestionEpp" element={<DetalleGestionEPP />} />

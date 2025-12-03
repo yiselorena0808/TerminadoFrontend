@@ -215,33 +215,6 @@ const MiDetalleActividadLudica: React.FC = () => {
             )}
           </div>
         </div>
-
-        {/* Sección de comentario del administrador */}
-        {isAdmin && (
-          <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-2">Comentario del Administrador</h3>
-            <textarea
-              className="w-full border rounded-lg p-3"
-              rows={4}
-              value={respuestaAdmin}
-              onChange={(e) => setRespuestaAdmin(e.target.value)}
-              placeholder="Escribe tu comentario..."
-            />
-            <button
-              onClick={handleEnviarRespuesta}
-              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              Enviar Respuesta
-            </button>
-          </div>
-        )}
-
-        {/* Mensaje */}
-        {mensaje && (
-          <div className="mt-4 px-8 text-center text-green-700 font-semibold">
-            {mensaje}
-          </div>
-        )}
       </div>
     </div>
   );

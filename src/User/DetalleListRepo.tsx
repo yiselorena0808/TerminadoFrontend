@@ -186,46 +186,6 @@ const MiDetalleReporte: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Card de Admin: Cambiar estado y comentario */}
-        <div className="mt-8 bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
-          <h3 className="text-2xl font-bold text-gray-800 mb-4">
-            ⚙️ Gestión Administrador
-          </h3>
-
-          {/* Estado */}
-          <label className="block text-gray-700 font-semibold mb-2">
-            Cambiar Estado
-          </label>
-          <select
-            value={form.estado}
-            onChange={(e) => setForm({ ...form, estado: e.target.value })}
-            className="w-full border rounded-lg px-3 py-2 mb-4"
-          >
-            <option value="Pendiente">Pendiente</option>
-            <option value="Revisado">Revisado</option>
-            <option value="Finalizado">Finalizado</option>
-          </select>
-
-          {/* Comentario */}
-          <label className="block text-gray-700 font-semibold mb-2">
-            Agregar Comentario
-          </label>
-          <textarea
-            value={form.comentario}
-            onChange={(e) => setForm({ ...form, comentario: e.target.value })}
-            className="w-full border rounded-lg px-3 py-2 min-h-[100px] mb-4"
-            placeholder="Escribe un comentario sobre el reporte..."
-          />
-
-          {/* Guardar */}
-          <button
-            onClick={guardarCambios}
-            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl shadow-md transition"
-          >
-            <Save className="w-5 h-5" /> Guardar Cambios
-          </button>
-        </div>
       </div>
     </div>
   );

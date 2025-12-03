@@ -103,7 +103,8 @@ const DetalleReporte: React.FC = () => {
         const res = await fetch(`${API_BASE}/huella/verificar`, {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           id_usuario: usuarioLogueado.id
@@ -234,6 +235,7 @@ const DetalleReporte: React.FC = () => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+             'ngrok-skip-browser-warning': 'true',
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ 
@@ -507,12 +509,6 @@ const DetalleReporte: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
-
-        {/* COMENTARIOS */}
-        <div className="mt-8 bg-white rounded-2xl shadow-2xl p-8 border border-gray-200">
-          <h3 className="text-2xl font-bold mb-6 text-gray-800">💬 Comentarios del Administrador</h3>
-          <CajaComentarios idReporte={form.id_reporte} backendBase={BACKEND_BASE} />
         </div>
       </div>
     </div>

@@ -193,16 +193,6 @@ const MiDetalleListaChequeo: React.FC = () => {
             </div>
           </div>
         </div>
-
-        {/* Sección para mostrar comentario del administrador */}
-        {form.comentarioAdmin && (
-          <div className="mt-6 p-6 bg-gray-100 rounded-lg shadow-md">
-            <h3 className="text-lg font-semibold mb-2">Comentario del Administrador</h3>
-            <div className="w-full border rounded-lg p-3 bg-white text-gray-800">
-              {form.comentarioAdmin}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

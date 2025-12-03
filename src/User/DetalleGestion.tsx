@@ -213,55 +213,6 @@ const DetalleGestionEPPUser: React.FC = () => {
               </p>
             )}
           </div>
-
-          {/* Panel Admin */}
-          <div className="border-t border-gray-300 p-8 bg-gray-100">
-            <h3 className="text-2xl font-bold text-gray-800 mb-4">
-              ⚙️ Panel de Administración
-            </h3>
-
-            <div className="mb-4">
-              <label className="block font-semibold text-gray-900 mb-2">
-                Estado:
-              </label>
-              <select
-                value={estado}
-                onChange={(e) => setEstado(e.target.value)}
-                className="px-3 py-2 border rounded-lg w-full max-w-xs"
-              >
-                <option value="Activo">Activo</option>
-                <option value="Inactivo">Inactivo</option>
-              </select>
-            </div>
-
-            <div className="mb-4">
-              <label className="block font-semibold text-gray-900 mb-2">
-                Observación:
-              </label>
-              <textarea
-                value={observacion}
-                onChange={(e) => setObservacion(e.target.value)}
-                rows={4}
-                placeholder="Escribe una observación sobre esta gestión..."
-                className="w-full p-3 border rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={handleGuardar}
-                className="flex items-center gap-2 px-6 py-3 text-white font-bold bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 transition"
-              >
-                <Save className="w-5 h-5" /> Guardar Cambios
-              </button>
-            </div>
-
-            {mensaje && (
-              <div className="mt-4 text-center text-green-700 font-semibold">
-                {mensaje}
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
