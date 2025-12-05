@@ -143,7 +143,7 @@ const ListasChequeoGenerales: React.FC = () => {
   );
 
   const abrirDetalle = (item: ListaChequeo) => {
-    navigate("/nav/detalleListasChequeo", { state: item });
+    navigate("/nav/DetalleListaChequeoSuper", { state: item });
   };
 
   const formatearFecha = (fechaIso: string) => {

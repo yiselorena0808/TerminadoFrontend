@@ -69,7 +69,7 @@ import ListaProductos from "./Super Admin/ListaEquiposDeProteccion";
 import CrearActividadLudicaSA from "./Super Admin/CrearEvidencia";
 import CrearListaChequeoSA from "./Super Admin/CrearListaChequeo";
 import CrearGestionEppSA from "./Super Admin/CrearGestionEpp";
-
+import DetalleListaChequeoSuper from "./Super Admin/DetalleListaChqueo";
 // --- Perfil ---
 import Perfil from "./perfil";
 import SuperAdminDashboard from "./Super Admin/Empresas";
@@ -111,7 +111,7 @@ function App() {
           <Route path="crearActLudica" element={<CrearActividadLudica />} />
           <Route path="productos" element={<ProductosPage />} />
           <Route path="caja" element={<CajaComentarios></CajaComentarios>} />
-
+          <Route path="DetalleListaChequeoSuper" element={<DetalleListaChequeoSuper></DetalleListaChequeoSuper>}></Route>
           {/* --- ADMIN --- */}
           <Route path="Admusuarios" element={<AdmUsuarios />} />
           <Route path="Admadicionales" element={<DashboardPage />} />

@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 interface ListaChequeo {
   id: number;
   id_usuario: number;
-  usuarioNombre: string;
+  usuario_nombre: string;
   fecha: string;     
   hora: string;       
   modelo: string;
@@ -16,7 +16,7 @@ interface ListaChequeo {
   observaciones:string;
 }
 
-const DetalleListaChequeo: React.FC = () => {
+const DetalleListaChequeoSuper: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const lista = location.state as ListaChequeo | undefined;
@@ -122,7 +122,7 @@ const DetalleListaChequeo: React.FC = () => {
           {/* Header */}
           <div className="bg-blue-600 p-6 text-white">
             <h2 className="text-3xl font-bold">Detalle Lista de Chequeo</h2>
-            <p className="text-blue-100">Usuario: {form.usuarioNombre}</p>
+            <p className="text-blue-100">Usuario: {form.usuario_nombre}</p>
           </div>
 
           {/* Body */}
@@ -132,7 +132,7 @@ const DetalleListaChequeo: React.FC = () => {
               <input
                 type="text"
                 name="usuarioNombre"
-                value={form.usuarioNombre}
+                value={form.usuario_nombre}
                 onChange={handleChange}
                 disabled={!editando}
                 className="w-full border rounded p-2"
@@ -235,4 +235,4 @@ const DetalleListaChequeo: React.FC = () => {
   );
 };
 
-export default DetalleListaChequeo;
+export default DetalleListaChequeoSuper;

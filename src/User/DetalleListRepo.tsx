@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { ArrowLeft, Save } from "lucide-react";
 
 interface Reporte {
-  idReporte: number;
-  idUsuario: number;
-  nombreUsuario: string;
+  id_reporte: number;
+  id_usuario: number;
+  nombre_usuario: string;
   cargo: string;
   cedula: string;
   fecha: string;
@@ -44,7 +44,7 @@ const MiDetalleReporte: React.FC = () => {
   const guardarCambios = async () => {
     try {
       const apiActualizar = import.meta.env.VITE_API_ACTUALIZARREPORTE;
-      const res = await fetch(`${apiActualizar}/${form.idReporte}`, {
+      const res = await fetch(`${apiActualizar}/${form.id_reporte}`, {
         method: "PUT",
         headers: { 'ngrok-skip-browser-warning': 'true',"Content-Type": "application/json" },
         body: JSON.stringify({
@@ -83,7 +83,7 @@ const MiDetalleReporte: React.FC = () => {
           <div className="bg-blue-600 p-8 text-white">
             <h2 className="text-4xl font-bold">Detalle del Reporte</h2>
             <p className="text-blue-100 text-lg">
-              Usuario: {form.nombreUsuario}
+              Usuario: {form.nombre_usuario}
             </p>
           </div>
 
@@ -95,7 +95,7 @@ const MiDetalleReporte: React.FC = () => {
                 Información del Usuario
               </h3>
               <p>
-                <strong>Nombre:</strong> {form.nombreUsuario}
+                <strong>Nombre:</strong> {form.nombre_usuario}
               </p>
               <p>
                 <strong>Cargo:</strong> {form.cargo}
@@ -136,7 +136,7 @@ const MiDetalleReporte: React.FC = () => {
                       href={form.imagen}
                       target="_blank"
                       rel="noopener noreferrer"
-                      download={`reporte_${form.idReporte}_imagen`}
+                      download={`reporte_${form.id_reporte}_imagen`}
                       className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
                     >
                       Descargar Imagen
@@ -163,7 +163,7 @@ const MiDetalleReporte: React.FC = () => {
                       href={form.archivos}
                       target="_blank"
                       rel="noopener noreferrer"
-                      download={`reporte_${form.idReporte}_archivo`}
+                      download={`reporte_${form.id_reporte}_archivo`}
                       className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
                     >
                       Descargar Archivo
