@@ -183,12 +183,14 @@ const CargosPage2: React.FC = () => {
                   </h3>
                   <div className="flex gap-2">
                     <button
+                      name="editar"
                       onClick={() => editarCargo(c)}
                       className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white p-2 rounded-xl transition-all duration-300 shadow-lg"
                     >
                       <FaEdit size={14} />
                     </button>
                     <button
+                      name="eliminar"
                       onClick={() => eliminarCargo(c.idCargo)}
                       className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-2 rounded-xl transition-all duration-300 shadow-lg"
                     >

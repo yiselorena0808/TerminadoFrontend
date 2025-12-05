@@ -13,136 +13,160 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const apiLogin = import.meta.env.VITE_API_LOGIN;
   
-  // 🔹 NUEVO: API para Face ID
   const API_BASE = "https://facialsst-production.up.railway.app";
 
-  // 🔹 NUEVO: Referencia para la cámara
   const webcamRef = useRef<Webcam>(null);
 
-  // 🔹 NUEVO: Configuración de la cámara
   const videoConstraints = {
     width: 300,
     height: 300,
     facingMode: "user",
   };
 
-  // 🔹 NUEVA FUNCIÓN: Capturar imagen de la cámara
   const captureFaceImage = (): string | null => {
     const imageSrc = webcamRef.current?.getScreenshot();
     return imageSrc || null;
   };
 
- // 🔹 NUEVA FUNCIÓN: Login con reconocimiento facial
-const handleFaceLogin = async () => {
-  const imageSrc = captureFaceImage();
-  if (!imageSrc) {
-    Swal.fire({ icon: "error", title: "Error", text: "No se pudo capturar la imagen" });
-    return;
-  }
+  const guardarDatosUsuario = (data: any) => {
+    // Guardar token
+    localStorage.setItem("token", data.token);
+    
+    if (data.user) {
+      localStorage.setItem("userData", JSON.stringify(data.user));
+      console.log("✅ userData guardado en localStorage:", data.user);
+    }
+    
+    localStorage.setItem("usuario", JSON.stringify(data.user));
+    localStorage.setItem("auth", "true");
+    
+    if (data.user?.idEmpresa) {
+      localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
+    }
+  };
 
-  setLoadingFace(true);
-  try {
-    console.log("📸 Imagen capturada, convirtiendo a Blob...");
+  const manejarLoginExitoso = (data: any, tipoLogin: string = "tradicional") => {
+    console.log(`✅ Login ${tipoLogin} exitoso`);
     
-    const base64Response = await fetch(imageSrc);
-    const blob = await base64Response.blob();
+    guardarDatosUsuario(data);
     
-    const formData = new FormData();
-    formData.append('file', blob, "face-login.jpg");
+    const obtenerRutaSegunRol = (cargo: string) => {
+      if (["superadmin", "SuperAdmin"].includes(cargo)) {
+        return "/nav/admEmpresas";
+      }
+      if (["administrador", "Administrador"].includes(cargo)) {
+        return "/nav/Admusuarios";
+      }
+      if (["SG-SST", "sg-sst"].includes(cargo)) {
+        return "/nav/inicio";
+      }
+      return "/nav/inicioUser";
+    };
 
-    console.log('📤 Enviando verificación facial a FastAPI...');
-    
-    // 1. Primero verificar el rostro con FastAPI (LOCAL)
-    const API_FACE = "https://facialsst-production.up.railway.app"; // Tu microservicio FastAPI
-    const faceResponse = await fetch(`${API_FACE}/face/login`, {
-      method: 'POST',
-      body: formData,
+    Swal.fire({
+      icon: "success",
+      title: `Login ${tipoLogin === "facial" ? "Facial " : ""}Exitoso`,
+      text: `Bienvenido ${data.user.nombre} ${data.user.apellido || ''}`,
+      timer: 1800,
+      showConfirmButton: false,
+    }).then(() => {
+      const rutaInicial = obtenerRutaSegunRol(data.user.cargo);
+      console.log(`📍 Redirigiendo a: ${rutaInicial}`);
+      navigate(rutaInicial, { replace: true });
     });
+  };
 
-    if (!faceResponse.ok) {
-      const errorText = await faceResponse.text();
-      throw new Error(`Error en reconocimiento: ${errorText}`);
+  const handleFaceLogin = async () => {
+    const imageSrc = captureFaceImage();
+    if (!imageSrc) {
+      Swal.fire({ icon: "error", title: "Error", text: "No se pudo capturar la imagen" });
+      return;
     }
 
-    const faceData = await faceResponse.json();
-    console.log('🔑 Respuesta de reconocimiento facial:', faceData);
+    setLoadingFace(true);
+    try {
+      console.log("📸 Imagen capturada, convirtiendo a Blob...");
+      
+      const base64Response = await fetch(imageSrc);
+      const blob = await base64Response.blob();
+      
+      const formData = new FormData();
+      formData.append('file', blob, "face-login.jpg");
 
-    if (faceData.authenticated && faceData.id_usuario) {
-      console.log('✅ Rostro reconocido, ID usuario:', faceData.id_usuario);
+      console.log('📤 Enviando verificación facial a FastAPI...');
       
-      // 2. Ahora obtener el token JWT válido de Adonis (NGROK)
-      console.log('🔐 Obteniendo token JWT de Adonis...');
-      
-      // 🔹 CORREGIDO: Usar la variable de entorno para AdonisJS
-      const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/face-login`, { 
+      const API_FACE = "https://facialsst-production.up.railway.app";
+      const faceResponse = await fetch(`${API_FACE}/face/login`, {
         method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true"
-        },
-        body: JSON.stringify({ 
-          usuario_id: faceData.id_usuario 
-        }),
+        body: formData,
       });
 
-      console.log('📡 Respuesta login facial Adonis:', loginResponse.status);
-
-      if (!loginResponse.ok) {
-        const errorText = await loginResponse.text();
-        throw new Error(`Error en login: ${errorText}`);
+      if (!faceResponse.ok) {
+        const errorText = await faceResponse.text();
+        throw new Error(`Error en reconocimiento: ${errorText}`);
       }
 
-      const loginData = await loginResponse.json();
-      console.log('🎉 Login facial exitoso:', loginData);
+      const faceData = await faceResponse.json();
+      console.log('🔑 Respuesta de reconocimiento facial:', faceData);
 
-      // 🔥 GUARDAR TOKEN JWT VÁLIDO
-      localStorage.setItem("token", loginData.token);
-      localStorage.setItem("usuario", JSON.stringify(loginData.user));
-      localStorage.setItem("auth", "true");
-      
-      if (loginData.user?.id_empresa) {
-        localStorage.setItem("idEmpresa", loginData.user.id_empresa.toString());
+      if (faceData.authenticated && faceData.id_usuario) {
+        console.log('✅ Rostro reconocido, ID usuario:', faceData.id_usuario);
+        
+        console.log('🔐 Obteniendo token JWT de Adonis...');
+        
+        const loginResponse = await fetch(`${import.meta.env.VITE_API_URL}/face-login`, { 
+          method: 'POST',
+          headers: {
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+          },
+          body: JSON.stringify({ 
+            usuario_id: faceData.id_usuario 
+          }),
+        });
+
+        console.log('📡 Respuesta login facial Adonis:', loginResponse.status);
+
+        if (!loginResponse.ok) {
+          const errorText = await loginResponse.text();
+          throw new Error(`Error en login: ${errorText}`);
+        }
+
+        const loginData = await loginResponse.json();
+        console.log('🎉 Login facial exitoso:', loginData);
+
+        manejarLoginExitoso(loginData, "facial");
+
+      } else {
+        Swal.fire({ 
+          icon: "error", 
+          title: "Rostro no reconocido", 
+          text: faceData.message || "No se pudo identificar tu rostro." 
+        });
       }
-
-      Swal.fire({
-        icon: "success",
-        title: "Login Facial Exitoso",
-        text: `Bienvenido ${loginData.user.nombre} ${loginData.user.apellido || ''}`,
-        timer: 1800,
-        showConfirmButton: false,
-      }).then(() => {
-        const rutaInicial = obtenerRutaSegunRol(loginData.user.cargo);
-        navigate(rutaInicial, { replace: true });
-      });
-
-    } else {
+    } catch (error: any) {
+      console.error('❌ Error en login facial:', error);
       Swal.fire({ 
         icon: "error", 
-        title: "Rostro no reconocido", 
-        text: faceData.message || "No se pudo identificar tu rostro." 
+        title: "Error", 
+        text: error.message || "Error en el reconocimiento facial" 
       });
+    } finally {
+      setLoadingFace(false);
+      setShowCamera(false);
     }
-  } catch (error: any) {
-    console.error('❌ Error en login facial:', error);
-    Swal.fire({ 
-      icon: "error", 
-      title: "Error", 
-      text: error.message || "Error en el reconocimiento facial" 
-    });
-  } finally {
-    setLoadingFace(false);
-    setShowCamera(false);
-  }
-};
+  };
 
-  // 🔹 FUNCIÓN ORIGINAL: Login tradicional (sin cambios)
   const Enviar = async (event: React.FormEvent) => {
     event.preventDefault();
 
     try {
       const res = await fetch(apiLogin, {
         method: "POST",
-        headers: {"ngrok-skip-browser-warning": "true","Content-Type": "application/json" },
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          "Content-Type": "application/json" 
+        },
         body: JSON.stringify({ correo_electronico, contrasena }),
       });
 
@@ -154,64 +178,24 @@ const handleFaceLogin = async () => {
         return;
       }
 
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("usuario", JSON.stringify(data.user));
-      localStorage.setItem("auth", "true");
-      if (data.user?.idEmpresa) {
-        localStorage.setItem("idEmpresa", data.user.idEmpresa.toString());
-      }
+      console.log("✅ Login tradicional exitoso:", data);
+      
+      manejarLoginExitoso(data, "tradicional");
 
-      const obtenerRutaSegunRol = (cargo: string) => {
-        if (["superadmin", "SuperAdmin"].includes(cargo)) {
-          return "/nav/admEmpresas";
-        }
-        if (["administrador", "Administrador"].includes(cargo)) {
-          return "/nav/Admusuarios";
-        }
-        if (["SG-SST", "sg-sst"].includes(cargo)) {
-          return "/nav/inicio";
-        }
-        return "/nav/inicioUser";
-      };
-
-      Swal.fire({
-        icon: "success",
-        title: "Inicio de sesión exitoso",
-        text: "Bienvenido al Sistema SST",
-        timer: 1800,
-        showConfirmButton: false,
-      }).then(() => {
-        const rutaInicial = obtenerRutaSegunRol(data.user.cargo);
-        navigate(rutaInicial, { replace: true });
-      });
     } catch (error) {
+      console.error("❌ Error de conexión:", error);
       Swal.fire({
         icon: "error",
         title: "Error de conexión",
         text: "No se pudo conectar con el servidor",
       });
-      console.error("Error de conexión:", error);
     }
-  };
-
-  // 🔹 NUEVA FUNCIÓN: Obtener ruta según rol (extraída para reutilizar)
-  const obtenerRutaSegunRol = (cargo: string) => {
-    if (["superadmin", "SuperAdmin"].includes(cargo)) {
-      return "/nav/admEmpresas";
-    }
-    if (["administrador", "Administrador"].includes(cargo)) {
-      return "/nav/Admusuarios";
-    }
-    if (["SG-SST", "sg-sst"].includes(cargo)) {
-      return "/nav/inicio";
-    }
-    return "/nav/inicioUser";
   };
 
   return (
     <div className="w-screen h-screen flex items-center justify-center to-white">
       
-      {/* 🔹 NUEVO: Modal de Cámara para Face ID */}
+      {/* 🔹 Modal de Cámara para Face ID */}
       {showCamera && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
@@ -343,14 +327,14 @@ const handleFaceLogin = async () => {
             Iniciar Sesión
           </button>
 
-          {/* 🔹 NUEVO: Separador */}
+          {/* 🔹 Separador */}
           <div className="relative flex items-center my-4">
             <div className="flex-grow border-t border-gray-300"></div>
             <span className="flex-shrink mx-4 text-gray-500 text-sm">o</span>
             <div className="flex-grow border-t border-gray-300"></div>
           </div>
 
-          {/* 🔹 NUEVO: Botón Login Facial */}
+          {/* 🔹 Botón Login Facial */}
           <button
             type="button"
             onClick={() => setShowCamera(true)}

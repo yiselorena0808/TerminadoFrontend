@@ -278,6 +278,7 @@ const ListaProductos: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <button 
+                      name="Editar"
                       onClick={() => editarProducto(producto)}
                       className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded-xl transition-colors"
                       title="Editar equipo"
@@ -285,6 +286,7 @@ const ListaProductos: React.FC = () => {
                       <FaEdit size={14} />
                     </button>
                     <button 
+                      name="Eliminar"
                       onClick={() => eliminarProducto(producto.idProducto)}
                       className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl transition-colors"
                       title="Eliminar equipo"

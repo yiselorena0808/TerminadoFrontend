@@ -706,10 +706,10 @@ const eliminarUsuario = async (id: number) => {
                   <button onClick={() => abrirModalUsuarios(empresa)} className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg">
                     <FaUsers /> Ver Usuarios ({usuariosEmpresa.length})
                   </button>
-                  <button onClick={() => abrirModal("empresa", "editar", empresa)} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-3 py-2 rounded-xl transition-all duration-300 shadow-lg">
+                  <button name="editar" onClick={() => abrirModal("empresa", "editar", empresa)} className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white px-3 py-2 rounded-xl transition-all duration-300 shadow-lg">
                     <FaEdit />
                   </button>
-                  <button onClick={() => eliminarItem("empresa", empresa.idEmpresa)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-xl transition-all duration-300 shadow-lg">
+                  <button name="eliminar" onClick={() => eliminarItem("empresa", empresa.idEmpresa)} className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-3 py-2 rounded-xl transition-all duration-300 shadow-lg">
                     <FaTrash />
                   </button>
                   <button onClick={() => abrirModal("area", "crear")} className="bg-blue-300 text-white px-4 py-2 rounded-xl flex items-center gap-2 transition-all duration-300 shadow-lg">

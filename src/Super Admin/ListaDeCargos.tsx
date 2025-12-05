@@ -224,6 +224,7 @@ const ListaCargos: React.FC = () => {
                   <span className="font-semibold text-gray-800">{cargo.cargo}</span>
                   <div className="flex gap-2">
                     <button
+                      name="editar"
                       onClick={() => editarCargo(cargo)}
                       className="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded-xl transition-colors"
                       title="Editar cargo"
@@ -231,6 +232,7 @@ const ListaCargos: React.FC = () => {
                       <FaEdit size={14} />
                     </button>
                     <button
+                      name="eliminar"
                       onClick={() => eliminarCargo(cargo.idCargo)}
                       className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-xl transition-colors"
                       title="Eliminar cargo"

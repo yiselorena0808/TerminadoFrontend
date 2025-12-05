@@ -242,12 +242,14 @@ const ProductosPage: React.FC = () => {
                   </div>
                   <div className="flex gap-2">
                     <button
+                      name="editar"
                       onClick={() => editarProducto(p)}
                       className="bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white p-2 rounded-xl transition-all duration-300 shadow-lg"
                     >
                       <FaEdit size={14} />
                     </button>
                     <button
+                      name="eliminar"
                       onClick={() => eliminarProducto(p.idProducto)}
                       className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white p-2 rounded-xl transition-all duration-300 shadow-lg"
                     >
