@@ -14,7 +14,7 @@ const Login: React.FC = () => {
   const apiLogin = import.meta.env.VITE_API_LOGIN;
   
   // 🔹 NUEVO: API para Face ID
-  const API_BASE = "http://127.0.0.1:8000";
+  const API_BASE = "https://facialsst-production.up.railway.app";
 
   // 🔹 NUEVO: Referencia para la cámara
   const webcamRef = useRef<Webcam>(null);
@@ -53,7 +53,7 @@ const handleFaceLogin = async () => {
     console.log('📤 Enviando verificación facial a FastAPI...');
     
     // 1. Primero verificar el rostro con FastAPI (LOCAL)
-    const API_FACE = "http://127.0.0.1:8000"; // Tu microservicio FastAPI
+    const API_FACE = "https://facialsst-production.up.railway.app"; // Tu microservicio FastAPI
     const faceResponse = await fetch(`${API_FACE}/face/login`, {
       method: 'POST',
       body: formData,

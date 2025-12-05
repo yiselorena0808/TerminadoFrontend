@@ -261,7 +261,7 @@ const Perfil: React.FC = () => {
       formData.append('id_usuario', usuario!.id.toString());
       formData.append('image', base64Data); 
 
-      const API_FACE = "http://127.0.0.1:8000";
+      const API_FACE = "https://facialsst-production.up.railway.app";
       
       const response = await fetch(`${API_FACE}/face/register`, {
         method: "POST",
@@ -323,8 +323,8 @@ const Perfil: React.FC = () => {
       const formData = new FormData();
       formData.append('image', base64Data);
 
-      const API_FACE = "http://127.0.0.1:8000";
-      const response = await fetch(`${API_FACE}/face/verify`, {
+      const API_FACE = "https://facialsst-production.up.railway.app";
+      const response = await fetch(`${API_FACE}/face/login`, {
         method: "POST",
         body: formData,
       });
