@@ -14,6 +14,8 @@ import {
 import { useNavigate, useLocation, Outlet } from "react-router-dom";
 import logo from "../src/assets/logosst.jpg";
 
+const API_URL = "https://unreproaching-rancorously-evelina.ngrok-free.dev";
+
 interface Empresa {
   id_empresa: number;
   nombre: string;
@@ -45,42 +47,86 @@ const SUPER_ADMIN_ROLES = ["superadmin", "SuperAdmin"];
 const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [usuario, setUsuario] = useState<Usuario | null>(null);
+  // notificaciones en forma que usa la UI del navbar (titulo, descripcion, tiempo, leida, id)
   const [notificaciones, setNotificaciones] = useState<any[]>([]);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const ocultarSidebar = location.pathname === "/" || location.pathname === "/registro";
   if (ocultarSidebar) return null;
 
+  // 🔹 Cargar usuario y notificaciones
   useEffect(() => {
     const usuarioGuardado = localStorage.getItem("usuario");
-    if (usuarioGuardado) {
-      const user: Usuario = JSON.parse(usuarioGuardado);
-      setUsuario(user);
-      
-      // Solo cargar notificaciones para SG-SST
-      if (SGVA_ROLES.includes(user.cargo)) {
-        setNotificaciones([
-          { id: 1, titulo: "Lista de chequeo pendiente", leida: false, tiempo: "10:30 AM", descripcion: "Área de producción" },
-          { id: 2, titulo: "EPP por renovar", leida: true, tiempo: "Ayer", descripcion: "Casco de seguridad" },
-          { id: 3, titulo: "Nueva actividad asignada", leida: false, tiempo: "Hoy", descripcion: "Capacitación SST" },
-        ]);
-      }
-    }
+    if (!usuarioGuardado) return;
+
+    const user: Usuario = JSON.parse(usuarioGuardado);
+    setUsuario(user);
+
+    if (!SGVA_ROLES.includes(user.cargo)) return;
+
+    cargarNotificaciones();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const logout = () => {
-    localStorage.clear();
-    window.location.href = "/";
+  // 🔹 Obtener notificaciones (mapea a la forma que usa el dropdown)
+  const cargarNotificaciones = async (tipo?: string) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      let url = `${API_URL}/notificaciones?soloNoLeidas=false`;
+      if (tipo && tipo !== "todos") url += `&tipo=${encodeURIComponent(tipo)}`;
+
+      const res = await fetch(url, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      const raw = data?.notificaciones || [];
+
+      // Mapear a la estructura usada por el dropdown (titulo, descripcion, tiempo, leida, id)
+      const mapped = raw.map((n: any) => ({
+        id: n.id,
+        titulo: n.mensaje || n.titulo || "Notificación",
+        descripcion: n.reporte?.descripcion || n.descripcion || "",
+        tiempo: n.fecha ? new Date(n.fecha).toLocaleString() : "",
+        leida: !!n.leida,
+        tipo: n.tipo || "",
+        raw: n,
+      }));
+
+      setNotificaciones(mapped);
+    } catch (error) {
+      console.error("Error cargando notificaciones:", error);
+    }
   };
 
-  const marcarComoLeida = (id: number) => {
-    setNotificaciones(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, leida: true } : notif
-      )
-    );
+  // 🔹 Marcar notificación como leída
+  const marcarComoLeida = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      await fetch(`${API_URL}/notificaciones/${id}/leer`, {
+        method: "PUT",
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setNotificaciones((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, leida: true } : n))
+      );
+    } catch (error) {
+      console.error("Error marcando como leída:", error);
+    }
   };
 
   const irANotificaciones = () => {
@@ -88,9 +134,15 @@ const Navbar: React.FC = () => {
     navigate("/nav/GestionNotificaciones");
   };
 
-  const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
+  const logout = () => {
+    localStorage.clear();
+    navigate("/");
+  };
+
+  const notificacionesNoLeidas = notificaciones.filter((n) => !n.leida).length;
   const isSgva = usuario && SGVA_ROLES.includes(usuario.cargo);
 
+  // 🔹 Menús por rol
   const superAdminMenu = [
     { icon: <AiOutlineSetting />, label: "Administración de Empresas", path: "/nav/admEmpresas" },
     { icon: <AiOutlineSetting />, label: "Administración de Reportes", path: "/nav/ListaDeReportesGenerales" },
@@ -99,12 +151,12 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineSetting />, label: "Administración de Gestiones Epp", path: "/nav/ListaDeGestionEppGeneral"},
     { icon: <AiOutlineSetting />, label: "Administración de Eventos", path: "/nav/ListaDeEventosGenerales" },
     { icon: <AiOutlineSetting />, label: "Administración de Cargos", path: "/nav/ListaCargos" },
-    { icon: <AiOutlineSetting />, label: "Administración de Equipos de protección personal", path: "/nav/ListaProductos" }
+    { icon: <AiOutlineSetting />, label: "Administración de EPP", path: "/nav/ListaProductos" }
   ];
 
   const adminMenu = [
     { icon: <AiOutlineUser />, label: "Administración de Usuarios", path: "/nav/Admusuarios" },
-    { icon: <AiOutlineSetting />, label: "Administración de Áreas", path: "/nav/admAreas" }
+    { icon: <AiOutlineSetting />, label: "Administración de Áreas", path: "/nav/admAreas" },
   ];
 
   const sgvaMenu = [
@@ -114,29 +166,36 @@ const Navbar: React.FC = () => {
     { icon: <AiOutlineCheckSquare />, label: "Listas de Chequeo", path: "/nav/ListasChequeo" },
     { icon: <AiOutlineTool />, label: "Gestión EPP", path: "/nav/gestionEpp" },
     { icon: <AiOutlineSetting />, label: "Adicionales", path: "/nav/Admadicionales" },
-    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/blog" }
+    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/blog" },
   ];
 
   const userMenu = [
     { icon: <AiOutlineHome />, label: "Inicio", path: "/nav/inicioUser" },
     { icon: <AiOutlineCheckSquare />, label: "Mis Chequeos", path: "/nav/lectorUserChe" },
     { icon: <AiOutlineBarChart />, label: "Mis Reportes", path: "/nav/LectorUserRepo" },
-    { icon: <AiOutlineBook />, label: "Mis Actividades Lúdicas", path: "/nav/LectorUserAct" },
+    { icon: <AiOutlineBook />, label: "Mis Actividades", path: "/nav/LectorUserAct" },
     { icon: <AiOutlineTool />, label: "Mi Gestión EPP", path: "/nav/lectorgestionepp" },
-    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/EventosUser" }
+    { icon: <AiOutlineProfile />, label: "Eventos", path: "/nav/EventosUser" },
   ];
 
   const isSuperAdmin = usuario && SUPER_ADMIN_ROLES.includes(usuario.cargo);
   const isAdmin = usuario && ADMIN_ROLES.includes(usuario.cargo);
-  const menuItems = isSuperAdmin ? superAdminMenu : isSgva ? sgvaMenu : isAdmin ? adminMenu : userMenu;
+
+  const menuItems = isSuperAdmin
+    ? superAdminMenu
+    : isSgva
+    ? sgvaMenu
+    : isAdmin
+    ? adminMenu
+    : userMenu;
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-gradient-to-br from-white via-blue-50 to-blue-100">
-      {/* 🔹 Sidebar */}
+      {/* SIDEBAR */}
       <div
         className={`${isCollapsed ? "w-20" : "w-72"} h-full flex flex-col text-gray-800 bg-white border-r border-blue-100 shadow-lg transition-all duration-300`}
       >
-        {/* 🔹 Logo y menú */}
+        {/* LOGO */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-blue-100">
           {!isCollapsed && (
             <div className="flex items-center space-x-2">
@@ -152,13 +211,13 @@ const Navbar: React.FC = () => {
           </button>
         </div>
 
-        {/* 🔹 Perfil */}
+        {/* PERFIL */}
         {!isCollapsed && usuario && (
           <div className="flex flex-col items-center py-6 border-b border-blue-100 text-center">
             <img
               src={usuario.fotoPerfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
               alt="Perfil"
-              className="w-20 h-20 rounded-full border-4 border-blue-300 shadow-md object-cover"
+              className="w-20 h-20 rounded-full border-4 border-blue-300 shadow-md object-cover cursor-pointer"
               onClick={() => navigate("/nav/perfil")}
             />
             <h2 className="mt-3 font-semibold text-blue-900">{usuario.nombre}</h2>
@@ -166,7 +225,7 @@ const Navbar: React.FC = () => {
           </div>
         )}
 
-        {/* 🔹 Menú */}
+        {/* MENÚ */}
         <nav className="flex-1 mt-4 overflow-y-auto">
           <ul className="space-y-1 px-2">
             {menuItems.map((item, i) => (
@@ -183,7 +242,7 @@ const Navbar: React.FC = () => {
           </ul>
         </nav>
 
-        {/* 🔹 Footer */}
+        {/* FOOTER */}
         {!isCollapsed && (
           <div className="p-4 border-t border-blue-100">
             <button
@@ -197,32 +256,35 @@ const Navbar: React.FC = () => {
         )}
       </div>
 
-      {/* 🔹 Contenido principal con Header */}
+      {/* CONTENIDO PRINCIPAL + HEADER */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* 🔹 Header con Notificaciones */}
+        {/* HEADER */}
         <div className="bg-white/90 border-b border-blue-200 shadow-sm px-8 py-4">
           <div className="flex justify-between items-center">
-            {/* Título de la página */}
-            <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                {location.pathname.includes("/nav/inicio") && "Inicio"}
-                {location.pathname.includes("/nav/reportes") && "Reportes"}
-                {location.pathname.includes("/nav/actLudica") && "Actividades Lúdicas"}
-                {location.pathname.includes("/nav/ListasChequeo") && "Listas de Chequeo"}
-                {location.pathname.includes("/nav/gestionEpp") && "Gestión EPP"}
-                {location.pathname.includes("/nav/blog") && "Eventos"}
-                {location.pathname.includes("/nav/perfil") && "Perfil"}
-                {location.pathname.includes("/nav/gestion-notificaciones") && "Gestión de Notificaciones"}
-                {!location.pathname.includes("/nav/") && "Dashboard"}
-              </h1>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-800">
+              {
+                {
+                  "/nav/inicio": "Inicio",
+                  "/nav/reportesC": "Reportes",
+                  "/nav/actLudica": "Actividades Lúdicas",
+                  "/nav/ListasChequeo": "Listas de Chequeo",
+                  "/nav/gestionEpp": "Gestión EPP",
+                  "/nav/blog": "Eventos",
+                  "/nav/perfil": "Perfil",
+                }[location.pathname] || "Dashboard"
+              }
+            </h1>
 
-            {/* 🔔 Notificaciones y Perfil (SOLO para SG-SST) */}
+            {/* NOTIFICACIONES */}
             <div className="flex items-center gap-6">
               {isSgva && (
                 <div className="relative">
                   <button
-                    onClick={() => setShowNotifications(!showNotifications)}
+                    onClick={() => {
+                      setShowNotifications(!showNotifications);
+                      // refrescar al abrir
+                      if (!showNotifications) cargarNotificaciones();
+                    }}
                     className="relative p-2 hover:bg-blue-50 rounded-full transition"
                   >
                     <AiOutlineBell className="text-2xl text-gray-600" />
@@ -232,11 +294,9 @@ const Navbar: React.FC = () => {
                       </span>
                     )}
                   </button>
-                  
-                  {/* 🔔 Dropdown de notificaciones */}
+
                   {showNotifications && (
                     <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
-                      {/* Header del dropdown */}
                       <div className="p-4 border-b border-gray-200 bg-blue-50">
                         <div className="flex justify-between items-center">
                           <h3 className="font-bold text-gray-800">Notificaciones</h3>
@@ -248,8 +308,7 @@ const Navbar: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                      
-                      {/* Lista de notificaciones */}
+
                       <div className="max-h-80 overflow-y-auto">
                         {notificaciones.length === 0 ? (
                           <div className="p-8 text-center text-gray-500">
@@ -261,12 +320,12 @@ const Navbar: React.FC = () => {
                             <div
                               key={notif.id}
                               className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer ${
-                                !notif.leida ? 'bg-blue-50' : ''
+                                !notif.leida ? "bg-blue-50" : ""
                               }`}
                               onClick={() => marcarComoLeida(notif.id)}
                             >
                               <div className="flex justify-between items-start">
-                                <h4 className={`font-medium ${!notif.leida ? 'text-gray-900' : 'text-gray-700'}`}>
+                                <h4 className={`font-medium ${!notif.leida ? "text-gray-900" : "text-gray-700"}`}>
                                   {notif.titulo}
                                 </h4>
                                 {!notif.leida && (
@@ -279,8 +338,7 @@ const Navbar: React.FC = () => {
                           ))
                         )}
                       </div>
-                      
-                      {/* Footer del dropdown */}
+
                       <div className="p-3 border-t border-gray-200 bg-gray-50">
                         <button
                           onClick={irANotificaciones}
@@ -297,12 +355,12 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* 🔹 Contenido principal */}
+        {/* CONTENIDO */}
         <div
           className="flex-1 overflow-auto"
           style={{
             backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.95)), url('https://img.freepik.com/fotos-premium/trabajador-textura-oscura-fondo-concepto-sst-seguridad-salud-trabajo_488220-50664.jpg')",
+              "linear-gradient(rgba(255,255,255,0.8), rgba(255,255,255,0.95)), url('https://img.freepik.com/fotos-premium/trabajador-textura-arcilla.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
           }}

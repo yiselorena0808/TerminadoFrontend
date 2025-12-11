@@ -62,6 +62,22 @@ const MiDetalleReporte: React.FC = () => {
       console.error("Error al actualizar:", error);
     }
   };
+  const descargarArchivo = async (url: string, nombre: string) => {
+  try {
+    const res = await fetch(url, { headers: { 'ngrok-skip-browser-warning': 'true' } });
+    if (!res.ok) throw new Error("No se pudo descargar el archivo");
+    const blob = await res.blob();
+    const link = document.createElement("a");
+    link.href = window.URL.createObjectURL(blob);
+    link.download = nombre;
+    link.click();
+    window.URL.revokeObjectURL(link.href);
+  } catch (err) {
+    console.error(err);
+    alert("Error al descargar el archivo");
+  }
+};
+
 
   return (
     <div
@@ -159,15 +175,13 @@ const MiDetalleReporte: React.FC = () => {
                     >
                       Ver Archivo
                     </a>
-                    <a
-                      href={form.archivos}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      download={`reporte_${form.id_reporte}_archivo`}
-                      className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
-                    >
-                      Descargar Archivo
-                    </a>
+                   <button
+                    onClick={() => descargarArchivo(form.archivos!, `reporte_${form.id_reporte}_archivo`)}
+                    className="px-3 py-1 bg-blue-600 text-white rounded-md shadow hover:bg-blue-700"
+                  >
+                    Descargar Archivo
+                  </button>
+
                   </div>
                 ) : (
                   <p className="text-gray-500 italic">No hay archivo adjunto</p>

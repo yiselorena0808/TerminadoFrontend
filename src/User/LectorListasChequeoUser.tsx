@@ -27,6 +27,7 @@ interface ListaChequeo {
   soat: string;
   tecnico: string;
   kilometraje: string;
+  observaciones:string;
   id_empresa: number;
 }
 
@@ -94,19 +95,24 @@ const LectorChequeo: React.FC = () => {
   };
 
   const descargarPDF = (lista: ListaChequeo) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Lista de Chequeo - Vehículo", 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Usuario: ${lista.usuario_nombre}`, 20, 40);
-    doc.text(`Fecha: ${formatearFecha(lista.fecha)}`, 20, 50);
-    doc.text(`Marca: ${lista.marca}`, 20, 60);
-    doc.text(`Modelo: ${lista.modelo}`, 20, 70);
-    doc.text(`Kilometraje: ${lista.kilometraje}`, 20, 80);
-    doc.text(`Técnico: ${lista.tecnico}`, 20, 90);
-    doc.text(`SOAT: ${lista.soat}`, 20, 100);
-    doc.save(`lista_chequeo_${lista.id}.pdf`);
-  };
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("Lista de Chequeo - Vehículo", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Usuario: ${lista.usuario_nombre}`, 20, 40);
+  doc.text(`Fecha: ${formatearFecha(lista.fecha)}`, 20, 50);
+  doc.text(`Marca: ${lista.marca}`, 20, 60);
+  doc.text(`Modelo: ${lista.modelo}`, 20, 70);
+  doc.text(`Kilometraje: ${lista.kilometraje}`, 20, 80);
+  doc.text(`Técnico: ${lista.tecnico}`, 20, 90);
+  doc.text(`SOAT: ${lista.soat}`, 20, 100);
+  const descripcionLarga = doc.splitTextToSize(lista.observaciones, 170); // ancho permitido
+  doc.text("Descripción:", 20, 110);
+  doc.text(descripcionLarga, 20, 120);
+
+  doc.save(`lista_chequeo_${lista.id}.pdf`);
+};
 
   const listasFiltradas = listas.filter((item) =>
     `${item.usuario_nombre} ${item.modelo} ${item.marca} ${item.tecnico}`

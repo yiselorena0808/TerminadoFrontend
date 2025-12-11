@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FaFilePdf,
@@ -9,7 +9,6 @@ import {
   FaPlus,
   FaChevronLeft,
   FaChevronRight,
-  FaBell,
   FaShieldAlt,
 } from "react-icons/fa";
 import jsPDF from "jspdf";
@@ -20,7 +19,6 @@ import {
   esUsuarioSGSST,
   getCargoUsuario,
 } from "../utils/auth";
-import { socket } from "../services/socket";
 
 interface Reporte {
   id_reporte: number;
@@ -37,19 +35,6 @@ interface Reporte {
   id_empresa: number;
 }
 
-interface Notificacion {
-  id: string;
-  mensaje: string;
-  fecha: Date;
-  leida: boolean;
-  id_reporte?: number;
-  lugar?: string;
-  usuario?: string;
-  descripcion?: string;
-  estado?: string;
-  origen?: 'socket' | 'bd';
-}
-
 const ListarReportes: React.FC = () => {
   const navigate = useNavigate();
   const [listas, setListas] = useState<Reporte[]>([]);
@@ -57,22 +42,15 @@ const ListarReportes: React.FC = () => {
   const [estadoFiltro, setEstadoFiltro] = useState("Todos");
   const [usuario, setUsuario] = useState<UsuarioToken | null>(null);
   
-  // 🔔 ESTADOS PARA NOTIFICACIONES
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
-  const [mostrarPanelNotificaciones, setMostrarPanelNotificaciones] = useState(false);
-  const [contadorNoLeidas, setContadorNoLeidas] = useState(0);
   const [esSGSST, setEsSGSST] = useState(false);
-  const [socketConectado, setSocketConectado] = useState(false);
   const [cargoUsuario, setCargoUsuario] = useState<string>("");
   
-  const panelRef = useRef<HTMLDivElement>(null);
 
   const [paginaActual, setPaginaActual] = useState(1);
   const reportesPorPagina = 9;
 
-  const estados = ["Todos", "Pendiente", "Revisado", "Finalizado"];
+  const estados = ["Todos", "Pendiente", "Revisado", "Aprobado"];
   const apiListarReportes = import.meta.env.VITE_API_LISTARREPORTES;
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3333/api";
 
   useEffect(() => {
     console.log("🔍 Iniciando verificación de usuario...");
@@ -97,303 +75,6 @@ const ListarReportes: React.FC = () => {
     
     
   }, []);
-
-  useEffect(() => {
-    if (!usuario || !esSGSST) return;
-
-    const obtenerNotificacionesBD = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-
-        const response = await fetch(`${API_URL}/notificaciones`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          
-          const notificacionesBD = data.notificaciones?.map((notif: any) => ({
-            id: `bd_${notif.id}`,
-            mensaje: notif.mensaje,
-            fecha: new Date(notif.fecha),
-            leida: notif.leida,
-            id_reporte: notif.id_reporte,
-            lugar: notif.reporte?.lugar,
-            usuario: notif.reporte?.nombre_usuario,
-            descripcion: notif.reporte?.descripcion,
-            estado: notif.reporte?.estado,
-            origen: 'bd'
-          })) || [];
-
-          setNotificaciones(prev => {
-            const idsExistentes = new Set(prev.map(n => n.id));
-            const nuevasNotifBD = notificacionesBD.filter((n: any) => !idsExistentes.has(n.id));
-            return [...prev, ...nuevasNotifBD];
-          });
-        }
-      } catch (error) {
-        console.error('Error obteniendo notificaciones de BD:', error);
-      }
-    };
-
-    obtenerNotificacionesBD();
-    const intervalo = setInterval(obtenerNotificacionesBD, 30000);
-
-    return () => clearInterval(intervalo);
-  }, [usuario, esSGSST, API_URL]);
-
-  // 🔔 CONECTAR SOCKET Y REGISTRAR ROL
-  useEffect(() => {
-    if (!usuario) {
-      console.log("⏳ Esperando usuario...");
-      return;
-    }
-
-    console.log("🔌 Iniciando conexión socket...");
-    console.log("📊 Información para socket:");
-    console.log("   - Usuario:", usuario.nombre);
-    console.log("   - Cargo:", cargoUsuario);
-    console.log("   - Es SG-SST:", esSGSST);
-    console.log("   - ID Empresa:", usuario.id_empresa);
-
-    let rolParaSocket = "empleado";
-    if (esSGSST) {
-      rolParaSocket = "SG-SST";
-      console.log("🎯 Registrando socket como: SG-SST");
-    } else {
-      console.log("🎯 Registrando socket como: empleado");
-    }
-
-    if (!socket.connected) {
-      console.log("🔗 Conectando socket...");
-      socket.connect();
-    }
-
-    const handleConnect = () => {
-      console.log("✅ Socket conectado, ID:", socket.id);
-      setSocketConectado(true);
-      
-      console.log(`📤 Enviando rol al servidor: ${rolParaSocket}`);
-      socket.emit("registrar_rol", rolParaSocket);
-    };
-
-    socket.on("connect", handleConnect);
-
-    if (socket.connected) {
-      handleConnect();
-    }
-
-    // 🔔 ESCUCHAR NOTIFICACIONES SOLO SI ES SG-SST
-    if (esSGSST) {
-      console.log("👂 Configurando listeners para notificaciones SG-SST");
-      
-      socket.on("notificacion_sg_sst", (data: any) => {
-        console.log("📢 Notificación SG-SST recibida:", data);
-        
-        const nuevaNotif: Notificacion = {
-          id: `socket_${Date.now()}_${Math.random()}`,
-          mensaje: data.mensaje || "Nueva notificación",
-          fecha: new Date(data.fecha || Date.now()),
-          leida: false,
-          id_reporte: data.id_reporte,
-          lugar: data.lugar,
-          usuario: data.usuario,
-          descripcion: data.descripcion,
-          estado: data.estado,
-          origen: 'socket'
-        };
-        
-        setNotificaciones(prev => [nuevaNotif, ...prev]);
-        
-        mostrarToast(nuevaNotif.mensaje);
-        
-        obtenerListas();
-      });
-    } else {
-      console.log("🚫 Usuario no es SG-SST, no se configuran listeners");
-    }
-
-    socket.on("rol_registrado", (data: any) => {
-      console.log("✅ Rol registrado en servidor:", data);
-    });
-
-    socket.on("disconnect", () => {
-      console.log("❌ Socket desconectado");
-      setSocketConectado(false);
-    });
-
-    socket.on("connect_error", (error) => {
-      console.error("❌ Error de conexión socket:", error);
-      setSocketConectado(false);
-    });
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (panelRef.current && !panelRef.current.contains(event.target as Node)) {
-        setMostrarPanelNotificaciones(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      socket.off("connect");
-      socket.off("notificacion_sg_sst");
-      socket.off("rol_registrado");
-      socket.off("disconnect");
-      socket.off("connect_error");
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [usuario, esSGSST, cargoUsuario]);
-
-  // Actualizar contador de no leídas
-  useEffect(() => {
-    const noLeidas = notificaciones.filter(n => !n.leida).length;
-    setContadorNoLeidas(noLeidas);
-  }, [notificaciones]);
-
-  // 🔔 FUNCIÓN PARA MOSTRAR TOAST
-  const mostrarToast = (mensaje: string) => {
-    let toast = document.getElementById("notificacion-toast");
-    
-    if (!toast) {
-      toast = document.createElement("div");
-      toast.id = "notificacion-toast";
-      toast.className = "fixed top-4 right-4 bg-green-600 text-white px-4 py-3 rounded-lg shadow-lg z-50 transform transition-all duration-300 opacity-0 translate-y-[-20px]";
-      document.body.appendChild(toast);
-    }
-    
-    toast.textContent = mensaje;
-    toast.classList.remove("opacity-0", "translate-y-[-20px]");
-    toast.classList.add("opacity-100", "translate-y-0");
-    
-    setTimeout(() => {
-      toast?.classList.remove("opacity-100", "translate-y-0");
-      toast?.classList.add("opacity-0", "translate-y-[-20px]");
-    }, 3000);
-  };
-
-  // 🔔 FUNCIÓN PARA ABRIR REPORTE DESDE NOTIFICACIÓN
-  const abrirReporteDesdeNotificacion = async (notificacion: Notificacion) => {
-    if (!notificacion.id_reporte || !usuario) return;
-
-    try {
-      const token = localStorage.getItem("token");
-      
-      if (notificacion.id.toString().startsWith('bd_')) {
-        const idBD = notificacion.id.toString().replace('bd_', '');
-        await fetch(`${API_URL}/notificaciones/${idBD}/leer`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-      }
-
-      marcarComoLeida(notificacion.id);
-
-      const res = await fetch(`${API_URL}/idReporte/${notificacion.id_reporte}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'ngrok-skip-browser-warning': 'true'
-        }
-      });
-
-      const data = await res.json();
-
-      if (data.datos) {
-        navigate("/nav/detalleReportes", { 
-          state: data.datos 
-        });
-      }
-
-      setMostrarPanelNotificaciones(false);
-
-    } catch (error) {
-      console.error('Error al abrir reporte desde notificación:', error);
-      mostrarToast('❌ Error al cargar el reporte');
-    }
-  };
-
-  // 🔔 MARCAR NOTIFICACIÓN COMO LEÍDA (CONSUMIENDO API)
-  const marcarComoLeida = async (id: string) => {
-    try {
-      if (id.toString().startsWith('bd_')) {
-        const idBD = id.toString().replace('bd_', '');
-        const token = localStorage.getItem('token');
-        
-        await fetch(`${API_URL}/notificaciones/${idBD}/leer`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-      }
-
-      setNotificaciones(prev => 
-        prev.map(notif => 
-          notif.id === id ? { ...notif, leida: true } : notif
-        )
-      );
-    } catch (error) {
-      console.error('Error marcando notificación como leída:', error);
-    }
-  };
-
-  // 🔔 MARCAR TODAS COMO LEÍDAS (CONSUMIENDO API)
-  const marcarTodasComoLeidas = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      
-      const tieneNotifBD = notificaciones.some(n => n.id.toString().startsWith('bd_'));
-      if (tieneNotifBD && token) {
-        await fetch(`${API_URL}/notificaciones/leer-todas`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-      }
-
-      setNotificaciones(prev => 
-        prev.map(notif => ({ ...notif, leida: true }))
-      );
-    } catch (error) {
-      console.error('Error marcando todas como leídas:', error);
-    }
-  };
-
-  // 🔔 ELIMINAR NOTIFICACIÓN (CONSUMIENDO API)
-  const eliminarNotificacion = async (id: string) => {
-    try {
-      if (id.toString().startsWith('bd_')) {
-        const idBD = id.toString().replace('bd_', '');
-        const token = localStorage.getItem('token');
-        
-        await fetch(`${API_URL}/notificaciones/${idBD}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'ngrok-skip-browser-warning': 'true'
-          }
-        });
-      }
-
-      setNotificaciones(prev => prev.filter(notif => notif.id !== id));
-    } catch (error) {
-      console.error('Error eliminando notificación:', error);
-    }
-  };
-
-  const eliminarTodasNotificaciones = () => {
-    setNotificaciones([]);
-  };
 
   const obtenerListas = async () => {
     if (!usuario) return;
@@ -463,27 +144,6 @@ const ListarReportes: React.FC = () => {
     });
   };
 
-  const formatearFechaNotificacion = (fecha: Date) => {
-    const ahora = new Date();
-    const diffMs = ahora.getTime() - fecha.getTime();
-    const diffSeg = Math.floor(diffMs / 1000);
-    const diffMin = Math.floor(diffMs / (1000 * 60));
-    const diffHoras = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    
-    if (diffSeg < 60) return `Hace ${diffSeg} segundos`;
-    if (diffMin < 60) return `Hace ${diffMin} ${diffMin === 1 ? 'minuto' : 'minutos'}`;
-    if (diffHoras < 24) return `Hace ${diffHoras} ${diffHoras === 1 ? 'hora' : 'horas'}`;
-    if (diffDias < 7) return `Hace ${diffDias} ${diffDias === 1 ? 'día' : 'días'}`;
-    
-    return fecha.toLocaleDateString("es-CO", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    });
-  };
-
   const descargarPDF = (reporte: Reporte) => {
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -524,7 +184,7 @@ const ListarReportes: React.FC = () => {
         return "bg-yellow-100 text-yellow-800";
       case "Revisado":
         return "bg-blue-100 text-blue-800";
-      case "Finalizado":
+      case "Aprobado":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-600";
@@ -559,155 +219,6 @@ const ListarReportes: React.FC = () => {
         </div>
 
         <div className="flex gap-4 items-center">
-          {/* 🔔 BOTÓN DE NOTIFICACIONES (SOLO PARA SG-SST) */}
-          {esSGSST && (
-            <div className="relative" ref={panelRef}>
-              <button
-                onClick={() => {
-                  setMostrarPanelNotificaciones(!mostrarPanelNotificaciones);
-                  if (contadorNoLeidas > 0) {
-                    marcarTodasComoLeidas();
-                  }
-                }}
-                className="relative p-3 rounded-full bg-gradient-to-r from-blue-50 to-blue-100 border-2 border-blue-300 hover:border-blue-500 hover:shadow-lg transition-all duration-300 group"
-                title="Notificaciones SG-SST"
-              >
-                <FaBell className={`text-blue-700 text-xl ${contadorNoLeidas > 0 ? 'bell-ring' : ''}`} />
-                
-                {contadorNoLeidas > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded-full min-w-[20px] h-5 flex items-center justify-center">
-                    {contadorNoLeidas}
-                  </span>
-                )}
-              </button>
-
-              {/* PANEL DE NOTIFICACIONES */}
-              {mostrarPanelNotificaciones && (
-                <div className="absolute right-0 mt-2 w-96 bg-white shadow-2xl rounded-xl border border-gray-200 z-50 fade-in max-h-[500px] overflow-hidden flex flex-col">
-                  {/* ENCABEZADO */}
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
-                    <div className="flex justify-between items-center">
-                      <h3 className="text-lg font-bold flex items-center gap-2">
-                        <FaShieldAlt /> Notificaciones SG-SST
-                      </h3>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={marcarTodasComoLeidas}
-                          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition"
-                        >
-                          Marcar todas
-                        </button>
-                        <button
-                          onClick={eliminarTodasNotificaciones}
-                          className="text-xs bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg transition"
-                        >
-                          Limpiar
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-sm opacity-90">
-                      {notificaciones.length === 0 
-                        ? "No hay notificaciones" 
-                        : `${notificaciones.length} notificaciones`}
-                    </p>
-                  </div>
-
-                  {/* LISTA */}
-                  <div className="flex-1 overflow-y-auto p-2">
-                    {notificaciones.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500">
-                        <FaBell className="text-3xl mx-auto mb-3 text-gray-300" />
-                        <p>No hay notificaciones</p>
-                      </div>
-                    ) : (
-                      notificaciones.map((notif) => (
-                        <div
-                          key={notif.id}
-                          onClick={() => notif.id_reporte && abrirReporteDesdeNotificacion(notif)}
-                          className={`p-3 rounded-lg mb-2 border-l-4 cursor-pointer hover:shadow-md transition-all duration-200 ${
-                            notif.leida 
-                              ? 'border-gray-300 bg-gray-50' 
-                              : 'border-blue-600 bg-blue-50 hover:bg-green-100'
-                          } ${notif.id_reporte ? 'hover:border-green-700' : ''}`}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="flex-1">
-                              {/* Mostrar icono si tiene reporte */}
-                              {notif.id_reporte && (
-                                <div className="flex items-center gap-1 mb-1">
-                                  <FaHardHat className="text-blue-500 text-xs" />
-                                  <span className="text-xs font-medium text-blue-600">
-                                    Reporte #{notif.id_reporte}
-                                  </span>
-                                </div>
-                              )}
-                              
-                              <p className={`font-medium ${notif.leida ? 'text-gray-700' : 'text-gray-900'}`}>
-                                {notif.mensaje}
-                              </p>
-                              
-                              {notif.lugar && (
-                                <p className="text-sm text-gray-600 mt-1 flex items-center gap-1">
-                                  <FaMapMarkerAlt className="text-yellow-500" /> 
-                                  {notif.lugar}
-                                </p>
-                              )}
-                              
-                              {notif.usuario && (
-                                <p className="text-xs text-gray-500 mt-1">
-                                  👤 {notif.usuario}
-                                </p>
-                              )}
-                              
-                              <p className="text-xs text-gray-500 mt-1">
-                                {formatearFechaNotificacion(notif.fecha)}
-                              </p>
-                            </div>
-                            
-                            <div className="flex gap-1 ml-2" onClick={(e) => e.stopPropagation()}>
-                              {!notif.leida && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    marcarComoLeida(notif.id);
-                                  }}
-                                  className="text-xs bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded"
-                                  title="Marcar como leída"
-                                >
-                                  ✓
-                                </button>
-                              )}
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  eliminarNotificacion(notif.id);
-                                }}
-                                className="text-xs bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded"
-                                title="Eliminar"
-                              >
-                                ×
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* PIE */}
-                  {notificaciones.length > 0 && (
-                    <div className="border-t border-gray-200 p-3 bg-gray-50">
-                      <p className="text-xs text-gray-600 text-center">
-                        {contadorNoLeidas > 0 
-                          ? `${contadorNoLeidas} no leídas`
-                          : 'Todas leídas'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
 
           {/* BOTÓN NUEVO REPORTE */}
           <button

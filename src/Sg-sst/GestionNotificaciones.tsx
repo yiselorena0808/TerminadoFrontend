@@ -1,423 +1,371 @@
-import React, { useState, useEffect } from 'react';
-import { AiOutlineCalendar, AiOutlineFilter, AiOutlineCheckCircle, AiOutlineBell } from 'react-icons/ai';
-import DatePicker from "react-datepicker";
+// COMPONENTE COMPLETO
+import React, { useState, useEffect } from "react";
+import { AiOutlineCheckCircle, AiOutlineBell } from "react-icons/ai";
+import DatePicker from "react-datepicker"; // ← AGREGADO
 import "react-datepicker/dist/react-datepicker.css";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
+
+const API_URL = "https://unreproaching-rancorously-evelina.ngrok-free.dev";
 
 interface Notificacion {
   id: number;
-  titulo: string;
-  descripcion: string;
-  fecha: Date;
+  mensaje: string;
   leida: boolean;
-  tipo: 'chequeo' | 'epp' | 'actividad' | 'reporte';
-  usuario: string;
-  area: string;
+  fecha: string;
+  tipo: string;
+  id_reporte?: number;
+  reporte?: any;
 }
+
+const MAPEO_TIPOS: Record<string, string | null> = {
+  todos: null,
+  reporte: "reporte",
+  epp: "ppe_alert",
+  chequeo: "chequeo",
+  actividad: "actividad",
+};
+
+// ----------------- PARSEO DE MENSAJE EPP -----------------
+const parsearMensajeEPP = (mensaje: string) => {
+  try {
+    const usuario = mensaje.split("para ")[1]?.split(":")[0]?.trim() || "";
+    const equipos = mensaje.split(":")[1]?.split("(contexto")[0]?.trim();
+    const contexto = mensaje
+      .split("(contexto:")[1]
+      ?.replace(")", "")
+      ?.trim();
+
+    return { usuario, equipos, contexto };
+  } catch {
+    return { usuario: "", equipos: "", contexto: "" };
+  }
+};
 
 const GestionNotificaciones: React.FC = () => {
   const location = useLocation();
   const fechaFiltroInicial = location.state?.fechaFiltro || null;
 
-  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([
-    {
-      id: 1,
-      titulo: "Lista de chequeo pendiente",
-      descripcion: "Área de producción - Turno mañana",
-      fecha: new Date(),
-      leida: false,
-      tipo: 'chequeo',
-      usuario: "Juan Pérez",
-      area: "Producción"
-    },
-    {
-      id: 2,
-      titulo: "EPP por renovar",
-      descripcion: "Casco de seguridad vence esta semana",
-      fecha: new Date(new Date().setDate(new Date().getDate() - 1)),
-      leida: true,
-      tipo: 'epp',
-      usuario: "María García",
-      area: "Almacén"
-    },
-    {
-      id: 3,
-      titulo: "Nueva actividad asignada",
-      descripcion: "Capacitación SST - Primeros auxilios",
-      fecha: new Date(new Date().setDate(new Date().getDate() - 2)),
-      leida: false,
-      tipo: 'actividad',
-      usuario: "Carlos Rodríguez",
-      area: "Administración"
-    },
-    {
-      id: 4,
-      titulo: "Reporte mensual generado",
-      descripcion: "Reporte de incidentes enero 2024",
-      fecha: new Date(2024, 0, 10),
-      leida: true,
-      tipo: 'reporte',
-      usuario: "Ana López",
-      area: "Calidad"
-    },
-    {
-      id: 5,
-      titulo: "Inspección programada",
-      descripcion: "Inspección general de áreas de trabajo",
-      fecha: new Date(2024, 0, 8),
-      leida: false,
-      tipo: 'chequeo',
-      usuario: "Pedro Sánchez",
-      area: "Mantenimiento"
-    },
-    {
-      id: 6,
-      titulo: "Entrega de EPP completada",
-      descripcion: "Guantes de seguridad entregados",
-      fecha: new Date(2024, 0, 5),
-      leida: true,
-      tipo: 'epp',
-      usuario: "Laura Martínez",
-      area: "Logística"
-    },
-    {
-      id: 7,
-      titulo: "Actividad lúdica realizada",
-      descripcion: "Simulacro de evacuación exitoso",
-      fecha: new Date(2024, 0, 3),
-      leida: false,
-      tipo: 'actividad',
-      usuario: "Roberto Gómez",
-      area: "Operaciones"
-    },
-    {
-      id: 8,
-      titulo: "Reporte semanal generado",
-      descripcion: "Reporte de seguridad semana 1",
-      fecha: new Date(2024, 0, 2),
-      leida: true,
-      tipo: 'reporte',
-      usuario: "Sofía Hernández",
-      area: "Seguridad"
-    },
-  ]);
-
+  const [notificaciones, setNotificaciones] = useState<Notificacion[]>([]);
   const [fechaFiltro, setFechaFiltro] = useState<Date | null>(fechaFiltroInicial);
-  const [tipoFiltro, setTipoFiltro] = useState<string>('todos');
-  const [estadoFiltro, setEstadoFiltro] = useState<string>('todos');
+  const [tipoFiltro, setTipoFiltro] = useState<string>("todos");
+  const [estadoFiltro, setEstadoFiltro] = useState<string>("todos");
+  const [cargando, setCargando] = useState<boolean>(false);
+
+  const [notifSeleccionada, setNotifSeleccionada] =
+    useState<Notificacion | null>(null);
+
+  // ----------------- CARGA -----------------
+  const cargarNotificaciones = async () => {
+    try {
+      setCargando(true);
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      const tipoBackend = MAPEO_TIPOS[tipoFiltro];
+
+      const params = new URLSearchParams();
+      params.append("soloNoLeidas", "false");
+
+      if (tipoBackend) params.append("tipo", tipoBackend);
+
+      // Filtro por fecha (solo UNA)
+      if (fechaFiltro) {
+        const f = new Date(fechaFiltro);
+        const fecha = f.toISOString().split("T")[0];
+        params.append("fecha_inicio", fecha);
+        params.append("fecha_fin", fecha);
+      }
+
+      const res = await fetch(
+        `${API_URL}/notificaciones?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "ngrok-skip-browser-warning": "true",
+          },
+        }
+      );
+
+      const data = await res.json();
+      setNotificaciones(data.notificaciones || []);
+    } catch (error) {
+      console.error("Error cargando notificaciones:", error);
+    } finally {
+      setCargando(false);
+    }
+  };
 
   useEffect(() => {
-    if (fechaFiltroInicial) {
-      setFechaFiltro(new Date(fechaFiltroInicial));
-    }
-  }, [fechaFiltroInicial]);
+    cargarNotificaciones();
+  }, [tipoFiltro, fechaFiltro]);
 
-  const marcarComoLeida = (id: number) => {
-    setNotificaciones(prev =>
-      prev.map(notif =>
-        notif.id === id ? { ...notif, leida: true } : notif
-      )
-    );
-  };
+  // ----------------- FILTROS ADICIONALES -----------------
+  const notificacionesFiltradas = notificaciones.filter((notif) => {
+    if (estadoFiltro === "leidas" && !notif.leida) return false;
+    if (estadoFiltro === "no-leidas" && notif.leida) return false;
+    return true;
+  });
 
-  const marcarTodasComoLeidas = () => {
-    setNotificaciones(prev =>
-      prev.map(notif => ({ ...notif, leida: true }))
-    );
-  };
+  // ----------------- MARCAR LEÍDA -----------------
+  const marcarComoLeida = async (id: number) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-  const filtrarNotificaciones = () => {
-    return notificaciones.filter(notif => {
-      // Filtro por fecha
-      if (fechaFiltro) {
-        const notifDate = new Date(notif.fecha);
-        const filterDate = new Date(fechaFiltro);
-        if (notifDate.toDateString() !== filterDate.toDateString()) return false;
-      }
-      
-      // Filtro por tipo
-      if (tipoFiltro !== 'todos' && notif.tipo !== tipoFiltro) return false;
-      
-      // Filtro por estado
-      if (estadoFiltro !== 'todos') {
-        if (estadoFiltro === 'leidas' && !notif.leida) return false;
-        if (estadoFiltro === 'no-leidas' && notif.leida) return false;
-      }
-      
-      return true;
-    });
-  };
+      await fetch(`${API_URL}/notificaciones/${id}/leer`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "ngrok-skip-browser-warning": "true",
+        },
+      });
 
-  const notificacionesFiltradas = filtrarNotificaciones();
-  const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
+      setNotificaciones((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, leida: true } : n))
+      );
 
-  const getIconoTipo = (tipo: string) => {
-    switch(tipo) {
-      case 'chequeo': return '🔍';
-      case 'epp': return '🛡️';
-      case 'actividad': return '📚';
-      case 'reporte': return '📊';
-      default: return '📌';
+      setNotifSeleccionada(null);
+    } catch (error) {
+      console.error("Error marcando como leída:", error);
     }
   };
 
-  const getColorTipo = (tipo: string) => {
-    switch(tipo) {
-      case 'chequeo': return 'bg-yellow-100 text-yellow-800';
-      case 'epp': return 'bg-red-100 text-red-800';
-      case 'actividad': return 'bg-blue-100 text-blue-800';
-      case 'reporte': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // ----------------- TABLAS SEPARADAS -----------------
+  const notificacionesEPP = notificacionesFiltradas.filter(
+    (n) => n.tipo === "ppe_alert"
+  );
 
-  const limpiarFiltros = () => {
-    setFechaFiltro(null);
-    setTipoFiltro('todos');
-    setEstadoFiltro('todos');
-  };
+  const notificacionesReporte = notificacionesFiltradas.filter(
+    (n) => n.tipo === "reporte"
+  );
+
+  const notificacionesNoLeidas = notificaciones.filter((n) => !n.leida).length;
 
   return (
     <div className="p-6 bg-white rounded-xl shadow-lg">
-      {/* Header */}
+      {/* ------------ HEADER ------------ */}
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
             <AiOutlineBell className="text-blue-600" />
             Gestión de Notificaciones
           </h1>
-          <p className="text-gray-600 mt-2">
-            Visualiza y gestiona notificaciones por calendario
-          </p>
+          <p className="text-gray-600 mt-2">Notificaciones separadas por tipo</p>
         </div>
+
         <div className="flex items-center gap-4">
           <div className="bg-blue-50 px-4 py-2 rounded-lg">
             <span className="text-blue-700 font-semibold">
               {notificacionesNoLeidas} no leídas
             </span>
           </div>
+
           <button
-            onClick={marcarTodasComoLeidas}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition flex items-center gap-2"
+            onClick={cargarNotificaciones}
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition"
           >
-            <AiOutlineCheckCircle />
-            Marcar todas como leídas
+            <AiOutlineCheckCircle /> Actualizar
           </button>
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="bg-gray-50 p-6 rounded-lg mb-8">
-        <h2 className="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-          <AiOutlineFilter />
-          Filtros
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Filtro por fecha */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <AiOutlineCalendar className="inline mr-2" />
-              Fecha
-            </label>
-            <div className="flex items-center gap-2">
-              <DatePicker
-                selected={fechaFiltro}
-                onChange={(date) => setFechaFiltro(date)}
-                dateFormat="dd/MM/yyyy"
-                placeholderText="Seleccionar fecha"
-                className="w-full p-2 border border-gray-300 rounded-lg"
-                isClearable
-              />
-              {fechaFiltro && (
+      {/* ========================================================= */}
+      {/* FILTROS CON CALENDARIO */}
+      {/* ========================================================= */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-8 flex flex-wrap gap-6 items-end">
+
+        {/* FILTRO FECHA */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-1">
+            Filtrar por fecha
+          </label>
+
+          <DatePicker
+            selected={fechaFiltro}
+            onChange={(date) => setFechaFiltro(date)}
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Selecciona fecha"
+            className="border px-3 py-2 rounded-lg shadow-sm w-48"
+          />
+        </div>
+
+        {/* FILTRO TIPO */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-1">
+            Tipo
+          </label>
+          <select
+            value={tipoFiltro}
+            onChange={(e) => setTipoFiltro(e.target.value)}
+            className="border px-3 py-2 rounded-lg shadow-sm w-48"
+          >
+            <option value="todos">Todos</option>
+            <option value="epp">PPE</option>
+            <option value="reporte">Reportes</option>
+            <option value="chequeo">Chequeos</option>
+            <option value="actividad">Actividad</option>
+          </select>
+        </div>
+
+        {/* FILTRO ESTADO */}
+        <div>
+          <label className="block text-gray-700 font-semibold mb-1">
+            Estado
+          </label>
+          <select
+            value={estadoFiltro}
+            onChange={(e) => setEstadoFiltro(e.target.value)}
+            className="border px-3 py-2 rounded-lg shadow-sm w-48"
+          >
+            <option value="todos">Todos</option>
+            <option value="no-leidas">No leídas</option>
+            <option value="leidas">Leídas</option>
+          </select>
+        </div>
+
+        {fechaFiltro && (
+          <button
+            onClick={() => setFechaFiltro(null)}
+            className="px-3 py-2 bg-red-600 text-white rounded-lg"
+          >
+            Limpiar fecha
+          </button>
+        )}
+      </div>
+
+      {/* ========================================================= */}
+      {/* TABLA EPP */}
+      {/* ========================================================= */}
+      <h2 className="text-xl font-bold mt-10 mb-3">Alertas PPE</h2>
+
+      <table className="min-w-full bg-white border rounded-lg">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-3">Usuario</th>
+            <th className="px-4 py-3">Equipos Faltantes</th>
+            <th className="px-4 py-3">Contexto</th>
+            <th className="px-4 py-3 text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {notificacionesEPP.map((n) => {
+            const { usuario, equipos, contexto } = parsearMensajeEPP(n.mensaje);
+
+            return (
+              <tr key={n.id} className={n.leida ? "bg-white" : "bg-blue-50"}>
+                <td className="px-4 py-3">{usuario}</td>
+                <td className="px-4 py-3">{equipos}</td>
+                <td className="px-4 py-3">{contexto}</td>
+
+                <td className="px-4 py-3 text-center flex justify-center gap-3">
+                  <button
+                    onClick={() => setNotifSeleccionada(n)}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg"
+                  >
+                    Ver
+                  </button>
+
+                  {!n.leida && (
+                    <button
+                      onClick={() => marcarComoLeida(n.id)}
+                      className="px-3 py-2 bg-green-600 text-white rounded-lg"
+                    >
+                      Marcar Leída
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+
+      {/* ========================================================= */}
+      {/* TABLA REPORTES */}
+      {/* ========================================================= */}
+      <h2 className="text-xl font-bold mt-10 mb-3">Notificaciones de Reportes</h2>
+
+      <table className="min-w-full bg-white border rounded-lg">
+        <thead className="bg-gray-100">
+          <tr>
+            <th className="px-4 py-3">Usuario</th>
+            <th className="px-4 py-3">Descripción</th>
+            <th className="px-4 py-3">Fecha</th>
+            <th className="px-4 py-3 text-center">Acciones</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {notificacionesReporte.map((n) => (
+            <tr key={n.id} className={n.leida ? "bg-white" : "bg-blue-50"}>
+              <td className="px-4 py-3">{n.reporte?.nombre_usuario || "—"}</td>
+              <td className="px-4 py-3">{n.reporte?.descripcion || n.mensaje}</td>
+              <td className="px-4 py-3">{n.fecha}</td>
+
+              <td className="px-4 py-3 text-center flex justify-center gap-3">
                 <button
-                  onClick={() => setFechaFiltro(null)}
-                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => setNotifSeleccionada(n)}
+                  className="px-3 py-2 bg-blue-600 text-white rounded-lg"
                 >
-                  ✕
+                  Ver
+                </button>
+
+                {!n.leida && (
+                  <button
+                    onClick={() => marcarComoLeida(n.id)}
+                    className="px-3 py-2 bg-green-600 text-white rounded-lg"
+                  >
+                    Marcar Leída
+                  </button>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* ========================================================= */}
+      {/* MODAL DETALLE */}
+      {/* ========================================================= */}
+      {notifSeleccionada && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-xl w-96 shadow-xl">
+            <h2 className="text-xl font-bold mb-3">Detalle de Notificación</h2>
+
+            <p className="mb-2">
+              <b>Mensaje:</b> {notifSeleccionada.mensaje}
+            </p>
+
+            <p className="mb-2">
+              <b>Fecha:</b> {notifSeleccionada.fecha}
+            </p>
+
+            {notifSeleccionada.reporte && (
+              <p className="mb-2">
+                <b>Reporte:</b> {notifSeleccionada.reporte.descripcion}
+              </p>
+            )}
+
+            <div className="flex justify-end gap-3 mt-4">
+              {!notifSeleccionada.leida && (
+                <button
+                  onClick={() => marcarComoLeida(notifSeleccionada.id)}
+                  className="bg-green-600 text-white px-3 py-2 rounded-lg"
+                >
+                  Marcar Leída
                 </button>
               )}
-            </div>
-          </div>
-          
-          {/* Filtro por tipo */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Tipo</label>
-            <select
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              value={tipoFiltro}
-              onChange={(e) => setTipoFiltro(e.target.value)}
-            >
-              <option value="todos">Todos los tipos</option>
-              <option value="chequeo">Chequeos</option>
-              <option value="epp">EPP</option>
-              <option value="actividad">Actividades</option>
-              <option value="reporte">Reportes</option>
-            </select>
-          </div>
-          
-          {/* Filtro por estado */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-            <select
-              className="w-full p-2 border border-gray-300 rounded-lg"
-              value={estadoFiltro}
-              onChange={(e) => setEstadoFiltro(e.target.value)}
-            >
-              <option value="todos">Todos</option>
-              <option value="leidas">Leídas</option>
-              <option value="no-leidas">No leídas</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="flex justify-end mt-4">
-          <button
-            onClick={limpiarFiltros}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded hover:border-gray-400"
-          >
-            Limpiar filtros
-          </button>
-        </div>
-      </div>
 
-      {/* Tabla de notificaciones */}
-      <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <div className="flex justify-between items-center">
-            <h2 className="font-semibold text-gray-800">Notificaciones</h2>
-            <span className="text-sm text-gray-600">
-              {notificacionesFiltradas.length} resultados
-              {fechaFiltro && ` - ${fechaFiltro.toLocaleDateString('es-ES')}`}
-            </span>
-          </div>
-        </div>
-        
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Notificación</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usuario</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Área</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {notificacionesFiltradas.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-8 text-center text-gray-500">
-                    <AiOutlineBell className="text-3xl mx-auto mb-2 text-gray-300" />
-                    <p>No hay notificaciones con los filtros seleccionados</p>
-                  </td>
-                </tr>
-              ) : (
-                notificacionesFiltradas.map((notif) => (
-                  <tr key={notif.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2 text-gray-600">
-                        <AiOutlineCalendar className="text-gray-400" />
-                        <span className="text-sm">{notif.fecha.toLocaleDateString('es-ES')}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{getIconoTipo(notif.tipo)}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getColorTipo(notif.tipo)}`}>
-                          {notif.tipo}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>
-                        <div className="font-medium text-gray-900">{notif.titulo}</div>
-                        <div className="text-sm text-gray-600 mt-1">{notif.descripcion}</div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{notif.usuario}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{notif.area}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        notif.leida 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {notif.leida ? 'Leída' : 'No leída'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      {!notif.leida && (
-                        <button
-                          onClick={() => marcarComoLeida(notif.id)}
-                          className="text-blue-600 hover:text-blue-800 text-sm"
-                        >
-                          Marcar como leída
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Estadísticas */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-50 p-6 rounded-lg">
-          <h3 className="font-medium text-gray-700 mb-4">Resumen por tipo</h3>
-          <div className="space-y-3">
-            {['chequeo', 'epp', 'actividad', 'reporte'].map((tipo) => (
-              <div key={tipo} className="flex justify-between items-center">
-                <span className="text-gray-600 capitalize">{tipo}</span>
-                <span className="font-bold">
-                  {notificaciones.filter(n => n.tipo === tipo).length}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-green-50 p-6 rounded-lg">
-          <h3 className="font-medium text-gray-700 mb-4">Estadísticas</h3>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Total notificaciones</span>
-              <span className="font-bold text-lg">{notificaciones.length}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">No leídas</span>
-              <span className="font-bold text-blue-600">{notificacionesNoLeidas}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Leídas</span>
-              <span className="font-bold text-green-600">{notificaciones.length - notificacionesNoLeidas}</span>
+              <button
+                onClick={() => setNotifSeleccionada(null)}
+                className="bg-gray-500 text-white px-3 py-2 rounded-lg"
+              >
+                Cerrar
+              </button>
             </div>
           </div>
         </div>
-
-        <div className="bg-yellow-50 p-6 rounded-lg">
-          <h3 className="font-medium text-gray-700 mb-4">Distribución por fecha</h3>
-          <div className="space-y-2">
-            {notificaciones
-              .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
-              .slice(0, 5)
-              .map((notif) => (
-                <div key={notif.id} className="flex justify-between items-center text-sm">
-                  <span className="text-gray-600 truncate">{notif.titulo}</span>
-                  <span className="text-gray-500">{notif.fecha.toLocaleDateString('es-ES')}</span>
-                </div>
-              ))}
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

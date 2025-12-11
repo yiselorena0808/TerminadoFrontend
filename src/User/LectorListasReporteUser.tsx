@@ -116,21 +116,56 @@ const LectorListaReportes: React.FC = () => {
       minute: "2-digit",
     });
   };
+const descargarPDF = async (reporte: Reporte) => {
+  const doc = new jsPDF();
 
-  const descargarPDF = (reporte: Reporte) => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Reporte de Incidente - SST", 20, 20);
-    doc.setFontSize(12);
-    doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
-    doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
-    doc.text(`Cargo: ${reporte.cargo}`, 20, 60);
-    doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 70);
-    doc.text(`Lugar: ${reporte.lugar}`, 20, 80);
-    doc.text(`Descripción: ${reporte.descripcion}`, 20, 90);
-    doc.text(`Estado: ${reporte.estado}`, 20, 100);
-    doc.save(`reporte_${reporte.id_reporte}.pdf`);
-  };
+  doc.setFontSize(18);
+  doc.text("Reporte de Incidente - SST", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text(`Usuario: ${reporte.nombre_usuario}`, 20, 40);
+  doc.text(`Cédula: ${reporte.cedula}`, 20, 50);
+  doc.text(`Cargo: ${reporte.cargo}`, 20, 60);
+  doc.text(`Fecha: ${formatearFecha(reporte.fecha)}`, 20, 70);
+  doc.text(`Lugar: ${reporte.lugar}`, 20, 80);
+
+  const descripcionLines = doc.splitTextToSize(reporte.descripcion, 170);
+  doc.text("Descripción:", 20, 95);
+  doc.text(descripcionLines, 20, 105);
+
+  let yPos = 115 + descripcionLines.length * 5;
+
+  if (reporte.imagen) {
+    try {
+      const imgBase64 = await cargarImagenBase64(reporte.imagen);
+      doc.addImage(imgBase64, "JPEG", 20, yPos, 150, 100);
+    } catch (err) {
+      doc.text("Error cargando la imagen", 20, yPos);
+    }
+  }
+
+  doc.save(`reporte_${reporte.id_reporte}.pdf`);
+};
+
+const cargarImagenBase64 = (url: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d");
+      ctx!.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL("image/jpeg"));
+    };
+
+    img.onerror = reject;
+    img.src = url;
+  });
+};
+
 
   const reportesFiltrados = listas.filter(
     (item) =>
